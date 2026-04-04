@@ -70,6 +70,56 @@ if (-not $All -and -not $SkipTerminal -and -not $SkipAHK -and [Environment]::Use
 # -----------------------------------------------------------
 # 1. Download latest HyperYap release
 # -----------------------------------------------------------
+# -----------------------------------------------------------
+# 0. Remove old MURmure installation (if present)
+# -----------------------------------------------------------
+$murmureUninstall = Get-ItemProperty "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\*",
+    "HKLM:\SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\*",
+    "HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\*" -ErrorAction SilentlyContinue |
+    Where-Object { $_.DisplayName -match "murmure" -or $_.DisplayName -match "Murmure" } |
+    Select-Object -First 1
+
+if ($murmureUninstall) {
+    Write-Host "  Found old MURmure installation. Removing..." -ForegroundColor Yellow
+    # Kill MURmure if running
+    Get-Process -Name "murmure" -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue
+    # Run the uninstaller
+    $uninstallStr = $murmureUninstall.UninstallString
+    if ($uninstallStr) {
+        if ($uninstallStr -match "msiexec") {
+            $productCode = $murmureUninstall.PSChildName
+            Start-Process msiexec.exe -ArgumentList "/x $productCode /quiet /norestart" -Wait -ErrorAction SilentlyContinue
+        } else {
+            Start-Process cmd.exe -ArgumentList "/c `"$uninstallStr`" /S" -Wait -ErrorAction SilentlyContinue
+        }
+    }
+    Write-Host "  MURmure uninstalled." -ForegroundColor Green
+} else {
+    # Also check for a running murmure process even without a formal install
+    $murmureProc = Get-Process -Name "murmure" -ErrorAction SilentlyContinue
+    if ($murmureProc) {
+        Write-Host "  Stopping running MURmure process..." -ForegroundColor DarkGray
+        $murmureProc | Stop-Process -Force -ErrorAction SilentlyContinue
+    }
+}
+
+# Remove old MURmure autostart entries
+$oldMurmureLinks = @(
+    "$startupDir\murmure.lnk",
+    "$startupDir\Murmure.lnk",
+    "$startupDir\murmure-hotkeys.ahk",
+    "$startupDir\murmure-hotkeys.lnk"
+)
+foreach ($link in $oldMurmureLinks) {
+    if (Test-Path $link) {
+        Remove-Item $link -Force -ErrorAction SilentlyContinue
+        Write-Host "  Removed old startup entry: $(Split-Path $link -Leaf)" -ForegroundColor DarkGray
+    }
+}
+
+# -----------------------------------------------------------
+# 1. Download latest HyperYap release
+# -----------------------------------------------------------
 Write-Host "[1/6] Downloading latest HyperYap release..." -ForegroundColor Yellow
 
 $releaseApi = "https://api.github.com/repos/$repo/releases/latest"
@@ -258,21 +308,6 @@ if (-not (Test-Path $presetsDir)) {
     foreach ($f in $scriptFiles) {
         Invoke-WebRequest -Uri "https://raw.githubusercontent.com/$repo/main/presets/scripts/$f" -OutFile "$presetsDir\scripts\$f" -UseBasicParsing
     }
-}
-
-# Clean up old MURmure configs if present
-$oldMurmureDir = "$env:APPDATA\com.al1x-ai.murmure"
-if ((Test-Path $oldMurmureDir) -and $Force) {
-    Write-Host "  Removing old MURmure configs..." -ForegroundColor DarkGray
-    Remove-Item "$oldMurmureDir\settings.json" -Force -ErrorAction SilentlyContinue
-    Remove-Item "$oldMurmureDir\llm_connect.json" -Force -ErrorAction SilentlyContinue
-}
-
-# Also remove old murmure startup shortcuts
-$oldMurmureStartup = "$startupDir\murmure-hotkeys.ahk"
-if (Test-Path $oldMurmureStartup) {
-    Remove-Item $oldMurmureStartup -Force -ErrorAction SilentlyContinue
-    Write-Host "  Removed old MURmure startup shortcut." -ForegroundColor DarkGray
 }
 
 # Copy app configs
