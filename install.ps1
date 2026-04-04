@@ -31,8 +31,22 @@ Write-Host "  The complete vibe coding system." -ForegroundColor DarkGray
 Write-Host "  Voice-to-text + terminal + hotkeys. Windows only." -ForegroundColor DarkGray
 Write-Host ""
 
+Write-Host "  This will:" -ForegroundColor White
+Write-Host "    - Uninstall MURmure (if installed)" -ForegroundColor DarkGray
+Write-Host "    - Install/update BenjaminTerm terminal" -ForegroundColor DarkGray
+Write-Host "    - Install AutoHotkey v2 (if not present)" -ForegroundColor DarkGray
+Write-Host "    - Download NVIDIA Parakeet speech model (~440MB)" -ForegroundColor DarkGray
+Write-Host "    - Deploy HyperYap configs (overwrites existing)" -ForegroundColor DarkGray
+Write-Host "    - Set everything to auto-start on boot" -ForegroundColor DarkGray
+Write-Host ""
+
 if ($KeepConfig) {
     Write-Host "  --KeepConfig: existing configs will be preserved." -ForegroundColor DarkYellow
+    Write-Host ""
+}
+
+if ([Environment]::UserInteractive) {
+    Read-Host "  Press Enter to continue (Ctrl+C to cancel)"
     Write-Host ""
 }
 
