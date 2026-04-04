@@ -6,6 +6,7 @@
 
 param(
     [switch]$All,
+    [switch]$Force,
     [switch]$SkipModel,
     [switch]$SkipAHK,
     [switch]$SkipAutostart,
@@ -39,6 +40,11 @@ Write-Host ""
 $installVoice = $true
 $installTerminal = -not $SkipTerminal
 $installHotkeys = -not $SkipAHK
+
+if ($Force) {
+    Write-Host "  --Force mode: will overwrite existing configs and reinstall components." -ForegroundColor Yellow
+    Write-Host ""
+}
 
 if (-not $All -and -not $SkipTerminal -and -not $SkipAHK -and [Environment]::UserInteractive) {
     Write-Host "  What would you like to install?" -ForegroundColor White
@@ -107,8 +113,8 @@ if ($installTerminal) {
     )
     $btExe = $btExePaths | Where-Object { Test-Path $_ } | Select-Object -First 1
 
-    if ($btExe) {
-        Write-Host "  BenjaminTerm already installed." -ForegroundColor Green
+    if ($btExe -and -not $Force) {
+        Write-Host "  BenjaminTerm already installed. Use -Force to reinstall." -ForegroundColor Green
     } else {
         try {
             $btReleaseApi = "https://api.github.com/repos/$btRepo/releases"
@@ -254,21 +260,36 @@ if (-not (Test-Path $presetsDir)) {
     }
 }
 
+# Clean up old MURmure configs if present
+$oldMurmureDir = "$env:APPDATA\com.al1x-ai.murmure"
+if ((Test-Path $oldMurmureDir) -and $Force) {
+    Write-Host "  Removing old MURmure configs..." -ForegroundColor DarkGray
+    Remove-Item "$oldMurmureDir\settings.json" -Force -ErrorAction SilentlyContinue
+    Remove-Item "$oldMurmureDir\llm_connect.json" -Force -ErrorAction SilentlyContinue
+}
+
+# Also remove old murmure startup shortcuts
+$oldMurmureStartup = "$startupDir\murmure-hotkeys.ahk"
+if (Test-Path $oldMurmureStartup) {
+    Remove-Item $oldMurmureStartup -Force -ErrorAction SilentlyContinue
+    Write-Host "  Removed old MURmure startup shortcut." -ForegroundColor DarkGray
+}
+
 # Copy app configs
 New-Item -ItemType Directory -Path $appDataDir -Force | Out-Null
 
-if (-not (Test-Path "$appDataDir\settings.json")) {
-    Copy-Item "$presetsDir\settings.json" "$appDataDir\settings.json"
+if ($Force -or -not (Test-Path "$appDataDir\settings.json")) {
+    Copy-Item "$presetsDir\settings.json" "$appDataDir\settings.json" -Force
     Write-Host "  Settings deployed." -ForegroundColor Green
 } else {
-    Write-Host "  Settings already exist. Skipping (won't overwrite)." -ForegroundColor DarkYellow
+    Write-Host "  Settings already exist. Skipping (use -Force to overwrite)." -ForegroundColor DarkYellow
 }
 
-if (-not (Test-Path "$appDataDir\llm_connect.json")) {
-    Copy-Item "$presetsDir\llm_connect.json" "$appDataDir\llm_connect.json"
+if ($Force -or -not (Test-Path "$appDataDir\llm_connect.json")) {
+    Copy-Item "$presetsDir\llm_connect.json" "$appDataDir\llm_connect.json" -Force
     Write-Host "  LLM config deployed." -ForegroundColor Green
 } else {
-    Write-Host "  LLM config already exists. Skipping." -ForegroundColor DarkYellow
+    Write-Host "  LLM config already exists. Skipping (use -Force to overwrite)." -ForegroundColor DarkYellow
 }
 
 # Copy AHK scripts to a stable location (if hotkeys selected)
