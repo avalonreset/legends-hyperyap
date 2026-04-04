@@ -2384,6 +2384,57 @@ dependencies = [
 ]
 
 [[package]]
+name = "hyperyap"
+version = "1.0.0"
+dependencies = [
+ "anyhow",
+ "axum",
+ "chrono",
+ "core-foundation 0.10.1",
+ "core-foundation-sys",
+ "cpal",
+ "enigo",
+ "flate2",
+ "futures-util",
+ "hound",
+ "hyper",
+ "keyring",
+ "log",
+ "ndarray",
+ "once_cell",
+ "ort",
+ "parking_lot",
+ "rdev",
+ "regex",
+ "reqwest",
+ "rodio",
+ "rphonetic",
+ "serde",
+ "serde_json",
+ "strsim",
+ "tar",
+ "tauri",
+ "tauri-build",
+ "tauri-plugin-autostart",
+ "tauri-plugin-cli",
+ "tauri-plugin-clipboard-manager",
+ "tauri-plugin-dialog",
+ "tauri-plugin-log",
+ "tauri-plugin-opener",
+ "tauri-plugin-process",
+ "tauri-plugin-single-instance",
+ "tauri-plugin-store",
+ "tauri-plugin-updater",
+ "text2num",
+ "thiserror 2.0.18",
+ "tokio",
+ "unicode-normalization",
+ "url",
+ "uuid",
+ "windows-sys 0.61.2",
+]
+
+[[package]]
 name = "iana-time-zone"
 version = "0.1.64"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3081,57 +3132,6 @@ dependencies = [
  "mime",
  "spin",
  "version_check",
-]
-
-[[package]]
-name = "murmure"
-version = "1.8.1"
-dependencies = [
- "anyhow",
- "axum",
- "chrono",
- "core-foundation 0.10.1",
- "core-foundation-sys",
- "cpal",
- "enigo",
- "flate2",
- "futures-util",
- "hound",
- "hyper",
- "keyring",
- "log",
- "ndarray",
- "once_cell",
- "ort",
- "parking_lot",
- "rdev",
- "regex",
- "reqwest",
- "rodio",
- "rphonetic",
- "serde",
- "serde_json",
- "strsim",
- "tar",
- "tauri",
- "tauri-build",
- "tauri-plugin-autostart",
- "tauri-plugin-cli",
- "tauri-plugin-clipboard-manager",
- "tauri-plugin-dialog",
- "tauri-plugin-log",
- "tauri-plugin-opener",
- "tauri-plugin-process",
- "tauri-plugin-single-instance",
- "tauri-plugin-store",
- "tauri-plugin-updater",
- "text2num",
- "thiserror 2.0.18",
- "tokio",
- "unicode-normalization",
- "url",
- "uuid",
- "windows-sys 0.61.2",
 ]
 
 [[package]]

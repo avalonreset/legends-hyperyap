@@ -1,4 +1,4 @@
-# Default permissions for Murmure application
+# Default permissions for HyperYap application
 # Note: Tauri 2 only allows permissions from official plugins.
 # Custom command permissions are not supported in Tauri 2.
 # All Tauri commands are automatically allowed without explicit permission declaration.

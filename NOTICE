@@ -1,0 +1,18 @@
+HyperYap
+Copyright (C) 2026 avalonreset
+
+This project is a modified version of MURmure, originally created by Kieirra.
+Original project: https://github.com/Kieirra/murmure
+Original license: GNU Affero General Public License v3.0 (AGPL-3.0)
+
+This modified version ("HyperYap") is distributed under the same AGPL-3.0 license.
+
+Modifications from the original MURmure project include:
+- Rebranding from MURmure to HyperYap
+- Pre-configured settings for immediate use (toggle-to-talk, F13 hotkey, etc.)
+- Bundled AutoHotkey scripts for mouse-button-to-F13 mapping and smart paste
+- One-command installer with auto-boot setup
+- Removal of multi-language UI defaults (English-only focus)
+
+Per AGPL-3.0 Section 5, prominent notices of modification are included herein.
+Date of initial modification: April 2026

@@ -96,7 +96,7 @@ export const CustomDictionary = () => {
                         extensions: ['csv', 'CSV'],
                     },
                 ],
-                defaultPath: 'murmure-dictionary.csv',
+                defaultPath: 'hyperyap-dictionary.csv',
             });
             if (filePath == null) {
                 return;
@@ -152,7 +152,7 @@ export const CustomDictionary = () => {
                 <Typography.MainTitle data-testid="dictionary-title">{t('Custom Dictionary')}</Typography.MainTitle>
                 <Typography.Paragraph className="text-muted-foreground">
                     {t(
-                        'Personalize your Murmure experience by adding technical terms, names, or specialized vocabulary to the dictionary (optimized for both English and French).'
+                        'Personalize your HyperYap experience by adding technical terms, names, or specialized vocabulary to the dictionary (optimized for both English and French).'
                     )}
                 </Typography.Paragraph>
             </Page.Header>

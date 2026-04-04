@@ -26,7 +26,7 @@ export const Statistics = ({ className, ...props }: React.HTMLAttributes<HTMLDiv
                 </TooltipTrigger>
                 <TooltipContent>
                     <Typography.Paragraph className="text-white text-xs max-w-64">
-                        {t('Your average words per minute with Murmure this month.')}
+                        {t('Your average words per minute with HyperYap this month.')}
                         <br />
                         <br />
                         {t('A fast keyboard user usually types around 80 words per minute. You can speak much faster.')}
@@ -43,7 +43,7 @@ export const Statistics = ({ className, ...props }: React.HTMLAttributes<HTMLDiv
                 </TooltipTrigger>
                 <TooltipContent>
                     <Typography.Paragraph className="text-white text-xs max-w-64">
-                        {t('Total words written with Murmure this month.')}
+                        {t('Total words written with HyperYap this month.')}
                         <br />
                         <br />
                         {t('That’s thousands of ideas turned into text, without typing a single key.')}
@@ -64,7 +64,7 @@ export const Statistics = ({ className, ...props }: React.HTMLAttributes<HTMLDiv
                         <br />
                         <br />
                         {t(
-                            'Murmure removes all audio files after processing and only keeps your five latest transcriptions, stored locally on your device.'
+                            'HyperYap removes all audio files after processing and only keeps your five latest transcriptions, stored locally on your device.'
                         )}
                     </Typography.Paragraph>
                 </TooltipContent>

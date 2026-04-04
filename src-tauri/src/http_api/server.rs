@@ -80,7 +80,7 @@ async fn transcribe_handler(
                     };
 
                     let temp_path =
-                        std::env::temp_dir().join(format!("murmure-{}.wav", uuid::Uuid::new_v4()));
+                        std::env::temp_dir().join(format!("hyperyap-{}.wav", uuid::Uuid::new_v4()));
 
                     if let Err(e) = std::fs::write(&temp_path, bytes) {
                         return (

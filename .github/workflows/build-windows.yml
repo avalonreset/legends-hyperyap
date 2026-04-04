@@ -71,9 +71,9 @@ jobs:
               run: |
                   New-Item -ItemType Directory -Force -Path "unsigned_artifacts" | Out-Null
                   $msi = Get-ChildItem -Path "src-tauri/target/release/bundle/msi" -Filter *.msi | Select-Object -First 1
-                  Copy-Item $msi.FullName -Destination "unsigned_artifacts/Murmure_x64.msi"
+                  Copy-Item $msi.FullName -Destination "unsigned_artifacts/HyperYap_x64.msi"
                   $exe = Get-ChildItem -Path "src-tauri/target/release/bundle/nsis" -Filter *.exe | Select-Object -First 1
-                  Copy-Item $exe.FullName -Destination "unsigned_artifacts/Murmure_x64-setup.exe"
+                  Copy-Item $exe.FullName -Destination "unsigned_artifacts/HyperYap_x64-setup.exe"
 
             - name: Upload unsigned artifact
               if: ${{ inputs.dry == false }}
@@ -119,7 +119,7 @@ jobs:
                   # MSI
                   $msi = Get-ChildItem -Path "signed_artifacts" -Filter *.msi | Select-Object -First 1
                   if ($msi) {
-                      $finalMsi = Join-Path $releaseDir "Murmure_x64.msi"
+                      $finalMsi = Join-Path $releaseDir "HyperYap_x64.msi"
                       Copy-Item $msi.FullName -Destination $finalMsi -Force
                       pnpm tauri signer sign $finalMsi
                   }
@@ -127,7 +127,7 @@ jobs:
                   # EXE
                   $exe = Get-ChildItem -Path "signed_artifacts" -Filter *.exe | Select-Object -First 1
                   if ($exe) {
-                      $finalExe = Join-Path $releaseDir "Murmure_x64-setup.exe"
+                      $finalExe = Join-Path $releaseDir "HyperYap_x64-setup.exe"
                       Copy-Item $exe.FullName -Destination $finalExe -Force
                       pnpm tauri signer sign $finalExe
                   }
@@ -136,6 +136,6 @@ jobs:
               if: ${{ inputs.dry == false }}
               uses: actions/upload-artifact@v4
               with:
-                  name: murmure-windows-x64
+                  name: hyperyap-windows-x64
                   path: release-bundle
                   retention-days: 1

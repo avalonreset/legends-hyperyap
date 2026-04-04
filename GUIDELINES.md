@@ -1,8 +1,8 @@
-# Murmure - Technical Guidelines
+# HyperYap - Technical Guidelines
 
 ## Introduction
 
-The goal of this document is to compile the development practices for the Murmure repository, aiming for more consistent, secure, and maintainable development.
+The goal of this document is to compile the development practices for the HyperYap repository, aiming for more consistent, secure, and maintainable development.
 
 During code reviews, developers must ensure adherence to these established rules. Where possible, these rules will also be enforced by linters (`ESLint` for the frontend, `Clippy` for the backend).
 
@@ -374,7 +374,7 @@ pub fn set_record_shortcut(app: AppHandle, binding: String) -> Result<String, St
 #### 4.2 Dependency Management
 
 - Be mindful of adding new dependencies. Each dependency increases compile time and binary size.
-- Regularly run cargo audit to check for security vulnerabilities in dependencies. This is crucial for a privacy-focused application like Murmure.
+- Regularly run cargo audit to check for security vulnerabilities in dependencies. This is crucial for a privacy-focused application like HyperYap.
 
 > **Rationale**: These tools ensure the security and maintainability of the project.
 

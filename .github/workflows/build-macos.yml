@@ -194,8 +194,8 @@ jobs:
               if: ${{ inputs.dry == false }}
               shell: bash
               run: |
-                  find src-tauri/target/release/bundle -name "*.dmg" -exec sh -c 'mv "$1" "$(dirname "$1")/Murmure_aarch64_darwin.dmg"' _ {} \;
-                  find src-tauri/target/release/bundle -name "*.sig" -exec sh -c 'mv "$1" "$(dirname "$1")/Murmure_aarch64_darwin.dmg.sig"' _ {} \;
+                  find src-tauri/target/release/bundle -name "*.dmg" -exec sh -c 'mv "$1" "$(dirname "$1")/HyperYap_aarch64_darwin.dmg"' _ {} \;
+                  find src-tauri/target/release/bundle -name "*.sig" -exec sh -c 'mv "$1" "$(dirname "$1")/HyperYap_aarch64_darwin.dmg.sig"' _ {} \;
 
             # ── Cleanup ──────────────────────────────────────────────────
             - name: Cleanup keychain
@@ -211,7 +211,7 @@ jobs:
               if: ${{ inputs.dry == false }}
               uses: actions/upload-artifact@v4
               with:
-                  name: murmure-macos
+                  name: hyperyap-macos
                   path: |
                       src-tauri/target/release/bundle/**/*.dmg
                       src-tauri/target/release/bundle/**/*.sig

@@ -5,7 +5,7 @@ import { LLMMode } from '@/features/personalize/llm-connect/hooks/use-llm-connec
 export type { SystemSettings, ShortcutSettings, AppSettings } from '../settings.types';
 import type { SystemSettings, ShortcutSettings } from '../settings.types';
 
-export interface MurmureExportData {
+export interface HyperyapExportData {
     version: number;
     app_version: string;
     exported_at: string;

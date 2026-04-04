@@ -215,8 +215,8 @@ jobs:
               run: |
                   set -euo pipefail
                   bundle_dir="src-tauri/target/x86_64-apple-darwin/release/bundle"
-                  find "$bundle_dir" -name "*.dmg" -exec sh -c 'mv "$1" "$(dirname "$1")/Murmure_x86_64_darwin.dmg"' _ {} \;
-                  find "$bundle_dir" -name "*.sig" -exec sh -c 'mv "$1" "$(dirname "$1")/Murmure_x86_64_darwin.dmg.sig"' _ {} \;
+                  find "$bundle_dir" -name "*.dmg" -exec sh -c 'mv "$1" "$(dirname "$1")/HyperYap_x86_64_darwin.dmg"' _ {} \;
+                  find "$bundle_dir" -name "*.sig" -exec sh -c 'mv "$1" "$(dirname "$1")/HyperYap_x86_64_darwin.dmg.sig"' _ {} \;
 
             # ── Cleanup ──────────────────────────────────────────────────
             - name: Cleanup keychain
@@ -232,7 +232,7 @@ jobs:
               if: ${{ inputs.dry == false }}
               uses: actions/upload-artifact@v4
               with:
-                  name: murmure-macos-intel
+                  name: hyperyap-macos-intel
                   path: |
                       src-tauri/target/x86_64-apple-darwin/release/bundle/**/*.dmg
                       src-tauri/target/x86_64-apple-darwin/release/bundle/**/*.sig

@@ -17,7 +17,7 @@ export const Onboarding = ({ recordShortcut }: { recordShortcut?: string }) => {
         if (!showCongrats) {
             return (
                 <Typography.Paragraph className="text-muted-foreground">
-                    {t('Murmure use default microphone to record your voice.')}
+                    {t('HyperYap uses the default microphone to record your voice.')}
                 </Typography.Paragraph>
             );
         }
@@ -26,7 +26,7 @@ export const Onboarding = ({ recordShortcut }: { recordShortcut?: string }) => {
                 <div className="flex items-center gap-2 justify-between">
                     <Typography.Paragraph className="text-sky-300! font-bold flex gap-2 items-center">
                         <BadgeCheck />
-                        {t("Perfect! You're all set to use Murmure everywhere.")}
+                        {t("Perfect! You're all set to use HyperYap everywhere.")}
                     </Typography.Paragraph>
                     <button
                         type="button"
@@ -65,12 +65,12 @@ export const Onboarding = ({ recordShortcut }: { recordShortcut?: string }) => {
                             : t('Use the record shortcut on the Home page')
                     }
                     description={t(
-                        'Murmure use the default microphone to record your voice. Make sure your microphone is well set up.'
+                        'HyperYap uses the default microphone to record your voice. Make sure your microphone is well set up.'
                     )}
                 />
                 <OnboardingTask
                     done={state.transcribed_outside_app}
-                    label={t('Use murmure in another app')}
+                    label={t('Use HyperYap in another app')}
                     description={t(
                         'Place your cursor in any textbox of any software and try to transcribe your voice.'
                     )}

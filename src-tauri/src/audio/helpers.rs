@@ -12,7 +12,7 @@ pub fn ensure_recordings_dir(app: &tauri::AppHandle) -> Result<PathBuf> {
         .path()
         .temp_dir()
         .context("Failed to resolve temp dir")?
-        .join("murmure_recordings");
+        .join("hyperyap_recordings");
 
     if !recordings.exists() {
         std::fs::create_dir_all(&recordings).context("Failed to create recordings dir")?;
@@ -26,7 +26,7 @@ pub fn generate_unique_wav_name() -> String {
         .duration_since(std::time::UNIX_EPOCH)
         .unwrap()
         .as_secs();
-    format!("murmure-{}.wav", ts)
+    format!("hyperyap-{}.wav", ts)
 }
 
 pub fn cleanup_recordings(app: &tauri::AppHandle) -> Result<()> {

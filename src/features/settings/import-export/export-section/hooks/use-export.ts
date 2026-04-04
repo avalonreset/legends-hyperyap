@@ -4,11 +4,11 @@ import { save } from '@tauri-apps/plugin-dialog';
 import { getVersion } from '@tauri-apps/api/app';
 import { toast } from 'react-toastify';
 import { useTranslation } from '@/i18n';
-import { CURRENT_MURMURE_FORMAT_VERSION, SUB_ITEM_KEY } from '../../import-export.constants';
+import { CURRENT_HYPERYAP_FORMAT_VERSION, SUB_ITEM_KEY } from '../../import-export.constants';
 import {
     CategoryKey,
     CategorySelection,
-    MurmureExportData,
+    HyperyapExportData,
     ExportedCategories,
     AppSettings,
 } from '../../import-export.types';
@@ -125,8 +125,8 @@ export const useExport = () => {
 
             await Promise.all(fetchPromises);
 
-            const configFile: MurmureExportData = {
-                version: CURRENT_MURMURE_FORMAT_VERSION,
+            const configFile: HyperyapExportData = {
+                version: CURRENT_HYPERYAP_FORMAT_VERSION,
                 app_version: appVersion,
                 exported_at: new Date().toISOString(),
                 categories,
@@ -139,11 +139,11 @@ export const useExport = () => {
                 title: t('Export Configuration'),
                 filters: [
                     {
-                        name: 'Murmure Config',
-                        extensions: ['murmure'],
+                        name: 'HyperYap Config',
+                        extensions: ['hyperyap'],
                     },
                 ],
-                defaultPath: `murmure-config-${today}.murmure`,
+                defaultPath: `hyperyap-config-${today}.hyperyap`,
             });
 
             if (filePath == null) {
@@ -151,7 +151,7 @@ export const useExport = () => {
                 return;
             }
 
-            await invoke('write_murmure_file', { filePath, content });
+            await invoke('write_hyperyap_file', { filePath, content });
 
             toast.success(t('Configuration exported to {{path}}.', { path: filePath }), { autoClose: 3000 });
         } catch (error) {

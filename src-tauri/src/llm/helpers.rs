@@ -7,7 +7,7 @@ use std::{
 use tauri::{AppHandle, Manager};
 use url::{Host, Url};
 
-const KEYRING_SERVICE: &str = "murmure";
+const KEYRING_SERVICE: &str = "hyperyap";
 const KEYRING_REMOTE_API_KEY: &str = "remote_api_key";
 
 /// Default prompt for the "General" mode when no prompt is configured.

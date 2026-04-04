@@ -21,7 +21,7 @@ pub enum ImportStrategy {
 }
 
 #[derive(Deserialize)]
-pub struct MurmureExportData {
+pub struct HyperyapExportData {
     pub version: u32,
     #[allow(dead_code)]
     pub app_version: String,

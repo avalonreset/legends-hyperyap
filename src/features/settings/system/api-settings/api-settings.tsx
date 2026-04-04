@@ -29,7 +29,7 @@ export const APISettings = () => {
                         <div className="text-xs flex items-center gap-1">
                             <FileCode2 className="w-4 h-4 text-muted-foreground inline-block" />
                             {t('View')}{' '}
-                            <ExternalLink href="https://github.com/Kieirra/murmure/blob/main/docs/API_USAGE.md">
+                            <ExternalLink href="https://github.com/avalonreset/hyperyap/blob/main/docs/API_USAGE.md">
                                 {t('API documentation')}
                             </ExternalLink>
                         </div>

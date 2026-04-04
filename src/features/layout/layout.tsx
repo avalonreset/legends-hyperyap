@@ -19,7 +19,7 @@ export const Layout = () => {
             <SidebarInset
                 className={clsx('bg-background', 'text-white', 'pr-8', 'pt-8', 'flex', 'items-center', 'pl-[16rem]')}
             >
-                <div className="max-w-[800px] w-full pb-12" data-testid="murmure-content">
+                <div className="max-w-[800px] w-full pb-12" data-testid="hyperyap-content">
                     <Outlet />
                 </div>
             </SidebarInset>

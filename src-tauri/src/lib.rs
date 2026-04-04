@@ -232,8 +232,8 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             is_model_available,
             get_model_path,
-            read_murmure_file,
-            write_murmure_file,
+            read_hyperyap_file,
+            write_hyperyap_file,
             get_all_settings,
             set_show_in_dock,
             get_dictionary_with_languages,

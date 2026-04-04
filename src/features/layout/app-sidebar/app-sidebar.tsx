@@ -178,8 +178,8 @@ export const AppSidebar = () => {
                 <a
                     href={
                         version.length > 0
-                            ? `https://github.com/Kieirra/murmure/releases/tag/${version}`
-                            : 'https://github.com/Kieirra/murmure/releases/latest'
+                            ? `https://github.com/avalonreset/hyperyap/releases/tag/${version}`
+                            : 'https://github.com/avalonreset/hyperyap/releases/latest'
                     }
                     target="_blank"
                     rel="noopener noreferrer"
@@ -189,7 +189,7 @@ export const AppSidebar = () => {
                     <span>{t('Release notes')}</span>
                 </a>
                 <a
-                    href="https://github.com/Kieirra/murmure/issues/new"
+                    href="https://github.com/avalonreset/hyperyap/issues/new"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-muted-foreground text-xs hover:text-foreground transition-colors flex items-center gap-2 px-2"

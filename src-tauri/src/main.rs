@@ -10,7 +10,7 @@ fn main() {
         }
     }
 
-    if murmure_lib::cli::try_handle_early_args() {
+    if hyperyap_lib::cli::try_handle_early_args() {
         return;
     }
 
@@ -20,5 +20,5 @@ fn main() {
         std::env::set_var("WEBKIT_DISABLE_DMABUF_RENDERER", "1");
     }
 
-    murmure_lib::run()
+    hyperyap_lib::run()
 }

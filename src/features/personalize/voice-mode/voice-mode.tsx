@@ -70,7 +70,7 @@ export const VoiceMode = () => {
                     </Typography.MainTitle>
                     <Typography.Paragraph className="text-muted-foreground">
                         {t(
-                            'Control Murmure without touching your keyboard. Say a trigger word and let the magic happen.'
+                            'Control HyperYap without touching your keyboard. Say a trigger word and let the magic happen.'
                         )}
                     </Typography.Paragraph>
                 </Page.Header>

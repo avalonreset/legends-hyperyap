@@ -4,7 +4,7 @@ use std::path::Path;
 use log::info;
 use tauri::{AppHandle, Emitter, Manager};
 
-use super::types::{ImportStrategy, MurmureExportData};
+use super::types::{ImportStrategy, HyperyapExportData};
 use crate::dictionary::Dictionary;
 use crate::formatting_rules::types::FormattingSettings;
 use crate::llm::types::LLMConnectSettings;
@@ -15,8 +15,8 @@ const MAX_LLM_MODES: usize = 4;
 fn validate_extension(file_path: &str) -> Result<(), String> {
     let path = Path::new(file_path);
     match path.extension().and_then(|ext| ext.to_str()) {
-        Some("murmure") => Ok(()),
-        _ => Err("Error: File must have a .murmure extension.".to_string()),
+        Some("hyperyap") => Ok(()),
+        _ => Err("Error: File must have a .hyperyap extension.".to_string()),
     }
 }
 
@@ -46,7 +46,7 @@ pub fn execute_import(
         _ => format!("Error: Failed to read file: {}", e),
     })?;
 
-    let data: MurmureExportData =
+    let data: HyperyapExportData =
         serde_json::from_str(&content).map_err(|_| "Error: Invalid file format.".to_string())?;
 
     if data.version > MAX_SUPPORTED_VERSION {
@@ -324,8 +324,8 @@ mod tests {
 
     #[test]
     fn test_validate_extension_valid() {
-        assert!(validate_extension("/tmp/config.murmure").is_ok());
-        assert!(validate_extension("C:\\config\\standard.murmure").is_ok());
+        assert!(validate_extension("/tmp/config.hyperyap").is_ok());
+        assert!(validate_extension("C:\\config\\standard.hyperyap").is_ok());
     }
 
     #[test]
@@ -334,7 +334,7 @@ mod tests {
         assert!(result.is_err());
         assert!(result
             .unwrap_err()
-            .contains("File must have a .murmure extension"));
+            .contains("File must have a .hyperyap extension"));
     }
 
     #[test]

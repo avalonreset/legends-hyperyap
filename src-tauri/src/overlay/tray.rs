@@ -3,7 +3,7 @@ use tauri::tray::{TrayIconBuilder, TrayIconEvent};
 use tauri::{AppHandle, Manager};
 
 pub fn setup_tray(app: &AppHandle) -> Result<(), Box<dyn std::error::Error>> {
-    let show_i = MenuItem::with_id(app, "show", "Open Murmure", true, None::<&str>)?;
+    let show_i = MenuItem::with_id(app, "show", "Open HyperYap", true, None::<&str>)?;
     let quit_i = MenuItem::with_id(app, "quit", "Quit", true, None::<&str>)?;
     let menu = Menu::with_items(app, &[&show_i, &quit_i])?;
 

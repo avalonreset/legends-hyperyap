@@ -25,7 +25,7 @@ export const System = () => {
                 <Page.Header>
                     <Typography.MainTitle data-testid="system-title">{t('System')}</Typography.MainTitle>
                     <Typography.Paragraph className="text-muted-foreground">
-                        {t("Adjust system preferences to control Murmure's behavior at startup and more.")}
+                        {t("Adjust system preferences to control HyperYap's behavior at startup and more.")}
                     </Typography.Paragraph>
                 </Page.Header>
 

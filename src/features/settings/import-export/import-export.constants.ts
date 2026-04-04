@@ -1,7 +1,7 @@
 import { Settings, Keyboard, AlignLeft, Sparkles, BookText } from 'lucide-react';
 import { CategoryDefinition } from './import-export.types';
 
-export const CURRENT_MURMURE_FORMAT_VERSION = 1;
+export const CURRENT_HYPERYAP_FORMAT_VERSION = 1;
 
 export const DICTIONARY_PREVIEW_LIMIT = 15;
 

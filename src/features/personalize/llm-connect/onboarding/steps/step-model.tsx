@@ -245,7 +245,7 @@ export const StepModel = ({
                         {t('Refresh list')}
                     </Button>
                     <p className="text-xs text-muted-foreground">
-                        {t('On a remote server, you cannot install new models from Murmure.')}
+                        {t('On a remote server, you cannot install new models from HyperYap.')}
                     </p>
                 </div>
 

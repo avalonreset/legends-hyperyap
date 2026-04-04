@@ -1,4 +1,4 @@
-name: Release Murmure
+name: Release HyperYap
 on:
     workflow_dispatch:
         inputs:

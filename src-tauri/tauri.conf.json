@@ -1,8 +1,8 @@
 {
     "$schema": "https://schema.tauri.app/config/2",
-    "productName": "murmure",
-    "version": "1.8.1",
-    "identifier": "com.al1x-ai.murmure",
+    "productName": "hyperyap",
+    "version": "1.0.0",
+    "identifier": "com.avalonreset.hyperyap",
     "build": {
         "beforeDevCommand": "pnpm dev",
         "devUrl": "http://localhost:1420",
@@ -12,7 +12,7 @@
     "app": {
         "windows": [
             {
-                "title": "Murmure",
+                "title": "HyperYap",
                 "width": 920,
                 "height": 768,
                 "minWidth": 870,
@@ -57,17 +57,17 @@
     },
     "plugins": {
         "cli": {
-            "description": "Murmure - Privacy-first speech-to-text",
+            "description": "HyperYap - Voice-to-text that just works",
             "subcommands": {
                 "import": {
-                    "description": "Import a .murmure configuration file",
+                    "description": "Import a .hyperyap configuration file",
                     "args": [
                         {
                             "name": "file",
                             "index": 1,
                             "takesValue": true,
                             "required": true,
-                            "description": "Path to the .murmure file to import"
+                            "description": "Path to the .hyperyap file to import"
                         },
                         {
                             "name": "strategy",
@@ -82,7 +82,7 @@
         "updater": {
             "active": true,
             "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDNDRTZFRDczMzY2MzI5NDEKUldSQktXTTJjKzNtUEl6Q2htQ1AvcXlWVzExOG5wYWtLUjFYWVFWUCtnQU9Qb1o3RG03VmwzakkK",
-            "endpoints": ["https://github.com/Kieirra/murmure/releases/latest/download/latest.json"],
+            "endpoints": ["https://github.com/avalonreset/hyperyap/releases/latest/download/latest.json"],
             "windows": {
                 "installMode": "passive"
             }

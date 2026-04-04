@@ -1,7 +1,7 @@
 {
-    "name": "murmure",
+    "name": "hyperyap",
     "private": true,
-    "version": "1.8.1",
+    "version": "1.0.0",
     "type": "module",
     "scripts": {
         "dev": "vite",
@@ -90,6 +90,10 @@
             "minimatch@<4.0.0": "3.1.5",
             "flatted": ">=3.4.0",
             "dompurify": ">=3.3.2"
-        }
+        },
+        "ignoredBuiltDependencies": [
+            "@swc/core",
+            "esbuild"
+        ]
     }
 }

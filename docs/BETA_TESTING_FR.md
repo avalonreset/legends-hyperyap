@@ -1,6 +1,6 @@
-# Guide du Bêta Testeur - Murmure v1.8.0
+# Guide du Bêta Testeur - HyperYap v1.0.0
 
-Merci de participer au programme de bêta testing de Murmure ! Votre contribution est essentielle pour améliorer la qualité de l'application avant sa sortie officielle.
+Merci de participer au programme de bêta testing de HyperYap ! Votre contribution est essentielle pour améliorer la qualité de l'application avant sa sortie officielle.
 
 ---
 
@@ -38,8 +38,8 @@ Testez ce que vous pouvez, pas de pression :
 - [ ] Exporter uniquement certains paramètres (export partiel)
 - [ ] Modifier un paramètre, puis importer le fichier exporté
 - [ ] Vérifier que les paramètres sont restaurés correctement
-- [ ] (Linux/macOS) Tester l'import CLI : `murmure import <fichier>` (#223)
-- [ ] (Windows) Tester l'import CLI : `murmure.exe import <fichier>` (#223)
+- [ ] (Linux/macOS) Tester l'import CLI : `hyperyap import <fichier>` (#223)
+- [ ] (Windows) Tester l'import CLI : `hyperyap.exe import <fichier>` (#223)
 
 ### Raccourcis
 

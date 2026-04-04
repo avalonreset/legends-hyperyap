@@ -1,8 +1,8 @@
-# Contributing to Murmure
+# Contributing to HyperYap
 
 Contributions are welcome!
 
-If you'd like to improve Murmure or just build the sources, you're in the right place.
+If you'd like to improve HyperYap or just build the sources, you're in the right place.
 
 ## 🧭 Development Principles
 
@@ -16,11 +16,11 @@ Our guiding principles:
 - **Simplicity over complexity** : Prefer minimal, understandable solutions instead of over-engineered features.
 - **Small and focused PRs** : Each pull request must address **one single concern**. One bug fix, one feature, one refactor. Keep the diff as minimal as possible: no drive-by cleanups, no unrelated changes. The easier a PR is to review, the faster it gets merged.
 
-> 🧩 _Simple, secure, and maintainable, that's the spirit of Murmure._
+> 🧩 _Simple, secure, and maintainable, that's the spirit of HyperYap._
 
 ## Before You Start
 
-- **New feature or enhancement?** Please [open an issue](https://github.com/Kieirra/murmure/issues) or start a conversation in the [Discussions](https://github.com/Kieirra/murmure/discussions) tab **before writing any code**. This avoids duplicated effort and lets us agree on scope and approach together.
+- **New feature or enhancement?** Please [open an issue](https://github.com/avalonreset/hyperyap/issues) or start a conversation in the [Discussions](https://github.com/avalonreset/hyperyap/discussions) tab **before writing any code**. This avoids duplicated effort and lets us agree on scope and approach together.
 - **Bug fix?** No prior discussion needed, go ahead and open a PR directly.
 
 ## Quick Start
@@ -31,7 +31,7 @@ Our guiding principles:
 - Place the extracted folder into `resources/parakeet-tdt-0.6b-v3-int8`
 - Install all required dependencies for Tauri: [https://v2.tauri.app/start/prerequisites/](https://v2.tauri.app/start/prerequisites/)
 
-### Start Murmure
+### Start HyperYap
 
 ```sh
 pnpm install    # fetch dependencies
@@ -42,7 +42,7 @@ pnpm tauri dev  # Start a Vite dev server on http://127.0.0.1:1420/ + the Deskto
 
 1. **Pick one small feature/issue**
 2. **Create a fresh branch from main** (don't carry over other changes)
-3. **Write the minimum code necessary** that works and respects all Murmure principles
+3. **Write the minimum code necessary** that works and respects all HyperYap principles
 4. **Test it manually** (does it work as expected? Does it look good?)
 5. **Review your own code** (do you understand every line? Is there a simpler way?)
 6. **Run clippy and fmt** to catch Rust issues
@@ -57,7 +57,7 @@ Using AI tools (Claude Code, Copilot, ChatGPT…) is **not discouraged**, they c
 However, as a contributor, you are **fully responsible** for every line of code you submit. This means:
 
 - **Understand every line.** If you can't explain why a piece of code is there and how it works, don't submit it.
-- **Challenge the AI output.** Don't accept generated code at face value, question its choices, simplify where possible, and make sure it follows Murmure's principles and guidelines.
+- **Challenge the AI output.** Don't accept generated code at face value, question its choices, simplify where possible, and make sure it follows HyperYap's principles and guidelines.
 - **Test thoroughly.** AI-generated code must be manually tested just like any hand-written code.
 
 What is **not acceptable**: asking an AI to produce a PR and submitting it as-is without reviewing, testing, or understanding it. Maintainers are not here to review and debug AI-generated code on your behalf. A PR that looks like untested, unchallenged AI output will be closed.
@@ -66,31 +66,31 @@ What is **not acceptable**: asking an AI to produce a PR and submitting it as-is
 
 ## Understanding the Codebase
 
-Murmure consists of two parts:
+HyperYap consists of two parts:
 
 - A desktop app in Rust (using [Tauri](https://tauri.app/)) responsible for
   displaying the frontend, using audio primitives, and instantiating the
   Parakeet model — in the `src-tauri` directory
 - A frontend in React + TypeScript as per Tauri convention — in the `src/` directory
 
-The main flow of Murmure is the following:
+The main flow of HyperYap is the following:
 
 1. User presses the push-to-talk shortcut
-2. Murmure starts recording
+2. HyperYap starts recording
 3. User releases the keys
-4. Murmure writes a .wav file
+4. HyperYap writes a .wav file
 5. Audio is sent to Parakeet for transcription
 6. Parakeet returns the transcription
-7. Murmure saves the current clipboard content
-8. Murmure sets the new transcription to the clipboard
-9. Murmure simulates Ctrl+V to paste the transcription
-10. Murmure restores the original clipboard content
+7. HyperYap saves the current clipboard content
+8. HyperYap sets the new transcription to the clipboard
+9. HyperYap simulates Ctrl+V to paste the transcription
+10. HyperYap restores the original clipboard content
 
-For more, see [the **Tauri** documentation](https://v2.tauri.app/fr/start/), the framework Murmure is written with.
+For more, see [the **Tauri** documentation](https://v2.tauri.app/fr/start/), the framework HyperYap is written with.
 
 ### Frontend
 
-Murmure uses React + TypeScript + Tailwind CSS + shadcn/ui + lucide-react.
+HyperYap uses React + TypeScript + Tailwind CSS + shadcn/ui + lucide-react.
 
 - `src/components/` : Atomic UI primitives and shadcn/ui components
 - `src/features/` : Feature-oriented pages and modules
@@ -101,7 +101,7 @@ Components should be pure and keep markup simple; move logic to custom hooks or 
 
 ### Translations (i18n)
 
-- Murmure uses i18next with English sentences as keys (no technical keys).
+- HyperYap uses i18next with English sentences as keys (no technical keys).
   Punctuation matters; changing the sentence changes the key.
 - Where to translate: `src/i18n/locales/{locale}.json`
 

@@ -10,6 +10,6 @@ jobs:
             - name: Publish to WinGet
               uses: vedantmgoyal9/winget-releaser@4ffc7888bffd451b357355dc214d43bb9f23917e
               with:
-                  identifier: Kieirra.Murmure
+                  identifier: avalonreset.HyperYap
                   installers-regex: '\.(msi|exe)$'
                   token: ${{ secrets.WINGET_TOKEN }}

@@ -745,64 +745,64 @@ mod tests {
 
     #[test]
     fn test_normalize_text_lowercase() {
-        assert_eq!(normalize_text("MURMURE"), "murmure");
+        assert_eq!(normalize_text("HYPERYAP"), "hyperyap");
     }
 
     #[test]
     fn test_normalize_text_accents() {
-        assert_eq!(normalize_text("murmùre"), "murmure");
+        assert_eq!(normalize_text("hypéryap"), "hyperyap");
         assert_eq!(normalize_text("écoute"), "ecoute");
         assert_eq!(normalize_text("café"), "cafe");
     }
 
     #[test]
     fn test_normalize_text_punctuation() {
-        assert_eq!(normalize_text("murmure!"), "murmure");
-        assert_eq!(normalize_text("murmure."), "murmure");
-        assert_eq!(normalize_text("\"murmure\""), "murmure");
+        assert_eq!(normalize_text("hyperyap!"), "hyperyap");
+        assert_eq!(normalize_text("hyperyap."), "hyperyap");
+        assert_eq!(normalize_text("\"hyperyap\""), "hyperyap");
     }
 
     #[test]
     fn test_normalize_text_whitespace() {
-        assert_eq!(normalize_text("  murmure  "), "murmure");
-        assert_eq!(normalize_text("bonjour   murmure"), "bonjour murmure");
+        assert_eq!(normalize_text("  hyperyap  "), "hyperyap");
+        assert_eq!(normalize_text("bonjour   hyperyap"), "bonjour hyperyap");
     }
 
     #[test]
     fn test_normalize_text_combined() {
-        assert_eq!(normalize_text("  Écoute, MURMÙRE!  "), "ecoute murmure");
+        assert_eq!(normalize_text("  Écoute, HYPERYAP!  "), "ecoute hyperyap");
     }
 
     #[test]
     fn test_matches_wake_word_exact_substring() {
-        assert!(matches_wake_word("bonjour murmure comment", "murmure"));
+        assert!(matches_wake_word("bonjour hyperyap comment", "hyperyap"));
     }
 
     #[test]
     fn test_matches_wake_word_exact_word() {
-        assert!(matches_wake_word("murmure", "murmure"));
+        assert!(matches_wake_word("hyperyap", "hyperyap"));
     }
 
     #[test]
     fn test_matches_wake_word_levenshtein_one_char() {
-        // 1 edit distance: "murmur" vs "murmure" (missing 'e')
-        assert!(matches_wake_word("murmur", "murmure"));
-        // 1 edit distance: "murmurre" vs "murmure" (extra 'r')
-        assert!(matches_wake_word("murmurre", "murmure"));
-        // 1 edit distance: "nurmure" vs "murmure" (substitution)
-        assert!(matches_wake_word("nurmure", "murmure"));
+        // 1 edit distance: "hyperya" vs "hyperyap" (missing 'p')
+        assert!(matches_wake_word("hyperya", "hyperyap"));
+        // 1 edit distance: "hyperyapp" vs "hyperyap" (extra 'p')
+        assert!(matches_wake_word("hyperyapp", "hyperyap"));
+        // 1 edit distance: "hyperyab" vs "hyperyap" (substitution)
+        assert!(matches_wake_word("hyperyab", "hyperyap"));
     }
 
     #[test]
     fn test_matches_wake_word_levenshtein_two_chars() {
-        // 2 edit distance for 7-char word (threshold=2): should match
-        assert!(matches_wake_word("mirmur", "murmure"));
+        // 2 edit distance for 8-char word (threshold=2): should match
+        assert!(matches_wake_word("hyperya", "hyperyap"));
     }
 
     #[test]
     fn test_matches_wake_word_too_distant() {
         // 3+ edit distance: should NOT match
-        assert!(!matches_wake_word("miracle", "murmure"));
+        assert!(!matches_wake_word("miracle", "hyperyap"));
     }
 
     #[test]
@@ -818,41 +818,41 @@ mod tests {
     #[test]
     fn test_matches_wake_word_in_sentence() {
         assert!(matches_wake_word(
-            "bonjour nurmure comment ca va",
-            "murmure"
+            "bonjour hyperyab comment ca va",
+            "hyperyap"
         ));
     }
 
     #[test]
     fn test_matches_wake_word_no_match() {
-        assert!(!matches_wake_word("bonjour comment ca va", "murmure"));
+        assert!(!matches_wake_word("bonjour comment ca va", "hyperyap"));
     }
 
     #[test]
     fn test_matches_multi_word_exact() {
-        assert!(matches_wake_word("ok murmure", "ok murmure"));
+        assert!(matches_wake_word("ok hyperyap", "ok hyperyap"));
     }
 
     #[test]
     fn test_matches_multi_word_in_sentence() {
-        assert!(matches_wake_word("bonjour ok murmure merci", "ok murmure"));
+        assert!(matches_wake_word("bonjour ok hyperyap merci", "ok hyperyap"));
     }
 
     #[test]
     fn test_matches_multi_word_fuzzy() {
         // "oc" is 1 edit from "ok" (<=3 chars, threshold=1)
-        // "murmur" is 1 edit from "murmure" (>3 chars, threshold=2)
-        assert!(matches_wake_word("oc murmur", "ok murmure"));
+        // "hyperya" is 1 edit from "hyperyap" (>3 chars, threshold=2)
+        assert!(matches_wake_word("oc hyperya", "ok hyperyap"));
     }
 
     #[test]
     fn test_matches_multi_word_no_match() {
-        assert!(!matches_wake_word("bonjour murmure", "ok murmure"));
+        assert!(!matches_wake_word("bonjour hyperyap", "ok hyperyap"));
     }
 
     #[test]
     fn test_matches_multi_word_too_short() {
-        assert!(!matches_wake_word("ok", "ok murmure"));
+        assert!(!matches_wake_word("ok", "ok hyperyap"));
     }
 
     #[test]

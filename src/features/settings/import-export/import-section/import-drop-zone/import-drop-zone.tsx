@@ -49,11 +49,11 @@ export const ImportDropZone = ({ state, errorMessage, onBrowse, onFileDrop, onTr
                 <div className="flex gap-2">
                     <Page.SecondaryButton onClick={onTryAnother}>{t('Try another file')}</Page.SecondaryButton>
                     <a
-                        href="https://github.com/Kieirra/murmure/releases/latest"
+                        href="https://github.com/avalonreset/hyperyap/releases/latest"
                         target="_blank"
                         rel="noopener noreferrer"
                     >
-                        <Page.PrimaryButton>{t('Update Murmure')}</Page.PrimaryButton>
+                        <Page.PrimaryButton>{t('Update HyperYap')}</Page.PrimaryButton>
                     </a>
                 </div>
             </div>
@@ -94,7 +94,7 @@ export const ImportDropZone = ({ state, errorMessage, onBrowse, onFileDrop, onTr
                 <>
                     <Upload className={clsx('h-8 w-8 text-muted-foreground', isDragging && 'animate-bounce')} />
                     <p className="text-sm text-muted-foreground">
-                        {isDragging ? t('Drop to load configuration') : t('Drag & drop or select a .murmure file')}
+                        {isDragging ? t('Drop to load configuration') : t('Drag & drop or select a .hyperyap file')}
                     </p>
                     <div className={clsx(isDragging && 'invisible')}>
                         <Page.SecondaryButton

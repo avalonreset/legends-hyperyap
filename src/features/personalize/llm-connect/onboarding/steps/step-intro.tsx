@@ -109,7 +109,7 @@ export const StepIntro = ({ onChooseLocal, onChooseRemote }: StepIntroProps) => 
                         </p>
                         <div className="flex items-center gap-2 text-xs text-amber-500/80">
                             <AlertTriangle className="w-5 h-5 flex-shrink-0" />
-                            {t('If using a remote server, Murmure cannot guarantee your data privacy.')}
+                            {t('If using a remote server, HyperYap cannot guarantee your data privacy.')}
                         </div>
                         <div className="flex-1 flex items-center">
                             <Page.SecondaryButton

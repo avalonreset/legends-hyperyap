@@ -3,17 +3,17 @@ import { invoke } from '@tauri-apps/api/core';
 import { open } from '@tauri-apps/plugin-dialog';
 import { toast } from 'react-toastify';
 import { useTranslation } from '@/i18n';
-import { CURRENT_MURMURE_FORMAT_VERSION, CATEGORY_DEFINITIONS } from '../../import-export.constants';
+import { CURRENT_HYPERYAP_FORMAT_VERSION, CATEGORY_DEFINITIONS } from '../../import-export.constants';
 import {
     CategoryKey,
     ImportState,
     ImportStrategy,
-    MurmureExportData,
+    HyperyapExportData,
     ExportedCategories,
 } from '../../import-export.types';
 import { applySingleCategory } from '../import-section.helpers';
 
-const isValidConfigFile = (data: unknown): data is MurmureExportData => {
+const isValidConfigFile = (data: unknown): data is HyperyapExportData => {
     if (typeof data !== 'object' || data == null) {
         return false;
     }
@@ -29,7 +29,7 @@ const isValidConfigFile = (data: unknown): data is MurmureExportData => {
 
 export const useImport = () => {
     const [state, setState] = useState<ImportState>('idle');
-    const [configData, setConfigData] = useState<MurmureExportData | null>(null);
+    const [configData, setConfigData] = useState<HyperyapExportData | null>(null);
     const [fileName, setFileName] = useState('');
     const [errorMessage, setErrorMessage] = useState('');
     const { t } = useTranslation();
@@ -46,13 +46,13 @@ export const useImport = () => {
     const loadFile = async (filePath: string) => {
         try {
             const pathLower = filePath.toLowerCase();
-            if (!pathLower.endsWith('.murmure')) {
+            if (!pathLower.endsWith('.hyperyap')) {
                 setState('file_error');
-                setErrorMessage(t('Invalid file. Please select a valid .murmure file.'));
+                setErrorMessage(t('Invalid file. Please select a valid .hyperyap file.'));
                 return;
             }
 
-            const content = await invoke<string>('read_murmure_file', {
+            const content = await invoke<string>('read_hyperyap_file', {
                 filePath,
             });
 
@@ -61,24 +61,24 @@ export const useImport = () => {
                 parsed = JSON.parse(content);
             } catch {
                 setState('file_error');
-                setErrorMessage(t('Invalid file. Please select a valid .murmure file.'));
+                setErrorMessage(t('Invalid file. Please select a valid .hyperyap file.'));
                 return;
             }
 
             if (!isValidConfigFile(parsed)) {
                 setState('file_error');
-                setErrorMessage(t('Invalid file. Please select a valid .murmure file.'));
+                setErrorMessage(t('Invalid file. Please select a valid .hyperyap file.'));
                 return;
             }
 
-            if (parsed.version > CURRENT_MURMURE_FORMAT_VERSION) {
+            if (parsed.version > CURRENT_HYPERYAP_FORMAT_VERSION) {
                 setState('version_error');
                 setErrorMessage(
                     t(
-                        'This file was created with a newer version of Murmure (v{{fileVersion}}). Your version supports files up to v{{supportedVersion}}.',
+                        'This file was created with a newer version of HyperYap (v{{fileVersion}}). Your version supports files up to v{{supportedVersion}}.',
                         {
                             fileVersion: parsed.version,
-                            supportedVersion: CURRENT_MURMURE_FORMAT_VERSION,
+                            supportedVersion: CURRENT_HYPERYAP_FORMAT_VERSION,
                         }
                     )
                 );
@@ -101,7 +101,7 @@ export const useImport = () => {
             setState('previewing');
         } catch {
             setState('file_error');
-            setErrorMessage(t('Invalid file. Please select a valid .murmure file.'));
+            setErrorMessage(t('Invalid file. Please select a valid .hyperyap file.'));
         }
     };
 
@@ -110,11 +110,11 @@ export const useImport = () => {
             const file = await open({
                 directory: false,
                 multiple: false,
-                title: t('Select a .murmure file'),
+                title: t('Select a .hyperyap file'),
                 filters: [
                     {
-                        name: 'Murmure Config',
-                        extensions: ['murmure'],
+                        name: 'HyperYap Config',
+                        extensions: ['hyperyap'],
                     },
                 ],
             });
@@ -126,7 +126,7 @@ export const useImport = () => {
             await loadFile(file);
         } catch {
             setState('file_error');
-            setErrorMessage(t('Invalid file. Please select a valid .murmure file.'));
+            setErrorMessage(t('Invalid file. Please select a valid .hyperyap file.'));
         }
     };
 

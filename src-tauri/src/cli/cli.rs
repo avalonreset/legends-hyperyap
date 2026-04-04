@@ -25,7 +25,7 @@ pub fn try_handle_early_args() -> bool {
     }
 
     if has_version {
-        println!("murmure {}", VERSION);
+        println!("hyperyap {}", VERSION);
         return true;
     }
 
@@ -35,22 +35,22 @@ pub fn try_handle_early_args() -> bool {
 fn print_help() {
     println!(
         "\
-murmure {}
-Murmure - Privacy-first speech-to-text
+hyperyap {}
+HyperYap - Privacy-first speech-to-text
 
 USAGE:
-    murmure [SUBCOMMAND]
+    hyperyap [SUBCOMMAND]
 
 SUBCOMMANDS:
-    import    Import a .murmure configuration file
+    import    Import a .hyperyap configuration file
 
 OPTIONS:
     -h, --help       Print help information
     -V, --version    Print version information
 
 EXAMPLES:
-    murmure import config.murmure
-    murmure import config.murmure --strategy merge",
+    hyperyap import config.hyperyap
+    hyperyap import config.hyperyap --strategy merge",
         VERSION
     );
 }
@@ -58,23 +58,23 @@ EXAMPLES:
 fn print_import_help() {
     println!(
         "\
-murmure import
-Import a .murmure configuration file
+hyperyap import
+Import a .hyperyap configuration file
 
 USAGE:
-    murmure import <FILE> [OPTIONS]
+    hyperyap import <FILE> [OPTIONS]
 
 ARGS:
-    <FILE>    Path to the .murmure file to import
+    <FILE>    Path to the .hyperyap file to import
 
 OPTIONS:
     -s, --strategy <STRATEGY>    Import strategy: replace (default) or merge
     -h, --help                   Print help information
 
 EXAMPLES:
-    murmure import config.murmure
-    murmure import config.murmure --strategy merge
-    murmure import config.murmure -s replace"
+    hyperyap import config.hyperyap
+    hyperyap import config.hyperyap --strategy merge
+    hyperyap import config.hyperyap -s replace"
     );
 }
 
@@ -174,9 +174,9 @@ mod tests {
     #[test]
     fn test_parse_raw_args_basic_import() {
         let args = vec![
-            "murmure".to_string(),
+            "hyperyap".to_string(),
             "import".to_string(),
-            "/tmp/config.murmure".to_string(),
+            "/tmp/config.hyperyap".to_string(),
         ];
         let result = parse_raw_args(&args);
         assert!(result.is_some());
@@ -185,7 +185,7 @@ mod tests {
                 file_path,
                 strategy,
             } => {
-                assert_eq!(file_path, "/tmp/config.murmure");
+                assert_eq!(file_path, "/tmp/config.hyperyap");
                 assert_eq!(strategy, ImportStrategy::Replace);
             }
         }
@@ -194,9 +194,9 @@ mod tests {
     #[test]
     fn test_parse_raw_args_with_strategy_merge() {
         let args = vec![
-            "murmure".to_string(),
+            "hyperyap".to_string(),
             "import".to_string(),
-            "/tmp/config.murmure".to_string(),
+            "/tmp/config.hyperyap".to_string(),
             "--strategy".to_string(),
             "merge".to_string(),
         ];
@@ -207,7 +207,7 @@ mod tests {
                 file_path,
                 strategy,
             } => {
-                assert_eq!(file_path, "/tmp/config.murmure");
+                assert_eq!(file_path, "/tmp/config.hyperyap");
                 assert_eq!(strategy, ImportStrategy::Merge);
             }
         }
@@ -216,9 +216,9 @@ mod tests {
     #[test]
     fn test_parse_raw_args_with_short_strategy() {
         let args = vec![
-            "murmure".to_string(),
+            "hyperyap".to_string(),
             "import".to_string(),
-            "/tmp/config.murmure".to_string(),
+            "/tmp/config.hyperyap".to_string(),
             "-s".to_string(),
             "replace".to_string(),
         ];
@@ -229,7 +229,7 @@ mod tests {
                 file_path,
                 strategy,
             } => {
-                assert_eq!(file_path, "/tmp/config.murmure");
+                assert_eq!(file_path, "/tmp/config.hyperyap");
                 assert_eq!(strategy, ImportStrategy::Replace);
             }
         }
@@ -237,14 +237,14 @@ mod tests {
 
     #[test]
     fn test_parse_raw_args_no_import() {
-        let args = vec!["murmure".to_string(), "--autostart".to_string()];
+        let args = vec!["hyperyap".to_string(), "--autostart".to_string()];
         let result = parse_raw_args(&args);
         assert!(result.is_none());
     }
 
     #[test]
     fn test_parse_raw_args_import_without_file() {
-        let args = vec!["murmure".to_string(), "import".to_string()];
+        let args = vec!["hyperyap".to_string(), "import".to_string()];
         let result = parse_raw_args(&args);
         assert!(result.is_none());
     }
@@ -252,9 +252,9 @@ mod tests {
     #[test]
     fn test_parse_raw_args_invalid_strategy() {
         let args = vec![
-            "murmure".to_string(),
+            "hyperyap".to_string(),
             "import".to_string(),
-            "/tmp/config.murmure".to_string(),
+            "/tmp/config.hyperyap".to_string(),
             "--strategy".to_string(),
             "foo".to_string(),
         ];
@@ -265,9 +265,9 @@ mod tests {
     #[test]
     fn test_parse_raw_args_strategy_without_value() {
         let args = vec![
-            "murmure".to_string(),
+            "hyperyap".to_string(),
             "import".to_string(),
-            "/tmp/config.murmure".to_string(),
+            "/tmp/config.hyperyap".to_string(),
             "--strategy".to_string(),
         ];
         let result = parse_raw_args(&args);
@@ -277,7 +277,7 @@ mod tests {
     #[test]
     fn test_parse_raw_args_file_starts_with_dash() {
         let args = vec![
-            "murmure".to_string(),
+            "hyperyap".to_string(),
             "import".to_string(),
             "--something".to_string(),
         ];

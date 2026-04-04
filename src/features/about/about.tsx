@@ -40,9 +40,9 @@ const logoVariants = {
 const SUPPORT_LINKS = [
     {
         titleKey: 'Tipeee',
-        descriptionKey: 'Support Murmure with a one-time or recurring tip.',
+        descriptionKey: 'Support HyperYap with a one-time or recurring tip.',
         href: 'https://fr.tipeee.com/murmure-al1x-ai/',
-        ariaLabel: 'Support Murmure on Tipeee',
+        ariaLabel: 'Support HyperYap on Tipeee',
         icon: Heart,
         gradient: 'from-rose-500 via-pink-500 to-fuchsia-500',
         glowColor: 'rgba(244, 63, 94, 0.3)',
@@ -54,8 +54,8 @@ const SUPPORT_LINKS = [
     {
         titleKey: 'GitHub Sponsors',
         descriptionKey: 'Sponsor the development directly on GitHub.',
-        href: 'https://github.com/sponsors/Kieirra',
-        ariaLabel: 'Sponsor Murmure on GitHub',
+        href: 'https://github.com/sponsors/avalonreset',
+        ariaLabel: 'Sponsor HyperYap on GitHub',
         icon: Github,
         gradient: 'from-purple-500 via-violet-500 to-indigo-500',
         glowColor: 'rgba(139, 92, 246, 0.3)',
@@ -86,7 +86,7 @@ export const About = () => {
                     <div className="flex items-center justify-center gap-3">
                         <motion.img
                             src={appIcon}
-                            alt="Murmure"
+                            alt="HyperYap"
                             className="w-14 h-14"
                             style={{
                                 filter: 'drop-shadow(0 0 20px rgba(56, 189, 248, 0.3))',
@@ -99,7 +99,7 @@ export const About = () => {
                                 textShadow: '0 0 30px rgba(14, 165, 233, 0.4)',
                             }}
                         >
-                            <span className="text-sky-400">{t('Murmure')}</span>
+                            <span className="text-sky-400">{t('HyperYap')}</span>
                         </h1>
                     </div>
                     <p className="italic text-sm text-muted-foreground">
@@ -112,10 +112,10 @@ export const About = () => {
                 <motion.div variants={sectionVariants} className="w-full space-y-5">
                     <div className="text-center space-y-3">
                         <h2 className="text-xl font-semibold text-foreground tracking-tight">
-                            {t('Help Murmure Grow')}
+                            {t('Help HyperYap Grow')}
                         </h2>
                         <p className="text-sm text-muted-foreground max-w-sm mx-auto">
-                            {t('Murmure is free and open-source. Your support helps keep it alive and improving.')}
+                            {t('HyperYap is free and open-source. Your support helps keep it alive and improving.')}
                         </p>
                     </div>
                     <div className="grid grid-cols-2 gap-4">
@@ -169,10 +169,10 @@ export const About = () => {
                     <div className="flex justify-center">
                         <Button variant="outline" size="sm" asChild>
                             <a
-                                href="https://github.com/Kieirra/murmure"
+                                href="https://github.com/avalonreset/hyperyap"
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                aria-label="View the Murmure project on GitHub"
+                                aria-label="View the HyperYap project on GitHub"
                             >
                                 <Github />
                                 {t('View on GitHub')}
@@ -200,10 +200,10 @@ export const About = () => {
                         </ExternalLink>
                     </p>
                     <ExternalLink
-                        href="https://www.murmure.app"
+                        href="https://www.hyperyap.app"
                         className="!text-sky-400/70 hover:!text-sky-400 text-xs"
                     >
-                        www.murmure.app
+                        www.hyperyap.app
                     </ExternalLink>
                     <p className="text-xs text-muted-foreground">&copy; {yearDisplay} Al1x-ai. All rights reserved.</p>
                 </motion.div>

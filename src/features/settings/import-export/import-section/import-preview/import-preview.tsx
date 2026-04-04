@@ -6,7 +6,7 @@ import { useTranslation } from '@/i18n';
 import { CategoryTree } from '../../category-tree/category-tree';
 import { MergeReplaceToggle } from '../merge-replace-toggle/merge-replace-toggle';
 import { CATEGORY_DEFINITIONS } from '../../import-export.constants';
-import { CategoryKey, ImportStrategy, MurmureExportData, ExportedCategories } from '../../import-export.types';
+import { CategoryKey, ImportStrategy, HyperyapExportData, ExportedCategories } from '../../import-export.types';
 import {
     buildCategoriesWithDynamic,
     buildFilteredCategories,
@@ -18,7 +18,7 @@ import { FormattingRule } from '@/features/personalize/formatting-rules/types';
 import { LLMMode } from '@/features/personalize/llm-connect/hooks/use-llm-connect';
 
 interface ImportPreviewProps {
-    configData: MurmureExportData;
+    configData: HyperyapExportData;
     fileName: string;
     isImporting: boolean;
     onImport: (

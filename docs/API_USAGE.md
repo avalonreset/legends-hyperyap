@@ -1,21 +1,21 @@
-# Murmure Local HTTP API
+# HyperYap Local HTTP API
 
 ## Overview
 
-The local HTTP API allows other applications to send audio files to Murmure for transcription without using the graphical interface. This is useful for integrating Murmure as a backend Speech-to-Text engine in other applications.
+The local HTTP API allows other applications to send audio files to HyperYap for transcription without using the graphical interface. This is useful for integrating HyperYap as a backend Speech-to-Text engine in other applications.
 
 **Status:** Experimental feature - API design may change in future releases.
 
 ## Quick Start
 
-1. Open Murmure
+1. Open HyperYap
 2. Go to **Settings** → **System**
 3. Find **Local API (Experimental)**
 4. Toggle it **ON**
 5. The API will start immediately on `http://localhost:4800`
 6. (Optional) Change the port number if needed (default: 4800)
 
-The API will remain running as long as Murmure is open. It will stop when you close the application or toggle the API off in settings.
+The API will remain running as long as HyperYap is open. It will stop when you close the application or toggle the API off in settings.
 
 ## API Endpoint
 
@@ -118,14 +118,14 @@ If you get a "Address already in use" error:
 
 ### "Model not available" Error
 
-- Make sure Murmure runs correctly in the UI and that your model files are not corrupted.
-- If the issue persists, reinstall the latest version of Murmure.
+- Make sure HyperYap runs correctly in the UI and that your model files are not corrupted.
+- If the issue persists, reinstall the latest version of HyperYap.
 
 ### No Response from API
 
 - Check that the API toggle is ON in Settings → System
 - Verify the port number matches your request
-- Ensure Murmure is still running
+- Ensure HyperYap is still running
 - Check your firewall isn't blocking localhost access
 
 ### Slow Transcription
@@ -133,7 +133,7 @@ If you get a "Address already in use" error:
 - First request will be slower (model warming up)
 - Subsequent requests should be faster
 - Very long audio files may take time to process
-- Check that Murmure isn't being used for other tasks simultaneously
+- Check that HyperYap isn't being used for other tasks simultaneously
 
 ## Limitations
 
