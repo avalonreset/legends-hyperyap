@@ -120,6 +120,12 @@ pub fn run() {
                 let _ = app.autolaunch().enable();
             }
 
+            // HyperYap: enable autostart by default on first launch
+            if let Ok(false) = app.autolaunch().is_enabled() {
+                let _ = app.autolaunch().enable();
+                info!("Autostart enabled by default (first launch)");
+            }
+
             // Early CLI detection — before heavy initialization
             if let Some(cli::CliCommand::Import {
                 file_path,
