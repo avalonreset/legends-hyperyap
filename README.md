@@ -47,11 +47,11 @@ powershell -ExecutionPolicy Bypass -File install.ps1
 
 ## Requirements
 
-- Windows 10+
+- **Windows 10+** (Windows only)
 - A microphone
 - ~700MB disk space (voice model)
 
-AutoHotkey v2 and BenjaminTerm are installed automatically if not present.
+AutoHotkey v2 and BenjaminTerm are installed automatically if not present. The installer lets you choose which components to install.
 
 ## Build from Source
 

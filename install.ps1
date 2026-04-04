@@ -5,6 +5,7 @@
 #Requires -RunAsAdministrator
 
 param(
+    [switch]$All,
     [switch]$SkipModel,
     [switch]$SkipAHK,
     [switch]$SkipAutostart,
@@ -16,7 +17,7 @@ $ErrorActionPreference = "Stop"
 $repo = "avalonreset/hyperyap"
 $modelUrl = "https://github.com/Kieirra/murmure-model/releases/download/1.0.0/parakeet-tdt-0.6b-v3-int8.zip"
 $ahkInstallerUrl = "https://www.autohotkey.com/download/ahk-v2.exe"
-$appDataDir = "$env:APPDATA\com.al1x-ai.hyperyap"
+$appDataDir = "$env:APPDATA\com.avalonreset.hyperyap"
 $startupDir = "$env:APPDATA\Microsoft\Windows\Start Menu\Programs\Startup"
 $installDir = "$env:LOCALAPPDATA\Programs\HyperYap"
 $btRepo = "avalonreset/BenjaminTerm"
@@ -29,8 +30,36 @@ Write-Host "/_//_/\_, / .__/\__/_/     \____/\_,_/ .__/ " -ForegroundColor Cyan
 Write-Host "     /___/_/                        /_/     " -ForegroundColor Cyan
 Write-Host ""
 Write-Host "  The complete vibe coding system." -ForegroundColor DarkGray
-Write-Host "  Voice-to-text + terminal + hotkeys." -ForegroundColor DarkGray
+Write-Host "  Voice-to-text + terminal + hotkeys. Windows only." -ForegroundColor DarkGray
 Write-Host ""
+
+# -----------------------------------------------------------
+# Interactive component picker
+# -----------------------------------------------------------
+$installVoice = $true
+$installTerminal = -not $SkipTerminal
+$installHotkeys = -not $SkipAHK
+
+if (-not $All -and -not $SkipTerminal -and -not $SkipAHK -and [Environment]::UserInteractive) {
+    Write-Host "  What would you like to install?" -ForegroundColor White
+    Write-Host ""
+    Write-Host "    [1] Everything (recommended)" -ForegroundColor Green
+    Write-Host "    [2] Voice engine only" -ForegroundColor DarkGray
+    Write-Host "    [3] Voice engine + hotkeys (no terminal)" -ForegroundColor DarkGray
+    Write-Host "    [4] Voice engine + terminal (no hotkeys)" -ForegroundColor DarkGray
+    Write-Host ""
+    $choice = Read-Host "  Choice (1-4, default=1)"
+    if ([string]::IsNullOrWhiteSpace($choice)) { $choice = "1" }
+
+    switch ($choice) {
+        "1" { $installVoice = $true; $installTerminal = $true; $installHotkeys = $true }
+        "2" { $installVoice = $true; $installTerminal = $false; $installHotkeys = $false }
+        "3" { $installVoice = $true; $installTerminal = $false; $installHotkeys = $true }
+        "4" { $installVoice = $true; $installTerminal = $true; $installHotkeys = $false }
+        default { $installVoice = $true; $installTerminal = $true; $installHotkeys = $true }
+    }
+    Write-Host ""
+}
 
 # -----------------------------------------------------------
 # 1. Download latest HyperYap release
@@ -68,7 +97,7 @@ try {
 # -----------------------------------------------------------
 # 2. Install BenjaminTerm
 # -----------------------------------------------------------
-if (-not $SkipTerminal) {
+if ($installTerminal) {
     Write-Host "[2/6] Installing BenjaminTerm terminal..." -ForegroundColor Yellow
 
     $btExePaths = @(
@@ -127,7 +156,7 @@ if (-not $SkipTerminal) {
         }
     }
 } else {
-    Write-Host "[2/6] Skipping BenjaminTerm (--SkipTerminal)" -ForegroundColor DarkGray
+    Write-Host "[2/6] Skipping BenjaminTerm." -ForegroundColor DarkGray
 }
 
 # -----------------------------------------------------------
@@ -139,8 +168,8 @@ if (-not $SkipModel) {
     # Find where HyperYap stores resources
     $resourceDirs = @(
         "$installDir\resources",
-        "$env:LOCALAPPDATA\com.al1x-ai.hyperyap\resources",
-        "$env:APPDATA\com.al1x-ai.hyperyap\resources"
+        "$env:LOCALAPPDATA\com.avalonreset.hyperyap\resources",
+        "$env:APPDATA\com.avalonreset.hyperyap\resources"
     )
 
     $targetResourceDir = $resourceDirs | Where-Object { Test-Path (Split-Path $_ -Parent) } | Select-Object -First 1
@@ -169,7 +198,7 @@ if (-not $SkipModel) {
 # -----------------------------------------------------------
 # 4. Install AutoHotkey v2 (if needed)
 # -----------------------------------------------------------
-if (-not $SkipAHK) {
+if ($installHotkeys) {
     Write-Host "[4/6] Checking AutoHotkey v2..." -ForegroundColor Yellow
 
     $ahkExe = Get-Command "AutoHotkey64.exe" -ErrorAction SilentlyContinue
@@ -197,7 +226,7 @@ if (-not $SkipAHK) {
         Write-Host "  AutoHotkey v2 already installed." -ForegroundColor Green
     }
 } else {
-    Write-Host "[4/6] Skipping AutoHotkey install (--SkipAHK)" -ForegroundColor DarkGray
+    Write-Host "[4/6] Skipping AutoHotkey." -ForegroundColor DarkGray
 }
 
 # -----------------------------------------------------------
@@ -242,11 +271,13 @@ if (-not (Test-Path "$appDataDir\llm_connect.json")) {
     Write-Host "  LLM config already exists. Skipping." -ForegroundColor DarkYellow
 }
 
-# Copy AHK scripts to a stable location
+# Copy AHK scripts to a stable location (if hotkeys selected)
 $scriptsInstallDir = "$env:LOCALAPPDATA\HyperYap\scripts"
-New-Item -ItemType Directory -Path $scriptsInstallDir -Force | Out-Null
-Copy-Item "$presetsDir\scripts\*" "$scriptsInstallDir\" -Force
-Write-Host "  Hotkey scripts deployed to $scriptsInstallDir" -ForegroundColor Green
+if ($installHotkeys) {
+    New-Item -ItemType Directory -Path $scriptsInstallDir -Force | Out-Null
+    Copy-Item "$presetsDir\scripts\*" "$scriptsInstallDir\" -Force
+    Write-Host "  Hotkey scripts deployed to $scriptsInstallDir" -ForegroundColor Green
+}
 
 # -----------------------------------------------------------
 # 6. Set up auto-start
@@ -255,18 +286,20 @@ if (-not $SkipAutostart) {
     Write-Host "[6/6] Configuring auto-start..." -ForegroundColor Yellow
 
     # AHK hotkeys → Startup folder
-    $ahkTarget = "$scriptsInstallDir\hyperyap-hotkeys.ahk"
-    $startupLink = "$startupDir\hyperyap-hotkeys.lnk"
-    if (-not (Test-Path $startupLink)) {
-        $shell = New-Object -ComObject WScript.Shell
-        $shortcut = $shell.CreateShortcut($startupLink)
-        $shortcut.TargetPath = $ahkTarget
-        $shortcut.WorkingDirectory = $scriptsInstallDir
-        $shortcut.Description = "HyperYap Hotkeys"
-        $shortcut.Save()
-        Write-Host "  Hotkeys auto-start enabled." -ForegroundColor Green
-    } else {
-        Write-Host "  Hotkeys auto-start already configured." -ForegroundColor Green
+    if ($installHotkeys) {
+        $ahkTarget = "$scriptsInstallDir\hyperyap-hotkeys.ahk"
+        $startupLink = "$startupDir\hyperyap-hotkeys.lnk"
+        if (-not (Test-Path $startupLink)) {
+            $shell = New-Object -ComObject WScript.Shell
+            $shortcut = $shell.CreateShortcut($startupLink)
+            $shortcut.TargetPath = $ahkTarget
+            $shortcut.WorkingDirectory = $scriptsInstallDir
+            $shortcut.Description = "HyperYap Hotkeys"
+            $shortcut.Save()
+            Write-Host "  Hotkeys auto-start enabled." -ForegroundColor Green
+        } else {
+            Write-Host "  Hotkeys auto-start already configured." -ForegroundColor Green
+        }
     }
 
     # HyperYap app auto-start (via Tauri's built-in autostart if available,
@@ -309,10 +342,12 @@ Write-Host "  - Mouse Forward = Enter" -ForegroundColor DarkGray
 Write-Host ""
 
 # Start AHK hotkeys now
-$ahkScript = "$scriptsInstallDir\hyperyap-hotkeys.ahk"
-if (Test-Path $ahkScript) {
-    Write-Host "  Starting hotkeys..." -ForegroundColor DarkGray
-    Start-Process $ahkScript
+if ($installHotkeys) {
+    $ahkScript = "$scriptsInstallDir\hyperyap-hotkeys.ahk"
+    if (Test-Path $ahkScript) {
+        Write-Host "  Starting hotkeys..." -ForegroundColor DarkGray
+        Start-Process $ahkScript
+    }
 }
 
 # Start HyperYap app now
@@ -322,15 +357,17 @@ if ($appExe) {
 }
 
 # Start BenjaminTerm now
-$btExePaths = @(
-    "$env:ProgramFiles\BenjaminTerm\benjaminterm-gui.exe",
-    "$env:LOCALAPPDATA\Programs\BenjaminTerm\benjaminterm-gui.exe",
-    "${env:ProgramFiles(x86)}\BenjaminTerm\benjaminterm-gui.exe"
-)
-$btExe = $btExePaths | Where-Object { Test-Path $_ } | Select-Object -First 1
-if ($btExe) {
-    Write-Host "  Launching BenjaminTerm..." -ForegroundColor DarkGray
-    Start-Process $btExe
+if ($installTerminal) {
+    $btExePaths = @(
+        "$env:ProgramFiles\BenjaminTerm\benjaminterm-gui.exe",
+        "$env:LOCALAPPDATA\Programs\BenjaminTerm\benjaminterm-gui.exe",
+        "${env:ProgramFiles(x86)}\BenjaminTerm\benjaminterm-gui.exe"
+    )
+    $btExe = $btExePaths | Where-Object { Test-Path $_ } | Select-Object -First 1
+    if ($btExe) {
+        Write-Host "  Launching BenjaminTerm..." -ForegroundColor DarkGray
+        Start-Process $btExe
+    }
 }
 
 Write-Host ""
