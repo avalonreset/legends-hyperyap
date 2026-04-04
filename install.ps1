@@ -6,7 +6,7 @@
 
 param(
     [switch]$All,
-    [switch]$Force,
+    [switch]$KeepConfig,
     [switch]$SkipModel,
     [switch]$SkipAHK,
     [switch]$SkipAutostart,
@@ -41,8 +41,8 @@ $installVoice = $true
 $installTerminal = -not $SkipTerminal
 $installHotkeys = -not $SkipAHK
 
-if ($Force) {
-    Write-Host "  --Force mode: will overwrite existing configs and reinstall components." -ForegroundColor Yellow
+if ($KeepConfig) {
+    Write-Host "  --KeepConfig mode: existing configs will be preserved." -ForegroundColor DarkYellow
     Write-Host ""
 }
 
@@ -163,8 +163,8 @@ if ($installTerminal) {
     )
     $btExe = $btExePaths | Where-Object { Test-Path $_ } | Select-Object -First 1
 
-    if ($btExe -and -not $Force) {
-        Write-Host "  BenjaminTerm already installed. Use -Force to reinstall." -ForegroundColor Green
+    if ($btExe -and $KeepConfig) {
+        Write-Host "  BenjaminTerm already installed. Keeping current version." -ForegroundColor Green
     } else {
         try {
             $btReleaseApi = "https://api.github.com/repos/$btRepo/releases"
@@ -313,18 +313,18 @@ if (-not (Test-Path $presetsDir)) {
 # Copy app configs
 New-Item -ItemType Directory -Path $appDataDir -Force | Out-Null
 
-if ($Force -or -not (Test-Path "$appDataDir\settings.json")) {
+if (-not $KeepConfig -or -not (Test-Path "$appDataDir\settings.json")) {
     Copy-Item "$presetsDir\settings.json" "$appDataDir\settings.json" -Force
     Write-Host "  Settings deployed." -ForegroundColor Green
 } else {
-    Write-Host "  Settings already exist. Skipping (use -Force to overwrite)." -ForegroundColor DarkYellow
+    Write-Host "  Settings already exist. Preserving (--KeepConfig)." -ForegroundColor DarkYellow
 }
 
-if ($Force -or -not (Test-Path "$appDataDir\llm_connect.json")) {
+if (-not $KeepConfig -or -not (Test-Path "$appDataDir\llm_connect.json")) {
     Copy-Item "$presetsDir\llm_connect.json" "$appDataDir\llm_connect.json" -Force
     Write-Host "  LLM config deployed." -ForegroundColor Green
 } else {
-    Write-Host "  LLM config already exists. Skipping (use -Force to overwrite)." -ForegroundColor DarkYellow
+    Write-Host "  LLM config already exist. Preserving (--KeepConfig)." -ForegroundColor DarkYellow
 }
 
 # Copy AHK scripts to a stable location (if hotkeys selected)
