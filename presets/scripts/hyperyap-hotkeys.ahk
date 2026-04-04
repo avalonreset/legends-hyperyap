@@ -25,11 +25,12 @@ $^v:: {
             exe := StrLower(WinGetProcessName("A"))
         }
         ; Add your terminal executables here
-        if (exe = "windowsterminal.exe"
+        if (exe = "benjaminterm-gui.exe"
+            || exe = "wezterm-gui.exe"
+            || exe = "windowsterminal.exe"
             || exe = "powershell.exe"
             || exe = "pwsh.exe"
             || exe = "cmd.exe"
-            || exe = "wezterm-gui.exe"
             || exe = "alacritty.exe") {
             scriptDir := A_ScriptDir
             RunWait('powershell.exe -NoProfile -WindowStyle Hidden -ExecutionPolicy Bypass -File "' scriptDir '\clipboard-image-paste.ps1"',, "Hide")

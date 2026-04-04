@@ -1,13 +1,14 @@
 # ============================================================
 # HyperYap Installer
-# One-command setup for HyperYap (speech-to-text) + hotkeys
+# One-command setup: voice-to-text + terminal + hotkeys
 # ============================================================
 #Requires -RunAsAdministrator
 
 param(
     [switch]$SkipModel,
     [switch]$SkipAHK,
-    [switch]$SkipAutostart
+    [switch]$SkipAutostart,
+    [switch]$SkipTerminal
 )
 
 $ErrorActionPreference = "Stop"
@@ -18,6 +19,7 @@ $ahkInstallerUrl = "https://www.autohotkey.com/download/ahk-v2.exe"
 $appDataDir = "$env:APPDATA\com.al1x-ai.hyperyap"
 $startupDir = "$env:APPDATA\Microsoft\Windows\Start Menu\Programs\Startup"
 $installDir = "$env:LOCALAPPDATA\Programs\HyperYap"
+$btRepo = "avalonreset/BenjaminTerm"
 
 Write-Host ""
 Write-Host "  __ __                     __  __          " -ForegroundColor Cyan
@@ -26,13 +28,14 @@ Write-Host "/ _  / // / _ \/ -_) __/  / /_/ / _ '/ _ \ " -ForegroundColor Cyan
 Write-Host "/_//_/\_, / .__/\__/_/     \____/\_,_/ .__/ " -ForegroundColor Cyan
 Write-Host "     /___/_/                        /_/     " -ForegroundColor Cyan
 Write-Host ""
-Write-Host "  Voice-to-text that just works." -ForegroundColor DarkGray
+Write-Host "  The complete vibe coding system." -ForegroundColor DarkGray
+Write-Host "  Voice-to-text + terminal + hotkeys." -ForegroundColor DarkGray
 Write-Host ""
 
 # -----------------------------------------------------------
 # 1. Download latest HyperYap release
 # -----------------------------------------------------------
-Write-Host "[1/5] Downloading latest HyperYap release..." -ForegroundColor Yellow
+Write-Host "[1/6] Downloading latest HyperYap release..." -ForegroundColor Yellow
 
 $releaseApi = "https://api.github.com/repos/$repo/releases/latest"
 try {
@@ -63,10 +66,75 @@ try {
 }
 
 # -----------------------------------------------------------
-# 2. Download Parakeet model
+# 2. Install BenjaminTerm
+# -----------------------------------------------------------
+if (-not $SkipTerminal) {
+    Write-Host "[2/6] Installing BenjaminTerm terminal..." -ForegroundColor Yellow
+
+    $btExePaths = @(
+        "$env:ProgramFiles\BenjaminTerm\benjaminterm-gui.exe",
+        "$env:LOCALAPPDATA\Programs\BenjaminTerm\benjaminterm-gui.exe",
+        "${env:ProgramFiles(x86)}\BenjaminTerm\benjaminterm-gui.exe"
+    )
+    $btExe = $btExePaths | Where-Object { Test-Path $_ } | Select-Object -First 1
+
+    if ($btExe) {
+        Write-Host "  BenjaminTerm already installed." -ForegroundColor Green
+    } else {
+        try {
+            $btReleaseApi = "https://api.github.com/repos/$btRepo/releases"
+            $btReleases = Invoke-RestMethod -Uri $btReleaseApi -Headers @{ "User-Agent" = "HyperYap-Installer" }
+            # Find the first release that has a Setup.exe asset
+            $btSetupAsset = $null
+            foreach ($rel in $btReleases) {
+                $btSetupAsset = $rel.assets | Where-Object { $_.name -match "Setup\.exe$" } | Select-Object -First 1
+                if ($btSetupAsset) { break }
+            }
+            if ($btSetupAsset) {
+                $btInstallerPath = "$env:TEMP\BenjaminTerm-Setup.exe"
+                Write-Host "  Downloading $($btSetupAsset.name)..." -ForegroundColor DarkGray
+                Invoke-WebRequest -Uri $btSetupAsset.browser_download_url -OutFile $btInstallerPath -UseBasicParsing
+                Write-Host "  Running installer..." -ForegroundColor DarkGray
+                Start-Process $btInstallerPath -ArgumentList "/S" -Wait
+                Remove-Item $btInstallerPath -Force -ErrorAction SilentlyContinue
+                Write-Host "  BenjaminTerm installed." -ForegroundColor Green
+            } else {
+                # Fall back to portable zip
+                $btZipAsset = $null
+                foreach ($rel in $btReleases) {
+                    $btZipAsset = $rel.assets | Where-Object { $_.name -match "windows.*\.zip$" -and $_.name -notmatch "sha256" } | Select-Object -First 1
+                    if ($btZipAsset) { break }
+                }
+                if ($btZipAsset) {
+                    $btZipPath = "$env:TEMP\BenjaminTerm.zip"
+                    $btInstallDir = "$env:LOCALAPPDATA\Programs\BenjaminTerm"
+                    Write-Host "  Downloading $($btZipAsset.name) (portable)..." -ForegroundColor DarkGray
+                    Invoke-WebRequest -Uri $btZipAsset.browser_download_url -OutFile $btZipPath -UseBasicParsing
+                    Write-Host "  Extracting..." -ForegroundColor DarkGray
+                    New-Item -ItemType Directory -Path $btInstallDir -Force | Out-Null
+                    Expand-Archive -Path $btZipPath -DestinationPath $btInstallDir -Force
+                    Remove-Item $btZipPath -Force
+                    Write-Host "  BenjaminTerm installed (portable) to $btInstallDir" -ForegroundColor Green
+                } else {
+                    Write-Host "  No BenjaminTerm installer found. Install manually from:" -ForegroundColor DarkYellow
+                    Write-Host "  https://github.com/$btRepo/releases" -ForegroundColor DarkGray
+                }
+            }
+        } catch {
+            Write-Host "  Could not fetch BenjaminTerm release." -ForegroundColor DarkYellow
+            Write-Host "  Error: $_" -ForegroundColor DarkGray
+            Write-Host "  Install manually: https://github.com/$btRepo/releases" -ForegroundColor DarkGray
+        }
+    }
+} else {
+    Write-Host "[2/6] Skipping BenjaminTerm (--SkipTerminal)" -ForegroundColor DarkGray
+}
+
+# -----------------------------------------------------------
+# 3. Download Parakeet model
 # -----------------------------------------------------------
 if (-not $SkipModel) {
-    Write-Host "[2/5] Downloading speech recognition model (~440MB)..." -ForegroundColor Yellow
+    Write-Host "[3/6] Downloading speech recognition model (~440MB)..." -ForegroundColor Yellow
 
     # Find where HyperYap stores resources
     $resourceDirs = @(
@@ -95,14 +163,14 @@ if (-not $SkipModel) {
         Write-Host "  Model installed to $targetResourceDir" -ForegroundColor Green
     }
 } else {
-    Write-Host "[2/5] Skipping model download (--SkipModel)" -ForegroundColor DarkGray
+    Write-Host "[3/6] Skipping model download (--SkipModel)" -ForegroundColor DarkGray
 }
 
 # -----------------------------------------------------------
-# 3. Install AutoHotkey v2 (if needed)
+# 4. Install AutoHotkey v2 (if needed)
 # -----------------------------------------------------------
 if (-not $SkipAHK) {
-    Write-Host "[3/5] Checking AutoHotkey v2..." -ForegroundColor Yellow
+    Write-Host "[4/6] Checking AutoHotkey v2..." -ForegroundColor Yellow
 
     $ahkExe = Get-Command "AutoHotkey64.exe" -ErrorAction SilentlyContinue
     if (-not $ahkExe) {
@@ -129,13 +197,13 @@ if (-not $SkipAHK) {
         Write-Host "  AutoHotkey v2 already installed." -ForegroundColor Green
     }
 } else {
-    Write-Host "[3/5] Skipping AutoHotkey install (--SkipAHK)" -ForegroundColor DarkGray
+    Write-Host "[4/6] Skipping AutoHotkey install (--SkipAHK)" -ForegroundColor DarkGray
 }
 
 # -----------------------------------------------------------
-# 4. Deploy preset configs
+# 5. Deploy preset configs
 # -----------------------------------------------------------
-Write-Host "[4/5] Deploying HyperYap configs..." -ForegroundColor Yellow
+Write-Host "[5/6] Deploying HyperYap configs..." -ForegroundColor Yellow
 
 # Find presets (either from repo clone or bundled with installer)
 $scriptRoot = $PSScriptRoot
@@ -181,10 +249,10 @@ Copy-Item "$presetsDir\scripts\*" "$scriptsInstallDir\" -Force
 Write-Host "  Hotkey scripts deployed to $scriptsInstallDir" -ForegroundColor Green
 
 # -----------------------------------------------------------
-# 5. Set up auto-start
+# 6. Set up auto-start
 # -----------------------------------------------------------
 if (-not $SkipAutostart) {
-    Write-Host "[5/5] Configuring auto-start..." -ForegroundColor Yellow
+    Write-Host "[6/6] Configuring auto-start..." -ForegroundColor Yellow
 
     # AHK hotkeys → Startup folder
     $ahkTarget = "$scriptsInstallDir\hyperyap-hotkeys.ahk"
@@ -226,7 +294,7 @@ if (-not $SkipAutostart) {
         Write-Host "  HyperYap executable not found. Auto-start will be handled by the app's built-in setting." -ForegroundColor DarkYellow
     }
 } else {
-    Write-Host "[5/5] Skipping auto-start (--SkipAutostart)" -ForegroundColor DarkGray
+    Write-Host "[6/6] Skipping auto-start (--SkipAutostart)" -ForegroundColor DarkGray
 }
 
 # -----------------------------------------------------------
@@ -251,6 +319,18 @@ if (Test-Path $ahkScript) {
 if ($appExe) {
     Write-Host "  Launching HyperYap..." -ForegroundColor DarkGray
     Start-Process $appExe
+}
+
+# Start BenjaminTerm now
+$btExePaths = @(
+    "$env:ProgramFiles\BenjaminTerm\benjaminterm-gui.exe",
+    "$env:LOCALAPPDATA\Programs\BenjaminTerm\benjaminterm-gui.exe",
+    "${env:ProgramFiles(x86)}\BenjaminTerm\benjaminterm-gui.exe"
+)
+$btExe = $btExePaths | Where-Object { Test-Path $_ } | Select-Object -First 1
+if ($btExe) {
+    Write-Host "  Launching BenjaminTerm..." -ForegroundColor DarkGray
+    Start-Process $btExe
 }
 
 Write-Host ""

@@ -1,10 +1,13 @@
 # HyperYap
 
-Voice-to-text that just works. Clone it, install it, yap away.
+The complete vibe coding system. Voice-to-text, hacker terminal, and hotkeys — one install, zero config.
 
-HyperYap is a preconfigured, grab-and-go speech-to-text package built on [MURmure](https://github.com/Kieirra/murmure). It bundles NVIDIA's [Parakeet TDT 0.6B v3](https://huggingface.co/nvidia/parakeet-tdt-0.6b-v3) model for fast, fully local transcription — no internet, no cloud, no data collection.
+HyperYap bundles three tools into a single grab-and-go package:
+- **Voice engine** — local speech-to-text powered by NVIDIA [Parakeet TDT 0.6B v3](https://huggingface.co/nvidia/parakeet-tdt-0.6b-v3) (built on [MURmure](https://github.com/Kieirra/murmure))
+- **[BenjaminTerm](https://github.com/avalonreset/BenjaminTerm)** — hacker-styled WezTerm terminal with smart clipboard, 86 dark themes, and borderless mode
+- **Hotkey scripts** — mouse button mapping, CapsLock remapping, smart paste for terminals
 
-Everything is preset: hotkeys, toggle-to-talk, mouse button mapping, auto-boot. Install once, use everywhere.
+No internet required for transcription. No cloud. No data collection. Install once, use everywhere.
 
 ## One-Line Install
 
@@ -24,9 +27,10 @@ powershell -ExecutionPolicy Bypass -File install.ps1
 
 | Component | What It Does |
 |-----------|-------------|
-| **HyperYap app** | Local speech-to-text powered by Parakeet TDT 0.6B (NVIDIA) |
+| **HyperYap voice engine** | Local speech-to-text powered by Parakeet TDT 0.6B (NVIDIA) |
+| **BenjaminTerm** | Hacker-styled WezTerm terminal — smart clipboard, theme cycling, borderless mode |
 | **Hotkey scripts** | Mouse side buttons → F13 (record), CapsLock → F13, Mouse Forward → Enter |
-| **Smart paste** | Ctrl+V in terminals auto-saves clipboard images as PNGs |
+| **Smart paste** | Ctrl+V in BenjaminTerm auto-saves clipboard images as PNGs |
 | **Auto-boot** | Everything starts on login. No setup after reboot. |
 | **Preset configs** | Toggle-to-talk, English, overlay on bottom, all shortcuts pre-mapped |
 
@@ -45,9 +49,9 @@ powershell -ExecutionPolicy Bypass -File install.ps1
 
 - Windows 10+
 - A microphone
-- ~700MB disk space (model)
+- ~700MB disk space (voice model)
 
-AutoHotkey v2 is installed automatically if not present.
+AutoHotkey v2 and BenjaminTerm are installed automatically if not present.
 
 ## Build from Source
 
@@ -63,8 +67,10 @@ Download the [Parakeet model](https://github.com/Kieirra/murmure-model/releases/
 
 ## Attribution
 
-HyperYap is a modified version of [MURmure](https://github.com/Kieirra/murmure) by [Kieirra](https://github.com/Kieirra). Full credit to the original author for building an excellent local speech-to-text application.
+HyperYap's voice engine is a modified version of [MURmure](https://github.com/Kieirra/murmure) by [Kieirra](https://github.com/Kieirra). Full credit to the original author for building an excellent local speech-to-text application.
 
-This project is licensed under **AGPL-3.0**, the same license as the original. See [LICENSE](LICENSE) and [NOTICE](NOTICE) for details.
+[BenjaminTerm](https://github.com/avalonreset/BenjaminTerm) is a custom distribution of [WezTerm](https://github.com/wezterm/wezterm) by Wez Furlong.
+
+The voice engine is licensed under **AGPL-3.0**. BenjaminTerm is licensed under **MIT**. See [LICENSE](LICENSE) and [NOTICE](NOTICE) for details.
 
 Powered by NVIDIA's [Parakeet TDT 0.6B v3](https://huggingface.co/nvidia/parakeet-tdt-0.6b-v3) speech recognition model.
