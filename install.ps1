@@ -90,27 +90,50 @@ if ($murmureUninstall) {
 # -----------------------------------------------------------
 Write-Host "[1/5] Installing HyperYap voice engine..." -ForegroundColor Yellow
 
+# Kill any running HyperYap before installing
+Get-Process -Name "hyperyap", "HyperYap" -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue
+Start-Sleep -Seconds 1
+
+# Silently uninstall previous HyperYap if present (clean upgrade)
+$hyperyapUninstall = Get-ItemProperty "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\*",
+    "HKLM:\SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\*",
+    "HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\*" -ErrorAction SilentlyContinue |
+    Where-Object { $_.DisplayName -match "hyperyap" -or $_.DisplayName -match "HyperYap" } |
+    Select-Object -First 1
+
+if ($hyperyapUninstall) {
+    Write-Host "  Removing previous HyperYap install..." -ForegroundColor DarkGray
+    $uninstallStr = $hyperyapUninstall.UninstallString
+    if ($uninstallStr) {
+        if ($uninstallStr -match "msiexec") {
+            $productCode = $hyperyapUninstall.PSChildName
+            Start-Process msiexec.exe -ArgumentList "/x $productCode /quiet /norestart" -Wait -ErrorAction SilentlyContinue
+        } else {
+            Start-Process cmd.exe -ArgumentList "/c `"$uninstallStr`" /S" -Wait -ErrorAction SilentlyContinue
+        }
+    }
+    Write-Host "  Previous version removed." -ForegroundColor DarkGray
+}
+
 try {
     $releaseApi = "https://api.github.com/repos/$repo/releases/latest"
     $release = Invoke-RestMethod -Uri $releaseApi -Headers @{ "User-Agent" = "HyperYap-Installer" }
-    # Prefer NSIS exe over MSI - exe handles running processes and upgrades better
-    $msiAsset = $release.assets | Where-Object { $_.name -match "setup\.exe$" -and $_.name -match "x64" } | Select-Object -First 1
-    if (-not $msiAsset) {
-        $msiAsset = $release.assets | Where-Object { $_.name -match "\.(msi|exe)$" -and $_.name -match "x64" } | Select-Object -First 1
+    # Always use the NSIS exe installer (not MSI). NSIS handles upgrades and running processes properly.
+    $setupAsset = $release.assets | Where-Object { $_.name -match "setup\.exe$" } | Select-Object -First 1
+    if (-not $setupAsset) {
+        $setupAsset = $release.assets | Where-Object { $_.name -match "\.(exe|msi)$" } | Select-Object -First 1
     }
-    if (-not $msiAsset) {
-        $msiAsset = $release.assets | Where-Object { $_.name -match "\.(msi|exe)$" } | Select-Object -First 1
-    }
-    if ($msiAsset) {
-        $installerPath = "$env:TEMP\hyperyap-installer$([System.IO.Path]::GetExtension($msiAsset.name))"
-        Write-Host "  Downloading $($msiAsset.name)..." -ForegroundColor DarkGray
-        Invoke-WebRequest -Uri $msiAsset.browser_download_url -OutFile $installerPath -UseBasicParsing
+    if ($setupAsset) {
+        $installerPath = "$env:TEMP\hyperyap-installer$([System.IO.Path]::GetExtension($setupAsset.name))"
+        Write-Host "  Downloading $($setupAsset.name)..." -ForegroundColor DarkGray
+        Invoke-WebRequest -Uri $setupAsset.browser_download_url -OutFile $installerPath -UseBasicParsing
         Write-Host "  Running installer..." -ForegroundColor DarkGray
         if ($installerPath -match "\.msi$") {
             Start-Process msiexec.exe -ArgumentList "/i `"$installerPath`" /quiet /norestart" -Wait
         } else {
             Start-Process $installerPath -ArgumentList "/S" -Wait
         }
+        Remove-Item $installerPath -Force -ErrorAction SilentlyContinue
         Write-Host "  HyperYap installed." -ForegroundColor Green
     } else {
         Write-Host "  No release found yet. Build from source with: pnpm tauri build" -ForegroundColor DarkYellow
