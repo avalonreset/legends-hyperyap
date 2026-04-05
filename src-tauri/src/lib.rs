@@ -48,63 +48,55 @@ fn deploy_hotkey_scripts(app: &tauri::AppHandle) {
     let scripts_dir = local_app_data.join("HyperYap").join("scripts");
     let _ = fs::create_dir_all(&scripts_dir);
 
-    let target_ahk = scripts_dir.join("hyperyap-hotkeys.ahk");
-
-    // Find bundled scripts. Tauri NSIS puts ../presets/scripts/* into _up_/presets/scripts/
-    // relative to the exe. Also check Tauri resource resolver paths as fallback.
-    let mut search_dirs: Vec<PathBuf> = Vec::new();
-
-    // Primary: relative to the exe (most reliable for installed apps)
+    // Find bundled scripts directory (Tauri NSIS puts them at _up_/presets/scripts/ relative to exe)
+    let mut bundle_dir: Option<PathBuf> = None;
     if let Ok(exe_path) = std::env::current_exe() {
         if let Some(exe_dir) = exe_path.parent() {
-            search_dirs.push(exe_dir.join("_up_").join("presets").join("scripts"));
-            search_dirs.push(exe_dir.join("presets").join("scripts"));
+            let candidate = exe_dir.join("_up_").join("presets").join("scripts");
+            if candidate.join("hyperyap-hotkeys.ahk").exists() {
+                bundle_dir = Some(candidate);
+            }
         }
     }
 
     // Fallback: Tauri resource resolver
-    if let Ok(p) = app.path().resolve("../presets/scripts", tauri::path::BaseDirectory::Resource) {
-        search_dirs.push(p);
-    }
-    if let Ok(p) = app.path().resolve("presets/scripts", tauri::path::BaseDirectory::Resource) {
-        search_dirs.push(p);
-    }
-
-    let mut deployed = false;
-    for dir in &search_dirs {
-        let source_ahk = dir.join("hyperyap-hotkeys.ahk");
-        if source_ahk.exists() {
-            if let Ok(_) = fs::copy(&source_ahk, &target_ahk) {
-                info!("Deployed hotkey script from {} to {}", source_ahk.display(), target_ahk.display());
-                deployed = true;
+    if bundle_dir.is_none() {
+        for prefix in &["../presets/scripts", "presets/scripts"] {
+            if let Ok(p) = app.path().resolve(prefix, tauri::path::BaseDirectory::Resource) {
+                if p.join("hyperyap-hotkeys.ahk").exists() {
+                    bundle_dir = Some(p);
+                    break;
+                }
             }
-            let ps1_source = dir.join("clipboard-image-paste.ps1");
-            if ps1_source.exists() {
-                let _ = fs::copy(&ps1_source, scripts_dir.join("clipboard-image-paste.ps1"));
-            }
-            break;
         }
     }
 
-    if !deployed {
-        // Scripts not found in bundle, but we should still try to install AHK and set up
-        // whatever scripts may already be in the target directory from a previous install
-        if !target_ahk.exists() {
-            info!("Hotkey scripts not found in bundle or target directory, skipping");
+    let bundle_dir = match bundle_dir {
+        Some(d) => d,
+        None => {
+            info!("Bundled hotkey scripts not found, skipping deployment");
             return;
         }
-        info!("Using previously deployed hotkey scripts at {}", target_ahk.display());
-    }
+    };
 
-    // Create startup shortcut
+    // Deploy scripts to scripts_dir
+    for filename in &["hyperyap-hotkeys.ahk", "clipboard-image-paste.ps1"] {
+        let source = bundle_dir.join(filename);
+        if source.exists() {
+            let _ = fs::copy(&source, scripts_dir.join(filename));
+        }
+    }
+    info!("Deployed hotkey scripts to {}", scripts_dir.display());
+
+    let target_ahk = scripts_dir.join("hyperyap-hotkeys.ahk");
+
+    // Remove old murmure startup entries
     let app_data = match std::env::var("APPDATA") {
         Ok(v) => PathBuf::from(v),
         Err(_) => return,
     };
-    let startup_dir = app_data.join("Microsoft").join("Windows").join("Start Menu").join("Programs").join("Startup");
-    let startup_link = startup_dir.join("hyperyap-hotkeys.lnk");
-
-    // Remove old murmure startup entries
+    let startup_dir = app_data.join("Microsoft").join("Windows").join("Start Menu")
+        .join("Programs").join("Startup");
     for old_name in &["murmure-hotkeys.ahk", "murmure-hotkeys.lnk", "Murmure.lnk", "murmure.lnk"] {
         let old_path = startup_dir.join(old_name);
         if old_path.exists() {
@@ -113,79 +105,110 @@ fn deploy_hotkey_scripts(app: &tauri::AppHandle) {
         }
     }
 
-    // Find AutoHotkey exe
+    // Find AutoHotkey exe (check system install)
     let program_files = std::env::var("ProgramFiles").unwrap_or_default();
-    let ahk_paths = vec![
+    let ahk_search = vec![
         PathBuf::from(&program_files).join("AutoHotkey").join("v2").join("AutoHotkey64.exe"),
         PathBuf::from(&program_files).join("AutoHotkey").join("v2").join("AutoHotkey32.exe"),
         PathBuf::from(std::env::var("ProgramFiles(x86)").unwrap_or_default())
             .join("AutoHotkey").join("v2").join("AutoHotkey64.exe"),
     ];
-    let ahk_exe = ahk_paths.iter().find(|p| p.exists()).cloned();
+    let mut ahk_exe = ahk_search.iter().find(|p| p.exists()).cloned();
 
-    if let Some(ref ahk) = ahk_exe {
-        // AHK is installed. Create startup shortcut targeting AHK exe with script as argument.
-        let ps_cmd = format!(
-            "$s=(New-Object -ComObject WScript.Shell).CreateShortcut('{link}');\
-            $s.TargetPath='{ahk}';\
-            $s.Arguments='{script}';\
-            $s.WorkingDirectory='{workdir}';\
-            $s.Description='HyperYap Hotkeys';\
-            $s.Save()",
-            link = startup_link.display(),
-            ahk = ahk.display(),
-            script = target_ahk.display(),
-            workdir = scripts_dir.display()
-        );
-        let _ = std::process::Command::new("powershell")
-            .args(["-NoProfile", "-Command", &ps_cmd])
-            .creation_flags(0x08000000)
-            .status();
-        info!("Created startup shortcut: {} -> {}", startup_link.display(), ahk.display());
-
-        // Launch now if not already running
-        let _ = std::process::Command::new(ahk)
-            .arg(&target_ahk)
-            .creation_flags(0x08000000)
-            .spawn();
-        info!("Launched hotkey script with {}", ahk.display());
-    } else {
-        // AHK not installed. Write a temp PowerShell script to install it, create shortcut, and launch.
-        info!("AutoHotkey v2 not found, installing...");
-        let ahk64_path = PathBuf::from(&program_files)
-            .join("AutoHotkey").join("v2").join("AutoHotkey64.exe");
-        let ahk32_path = PathBuf::from(&program_files)
-            .join("AutoHotkey").join("v2").join("AutoHotkey32.exe");
-        let ps_script_path = std::env::temp_dir().join("hyperyap-install-ahk.ps1");
-        let script_content = "$ErrorActionPreference = 'Stop'\n\
-            $installer = \"$env:TEMP\\ahk-v2-setup.exe\"\n\
-            Invoke-WebRequest -Uri 'https://www.autohotkey.com/download/ahk-v2.exe' -OutFile $installer -UseBasicParsing\n\
-            Start-Process $installer -ArgumentList '/silent' -Wait\n\
-            Remove-Item $installer -Force -ErrorAction SilentlyContinue\n\
-            $ahk = $null\n"
-            .to_string()
-            + &format!("if (Test-Path '{}') {{ $ahk = '{}' }}\n", ahk64_path.display(), ahk64_path.display())
-            + &format!("elseif (Test-Path '{}') {{ $ahk = '{}' }}\n", ahk32_path.display(), ahk32_path.display())
-            + "if ($ahk) {\n"
-            + &format!("    $s = (New-Object -ComObject WScript.Shell).CreateShortcut('{}')\n", startup_link.display())
-            + "    $s.TargetPath = $ahk\n"
-            + &format!("    $s.Arguments = '{}'\n", target_ahk.display())
-            + &format!("    $s.WorkingDirectory = '{}'\n", scripts_dir.display())
-            + "    $s.Description = 'HyperYap Hotkeys'\n"
-            + "    $s.Save()\n"
-            + &format!("    Start-Process $ahk '{}'\n", target_ahk.display())
-            + "}\n"
-            + &format!("Remove-Item '{}' -Force -ErrorAction SilentlyContinue\n", ps_script_path.display());
-
-        if let Ok(_) = fs::write(&ps_script_path, &script_content) {
-            let _ = std::process::Command::new("powershell")
-                .args(["-NoProfile", "-ExecutionPolicy", "Bypass", "-File",
-                    &ps_script_path.to_string_lossy()])
+    // If AHK not installed, download and run the installer (shows GUI + UAC prompt)
+    if ahk_exe.is_none() {
+        info!("AutoHotkey v2 not found. Downloading and launching installer...");
+        let ahk_installer = std::env::temp_dir().join("ahk-v2-setup.exe");
+        // Download and run in a blocking thread so the script launches after install completes
+        let ahk_installer_clone = ahk_installer.clone();
+        let ahk_search_clone = ahk_search.clone();
+        let target_ahk_clone = target_ahk.clone();
+        let startup_link = startup_dir.join("hyperyap-hotkeys.lnk");
+        let scripts_dir_clone = scripts_dir.clone();
+        std::thread::spawn(move || {
+            // Download AHK installer
+            let dl_result = std::process::Command::new("powershell")
+                .args(["-NoProfile", "-ExecutionPolicy", "Bypass", "-Command",
+                    &format!("Invoke-WebRequest -Uri 'https://www.autohotkey.com/download/ahk-v2.exe' -OutFile '{}' -UseBasicParsing",
+                        ahk_installer_clone.display())])
                 .creation_flags(0x08000000)
-                .spawn();
-            info!("AutoHotkey install script launched: {}", ps_script_path.display());
-        }
+                .status();
+
+            if dl_result.is_err() || !ahk_installer_clone.exists() {
+                error!("Failed to download AutoHotkey installer");
+                return;
+            }
+
+            // Run installer with GUI (user sees it, approves UAC)
+            info!("Launching AutoHotkey v2 installer...");
+            let _ = std::process::Command::new(&ahk_installer_clone)
+                .status(); // Blocking - waits for install to complete
+
+            // Clean up installer
+            let _ = std::fs::remove_file(&ahk_installer_clone);
+
+            // Find the newly installed AHK exe
+            let new_ahk = ahk_search_clone.iter().find(|p| p.exists());
+            if let Some(ahk) = new_ahk {
+                info!("AutoHotkey installed at {}", ahk.display());
+
+                // Create startup shortcut
+                let ps_cmd = format!(
+                    "$s=(New-Object -ComObject WScript.Shell).CreateShortcut('{link}');\
+                    $s.TargetPath='{ahk}';\
+                    $s.Arguments='{script}';\
+                    $s.WorkingDirectory='{workdir}';\
+                    $s.Description='HyperYap Hotkeys';\
+                    $s.Save()",
+                    link = startup_link.display(),
+                    ahk = ahk.display(),
+                    script = target_ahk_clone.display(),
+                    workdir = scripts_dir_clone.display()
+                );
+                let _ = std::process::Command::new("powershell")
+                    .args(["-NoProfile", "-Command", &ps_cmd])
+                    .creation_flags(0x08000000)
+                    .status();
+
+                // Launch hotkeys
+                let _ = std::process::Command::new(ahk)
+                    .arg(&target_ahk_clone)
+                    .creation_flags(0x08000000)
+                    .spawn();
+                info!("Hotkey script launched after AHK install");
+            } else {
+                error!("AutoHotkey install completed but exe not found");
+            }
+        });
+        return;
     }
+
+    // AHK is installed. Create startup shortcut and launch.
+    let ahk_exe = ahk_exe.unwrap();
+    let startup_link = startup_dir.join("hyperyap-hotkeys.lnk");
+    let ps_cmd = format!(
+        "$s=(New-Object -ComObject WScript.Shell).CreateShortcut('{link}');\
+        $s.TargetPath='{ahk}';\
+        $s.Arguments='{script}';\
+        $s.WorkingDirectory='{workdir}';\
+        $s.Description='HyperYap Hotkeys';\
+        $s.Save()",
+        link = startup_link.display(),
+        ahk = ahk_exe.display(),
+        script = target_ahk.display(),
+        workdir = scripts_dir.display()
+    );
+    let _ = std::process::Command::new("powershell")
+        .args(["-NoProfile", "-Command", &ps_cmd])
+        .creation_flags(0x08000000)
+        .status();
+    info!("Created startup shortcut: {}", startup_link.display());
+
+    let _ = std::process::Command::new(&ahk_exe)
+        .arg(&target_ahk)
+        .creation_flags(0x08000000)
+        .spawn();
+    info!("Launched hotkey script with {}", ahk_exe.display());
 }
 
 fn show_main_window(app: &tauri::AppHandle) {
