@@ -50,40 +50,50 @@ fn deploy_hotkey_scripts(app: &tauri::AppHandle) {
 
     let target_ahk = scripts_dir.join("hyperyap-hotkeys.ahk");
 
-    // Always deploy scripts (overwrite with latest version)
-    let search_paths: Vec<PathBuf> = vec![
-        app.path()
-            .resolve("../presets/scripts/hyperyap-hotkeys.ahk", tauri::path::BaseDirectory::Resource)
-            .ok(),
-        app.path()
-            .resolve("presets/scripts/hyperyap-hotkeys.ahk", tauri::path::BaseDirectory::Resource)
-            .ok(),
-    ]
-    .into_iter()
-    .flatten()
-    .collect();
+    // Find bundled scripts. Tauri NSIS puts ../presets/scripts/* into _up_/presets/scripts/
+    // relative to the exe. Also check Tauri resource resolver paths as fallback.
+    let mut search_dirs: Vec<PathBuf> = Vec::new();
+
+    // Primary: relative to the exe (most reliable for installed apps)
+    if let Ok(exe_path) = std::env::current_exe() {
+        if let Some(exe_dir) = exe_path.parent() {
+            search_dirs.push(exe_dir.join("_up_").join("presets").join("scripts"));
+            search_dirs.push(exe_dir.join("presets").join("scripts"));
+        }
+    }
+
+    // Fallback: Tauri resource resolver
+    if let Ok(p) = app.path().resolve("../presets/scripts", tauri::path::BaseDirectory::Resource) {
+        search_dirs.push(p);
+    }
+    if let Ok(p) = app.path().resolve("presets/scripts", tauri::path::BaseDirectory::Resource) {
+        search_dirs.push(p);
+    }
 
     let mut deployed = false;
-    for source in &search_paths {
-        if source.exists() {
-            if let Ok(_) = fs::copy(source, &target_ahk) {
-                info!("Deployed hotkey script to {}", target_ahk.display());
+    for dir in &search_dirs {
+        let source_ahk = dir.join("hyperyap-hotkeys.ahk");
+        if source_ahk.exists() {
+            if let Ok(_) = fs::copy(&source_ahk, &target_ahk) {
+                info!("Deployed hotkey script from {} to {}", source_ahk.display(), target_ahk.display());
                 deployed = true;
             }
-            // Also copy clipboard-image-paste.ps1
-            if let Some(parent) = source.parent() {
-                let ps1_source = parent.join("clipboard-image-paste.ps1");
-                if ps1_source.exists() {
-                    let _ = fs::copy(&ps1_source, scripts_dir.join("clipboard-image-paste.ps1"));
-                }
+            let ps1_source = dir.join("clipboard-image-paste.ps1");
+            if ps1_source.exists() {
+                let _ = fs::copy(&ps1_source, scripts_dir.join("clipboard-image-paste.ps1"));
             }
             break;
         }
     }
 
     if !deployed {
-        info!("Hotkey scripts not found in bundled resources, skipping deployment");
-        return;
+        // Scripts not found in bundle, but we should still try to install AHK and set up
+        // whatever scripts may already be in the target directory from a previous install
+        if !target_ahk.exists() {
+            info!("Hotkey scripts not found in bundle or target directory, skipping");
+            return;
+        }
+        info!("Using previously deployed hotkey scripts at {}", target_ahk.display());
     }
 
     // Create startup shortcut
