@@ -13,34 +13,42 @@ fn settings_path(app: &AppHandle) -> Result<PathBuf, String> {
 }
 
 fn load_bundled_preset(app: &AppHandle) -> AppSettings {
-    // Try the resource resolver first (looks in resources/ subdirs)
-    if let Some(preset_path) =
-        crate::utils::resources::resolve_resource_path(app, "settings.json")
-    {
-        if let Ok(content) = fs::read_to_string(&preset_path) {
-            if let Ok(settings) = serde_json::from_str::<AppSettings>(&content) {
-                info!("Loaded bundled HyperYap preset settings");
-                return settings;
-            }
-        }
-    }
-    // Fallback: check resource root directly (Tauri places individual resource files here)
-    if let Ok(preset_path) = app
-        .path()
-        .resolve("settings.json", tauri::path::BaseDirectory::Resource)
-    {
-        if preset_path.exists() {
-            if let Ok(content) = fs::read_to_string(&preset_path) {
-                if let Ok(settings) = serde_json::from_str::<AppSettings>(&content) {
-                    info!(
-                        "Loaded bundled HyperYap preset from resource root: {}",
-                        preset_path.display()
-                    );
-                    return settings;
+    // Tauri bundles ../presets/settings.json into _up_/presets/settings.json
+    let search_paths = vec![
+        app.path().resolve(
+            "../presets/settings.json",
+            tauri::path::BaseDirectory::Resource,
+        ),
+        app.path().resolve(
+            "presets/settings.json",
+            tauri::path::BaseDirectory::Resource,
+        ),
+        app.path().resolve(
+            "../resources/settings.json",
+            tauri::path::BaseDirectory::Resource,
+        ),
+        app.path().resolve(
+            "settings.json",
+            tauri::path::BaseDirectory::Resource,
+        ),
+    ];
+
+    for path_result in search_paths {
+        if let Ok(preset_path) = path_result {
+            if preset_path.exists() {
+                if let Ok(content) = fs::read_to_string(&preset_path) {
+                    if let Ok(settings) = serde_json::from_str::<AppSettings>(&content) {
+                        info!(
+                            "Loaded bundled HyperYap preset from: {}",
+                            preset_path.display()
+                        );
+                        return settings;
+                    }
                 }
             }
         }
     }
+
     info!("Bundled preset not found, using defaults");
     AppSettings::default()
 }
