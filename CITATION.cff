@@ -1,0 +1,18 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+type: software
+title: "HyperYap"
+version: "1.0.0"
+date-released: "2026-04-04"
+authors:
+  - name: "avalonreset"
+url: "https://github.com/avalonreset/hyperyap"
+repository-code: "https://github.com/avalonreset/hyperyap"
+license: "AGPL-3.0"
+keywords:
+  - voice-to-text
+  - speech-to-text
+  - speech-recognition
+  - local-ai
+  - tauri
+abstract: "The complete vibe coding system. Local voice-to-text, hacker terminal, and hotkeys bundled into a single zero-config installer for Windows."

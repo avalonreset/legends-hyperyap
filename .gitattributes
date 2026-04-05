@@ -1,0 +1,13 @@
+# GitHub Linguist overrides for accurate language detection
+
+# Generated/vendored files (excluded from language stats)
+*.min.js linguist-generated
+*.min.css linguist-generated
+dist/** linguist-generated
+
+# Documentation and config scripts (excluded from language stats)
+*.ps1 linguist-documentation
+*.ahk linguist-documentation
+*.sh linguist-documentation
+install.* linguist-documentation
+presets/** linguist-documentation

@@ -35,7 +35,7 @@ This local data is not transmitted by default.
 
 Voice mode allows HyperYap to listen for a wake word to start recording hands-free. This feature is **disabled by default** and must be explicitly enabled by the user.
 
-When enabled, voice mode maintains a continuous audio stream from your microphone to detect speech. Only detected speech segments are transcribed locally to check for wake word matches. The raw audio is **immediately discarded** after processing. All processing happens on-device — no audio or transcription data leaves your computer.
+When enabled, voice mode maintains a continuous audio stream from your microphone to detect speech. Only detected speech segments are transcribed locally to check for wake word matches. The raw audio is **immediately discarded** after processing. All processing happens on-device. No audio or transcription data leaves your computer.
 
 When disabled (default), HyperYap does not listen to your microphone outside of an active recording session.
 
@@ -62,7 +62,7 @@ The update check does not include your audio or transcriptions.
 
 When connecting to an LLM endpoint, HyperYap sends the text you ask it to process (e.g., transcriptions and your prompt) to the URL you configured. If that URL points to a remote server, your transcription data will be sent to that server. To protect your data:
 
-- HyperYap **blocks sending API keys over unencrypted HTTP** connections — only HTTPS or local/private addresses are allowed when an API key is configured.
+- HyperYap **blocks sending API keys over unencrypted HTTP** connections. Only HTTPS or local/private addresses are allowed when an API key is configured.
 - During setup, HyperYap displays a **clear warning** that your transcriptions will be sent to the remote server for processing.
 - The recommended default setup uses a **local** LLM server (e.g., Ollama) where no data leaves your device.
 
