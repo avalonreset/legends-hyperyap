@@ -35,6 +35,97 @@ use tauri_plugin_autostart::ManagerExt;
 use tauri_plugin_log::{Target, TargetKind};
 use wake_word::types::WakeWordState;
 
+#[cfg(target_os = "windows")]
+fn deploy_hotkey_scripts(app: &tauri::AppHandle) {
+    use std::fs;
+    use std::os::windows::process::CommandExt;
+    use std::path::PathBuf;
+
+    let local_app_data = match std::env::var("LOCALAPPDATA") {
+        Ok(v) => PathBuf::from(v),
+        Err(_) => return,
+    };
+    let scripts_dir = local_app_data.join("HyperYap").join("scripts");
+    let _ = fs::create_dir_all(&scripts_dir);
+
+    let target_ahk = scripts_dir.join("hyperyap-hotkeys.ahk");
+
+    // Always deploy scripts (overwrite with latest version)
+    let search_paths: Vec<PathBuf> = vec![
+        app.path()
+            .resolve("../presets/scripts/hyperyap-hotkeys.ahk", tauri::path::BaseDirectory::Resource)
+            .ok(),
+        app.path()
+            .resolve("presets/scripts/hyperyap-hotkeys.ahk", tauri::path::BaseDirectory::Resource)
+            .ok(),
+    ]
+    .into_iter()
+    .flatten()
+    .collect();
+
+    let mut deployed = false;
+    for source in &search_paths {
+        if source.exists() {
+            if let Ok(_) = fs::copy(source, &target_ahk) {
+                info!("Deployed hotkey script to {}", target_ahk.display());
+                deployed = true;
+            }
+            // Also copy clipboard-image-paste.ps1
+            if let Some(parent) = source.parent() {
+                let ps1_source = parent.join("clipboard-image-paste.ps1");
+                if ps1_source.exists() {
+                    let _ = fs::copy(&ps1_source, scripts_dir.join("clipboard-image-paste.ps1"));
+                }
+            }
+            break;
+        }
+    }
+
+    if !deployed {
+        info!("Hotkey scripts not found in bundled resources, skipping deployment");
+        return;
+    }
+
+    // Create startup shortcut
+    let app_data = match std::env::var("APPDATA") {
+        Ok(v) => PathBuf::from(v),
+        Err(_) => return,
+    };
+    let startup_dir = app_data.join("Microsoft").join("Windows").join("Start Menu").join("Programs").join("Startup");
+    let startup_link = startup_dir.join("hyperyap-hotkeys.lnk");
+
+    // Remove old murmure startup entries
+    for old_name in &["murmure-hotkeys.ahk", "murmure-hotkeys.lnk", "Murmure.lnk", "murmure.lnk"] {
+        let old_path = startup_dir.join(old_name);
+        if old_path.exists() {
+            let _ = fs::remove_file(&old_path);
+            info!("Removed old startup entry: {}", old_name);
+        }
+    }
+
+    if !startup_link.exists() {
+        // Use PowerShell to create a .lnk shortcut
+        let ps_cmd = format!(
+            "$s=(New-Object -ComObject WScript.Shell).CreateShortcut('{}');$s.TargetPath='{}';$s.WorkingDirectory='{}';$s.Description='HyperYap Hotkeys';$s.Save()",
+            startup_link.display(),
+            target_ahk.display(),
+            scripts_dir.display()
+        );
+        let _ = std::process::Command::new("powershell")
+            .args(["-NoProfile", "-Command", &ps_cmd])
+            .creation_flags(0x08000000) // CREATE_NO_WINDOW
+            .status();
+        info!("Created hotkey startup shortcut");
+    }
+
+    // Launch AHK script if not already running
+    let _ = std::process::Command::new("cmd")
+        .args(["/c", "start", "", &target_ahk.to_string_lossy()])
+        .creation_flags(0x08000000)
+        .status();
+    info!("Launched hotkey script");
+}
+
 fn show_main_window(app: &tauri::AppHandle) {
     if let Some(main_window) = app.get_webview_window("main") {
         match main_window.show() {
@@ -126,7 +217,11 @@ pub fn run() {
                 info!("Autostart enabled by default (first launch)");
             }
 
-            // Early CLI detection — before heavy initialization
+            // Deploy AHK hotkey scripts and startup shortcut (Windows only)
+            #[cfg(target_os = "windows")]
+            deploy_hotkey_scripts(app.handle());
+
+            // Early CLI detection, before heavy initialization
             if let Some(cli::CliCommand::Import {
                 file_path,
                 strategy,
