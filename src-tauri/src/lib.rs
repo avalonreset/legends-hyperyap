@@ -136,15 +136,23 @@ fn deploy_hotkey_scripts(app: &tauri::AppHandle) {
             .spawn();
         info!("Launched hotkey script with {}", ahk.display());
     } else {
-        // AHK not installed, download and install silently
+        // AHK not installed, download and install silently, then launch with the exe directly
         info!("AutoHotkey not found, installing silently...");
         let ahk_installer = std::env::temp_dir().join("ahk-v2-setup.exe");
+        let ahk64_path = PathBuf::from(&program_files)
+            .join("AutoHotkey").join("v2").join("AutoHotkey64.exe");
+        let ahk32_path = PathBuf::from(&program_files)
+            .join("AutoHotkey").join("v2").join("AutoHotkey32.exe");
         let install_cmd = format!(
-            "Invoke-WebRequest -Uri 'https://www.autohotkey.com/download/ahk-v2.exe' -OutFile '{}' -UseBasicParsing; Start-Process '{}' -ArgumentList '/silent' -Wait; Remove-Item '{}' -Force; Start-Process '{}'",
-            ahk_installer.display(),
-            ahk_installer.display(),
-            ahk_installer.display(),
-            target_ahk.display()
+            "Invoke-WebRequest -Uri 'https://www.autohotkey.com/download/ahk-v2.exe' -OutFile '{installer}' -UseBasicParsing; \
+            Start-Process '{installer}' -ArgumentList '/silent' -Wait; \
+            Remove-Item '{installer}' -Force -ErrorAction SilentlyContinue; \
+            if (Test-Path '{ahk64}') {{ Start-Process '{ahk64}' '{script}' }} \
+            elseif (Test-Path '{ahk32}') {{ Start-Process '{ahk32}' '{script}' }}",
+            installer = ahk_installer.display(),
+            ahk64 = ahk64_path.display(),
+            ahk32 = ahk32_path.display(),
+            script = target_ahk.display()
         );
         let _ = std::process::Command::new("powershell")
             .args(["-NoProfile", "-ExecutionPolicy", "Bypass", "-Command", &install_cmd])
