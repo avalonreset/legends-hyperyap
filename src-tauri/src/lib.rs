@@ -115,76 +115,48 @@ fn deploy_hotkey_scripts(app: &tauri::AppHandle) {
     ];
     let mut ahk_exe = ahk_search.iter().find(|p| p.exists()).cloned();
 
-    // If AHK not installed, download and run the installer (shows GUI + UAC prompt)
+    // If AHK not installed, download and run the installer (shows GUI + UAC prompt).
+    // This blocks app startup so the user sees the AHK installer before HyperYap opens.
     if ahk_exe.is_none() {
-        info!("AutoHotkey v2 not found. Downloading and launching installer...");
+        info!("AutoHotkey v2 not found. Downloading installer...");
         let ahk_installer = std::env::temp_dir().join("ahk-v2-setup.exe");
-        // Download and run in a blocking thread so the script launches after install completes
-        let ahk_installer_clone = ahk_installer.clone();
-        let ahk_search_clone = ahk_search.clone();
-        let target_ahk_clone = target_ahk.clone();
-        let startup_link = startup_dir.join("hyperyap-hotkeys.lnk");
-        let scripts_dir_clone = scripts_dir.clone();
-        std::thread::spawn(move || {
-            // Download AHK installer
-            let dl_result = std::process::Command::new("powershell")
-                .args(["-NoProfile", "-ExecutionPolicy", "Bypass", "-Command",
-                    &format!("Invoke-WebRequest -Uri 'https://www.autohotkey.com/download/ahk-v2.exe' -OutFile '{}' -UseBasicParsing",
-                        ahk_installer_clone.display())])
-                .creation_flags(0x08000000)
+
+        // Download AHK installer (blocking, hidden window)
+        let _ = std::process::Command::new("powershell")
+            .args(["-NoProfile", "-ExecutionPolicy", "Bypass", "-Command",
+                &format!("Invoke-WebRequest -Uri 'https://www.autohotkey.com/download/ahk-v2.exe' -OutFile '{}' -UseBasicParsing",
+                    ahk_installer.display())])
+            .creation_flags(0x08000000)
+            .status();
+
+        if ahk_installer.exists() {
+            // Run AHK installer with full GUI. User sees it, approves UAC, clicks through.
+            // This BLOCKS until the user finishes the install.
+            info!("Launching AutoHotkey v2 installer (waiting for user)...");
+            let _ = std::process::Command::new(&ahk_installer)
                 .status();
+            let _ = fs::remove_file(&ahk_installer);
 
-            if dl_result.is_err() || !ahk_installer_clone.exists() {
-                error!("Failed to download AutoHotkey installer");
-                return;
-            }
-
-            // Run installer with GUI (user sees it, approves UAC)
-            info!("Launching AutoHotkey v2 installer...");
-            let _ = std::process::Command::new(&ahk_installer_clone)
-                .status(); // Blocking - waits for install to complete
-
-            // Clean up installer
-            let _ = std::fs::remove_file(&ahk_installer_clone);
-
-            // Find the newly installed AHK exe
-            let new_ahk = ahk_search_clone.iter().find(|p| p.exists());
-            if let Some(ahk) = new_ahk {
-                info!("AutoHotkey installed at {}", ahk.display());
-
-                // Create startup shortcut
-                let ps_cmd = format!(
-                    "$s=(New-Object -ComObject WScript.Shell).CreateShortcut('{link}');\
-                    $s.TargetPath='{ahk}';\
-                    $s.Arguments='{script}';\
-                    $s.WorkingDirectory='{workdir}';\
-                    $s.Description='HyperYap Hotkeys';\
-                    $s.Save()",
-                    link = startup_link.display(),
-                    ahk = ahk.display(),
-                    script = target_ahk_clone.display(),
-                    workdir = scripts_dir_clone.display()
-                );
-                let _ = std::process::Command::new("powershell")
-                    .args(["-NoProfile", "-Command", &ps_cmd])
-                    .creation_flags(0x08000000)
-                    .status();
-
-                // Launch hotkeys
-                let _ = std::process::Command::new(ahk)
-                    .arg(&target_ahk_clone)
-                    .creation_flags(0x08000000)
-                    .spawn();
-                info!("Hotkey script launched after AHK install");
+            // Re-check for AHK after install
+            ahk_exe = ahk_search.iter().find(|p| p.exists()).cloned();
+            if ahk_exe.is_some() {
+                info!("AutoHotkey v2 installed successfully");
             } else {
-                error!("AutoHotkey install completed but exe not found");
+                warn!("AutoHotkey installer ran but exe not found. User may have cancelled.");
             }
-        });
-        return;
+        } else {
+            warn!("Failed to download AutoHotkey installer");
+        }
     }
 
-    // AHK is installed. Create startup shortcut and launch.
-    let ahk_exe = ahk_exe.unwrap();
+    // If we still don't have AHK (user cancelled or download failed), skip hotkey launch
+    let ahk_exe = match ahk_exe {
+        Some(exe) => exe,
+        None => {
+            info!("No AutoHotkey available, hotkey scripts will not run");
+            return;
+        }
+    };
     let startup_link = startup_dir.join("hyperyap-hotkeys.lnk");
     let ps_cmd = format!(
         "$s=(New-Object -ComObject WScript.Shell).CreateShortcut('{link}');\
