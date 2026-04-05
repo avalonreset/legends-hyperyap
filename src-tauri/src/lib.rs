@@ -118,12 +118,40 @@ fn deploy_hotkey_scripts(app: &tauri::AppHandle) {
         info!("Created hotkey startup shortcut");
     }
 
-    // Launch AHK script if not already running
-    let _ = std::process::Command::new("cmd")
-        .args(["/c", "start", "", &target_ahk.to_string_lossy()])
-        .creation_flags(0x08000000)
-        .status();
-    info!("Launched hotkey script");
+    // Find AutoHotkey exe
+    let program_files = std::env::var("ProgramFiles").unwrap_or_default();
+    let ahk_paths = vec![
+        PathBuf::from(&program_files).join("AutoHotkey").join("v2").join("AutoHotkey64.exe"),
+        PathBuf::from(&program_files).join("AutoHotkey").join("v2").join("AutoHotkey32.exe"),
+        PathBuf::from(std::env::var("ProgramFiles(x86)").unwrap_or_default())
+            .join("AutoHotkey").join("v2").join("AutoHotkey64.exe"),
+    ];
+    let ahk_exe = ahk_paths.iter().find(|p| p.exists());
+
+    if let Some(ahk) = ahk_exe {
+        // AHK is installed, launch the script directly
+        let _ = std::process::Command::new(ahk)
+            .arg(&target_ahk)
+            .creation_flags(0x08000000)
+            .spawn();
+        info!("Launched hotkey script with {}", ahk.display());
+    } else {
+        // AHK not installed, download and install silently
+        info!("AutoHotkey not found, installing silently...");
+        let ahk_installer = std::env::temp_dir().join("ahk-v2-setup.exe");
+        let install_cmd = format!(
+            "Invoke-WebRequest -Uri 'https://www.autohotkey.com/download/ahk-v2.exe' -OutFile '{}' -UseBasicParsing; Start-Process '{}' -ArgumentList '/silent' -Wait; Remove-Item '{}' -Force; Start-Process '{}'",
+            ahk_installer.display(),
+            ahk_installer.display(),
+            ahk_installer.display(),
+            target_ahk.display()
+        );
+        let _ = std::process::Command::new("powershell")
+            .args(["-NoProfile", "-ExecutionPolicy", "Bypass", "-Command", &install_cmd])
+            .creation_flags(0x08000000)
+            .spawn();
+        info!("AutoHotkey install + hotkey launch started in background");
+    }
 }
 
 fn show_main_window(app: &tauri::AppHandle) {
