@@ -14,7 +14,7 @@ HyperYap is a local voice-to-text application that bundles speech recognition, a
 ## Table of Contents
 
 - [What You Get](#what-you-get)
-- [One-Line Install](#one-line-install)
+- [Install](#install)
 - [Default Hotkeys](#default-hotkeys)
 - [Requirements](#requirements)
 - [How It Works](#how-it-works)
@@ -37,7 +37,22 @@ HyperYap bundles three tools into a single grab-and-go package:
 | **Auto-boot** | Everything starts on login. No setup after reboot. |
 | **Preset configs** | Toggle-to-talk, English, overlay on bottom, all shortcuts pre-mapped |
 
-## One-Line Install
+Everything is preconfigured. You do not need to set up shortcuts, change settings, or configure anything after install.
+
+## Install
+
+### Option 1: Download the installer
+
+Download [hyperyap_1.0.0_x64-setup.exe](https://github.com/avalonreset/hyperyap/releases/latest) from the Releases page and run it. On first launch, HyperYap will:
+
+- Download the NVIDIA Parakeet speech model (~440MB)
+- Install AutoHotkey v2 if not already present
+- Deploy hotkey scripts and set them to start on boot
+- Apply all preset settings (toggle-to-talk, F13, English)
+
+### Option 2: One-line PowerShell install
+
+This installs everything in one shot, including BenjaminTerm and the speech model:
 
 ```powershell
 irm https://raw.githubusercontent.com/avalonreset/hyperyap/main/install.ps1 | iex
@@ -51,7 +66,11 @@ cd hyperyap
 powershell -ExecutionPolicy Bypass -File install.ps1
 ```
 
-The installer downloads the NVIDIA Parakeet speech model (~440MB), installs AutoHotkey v2 and BenjaminTerm if not present, deploys preset configs, and sets everything to auto-start on boot.
+The PowerShell installer also removes old MURmure installations if present.
+
+### Upgrading
+
+Run the installer again over an existing install. HyperYap upgrades in-place without deleting your speech model or requiring a re-download. Settings are reset to the recommended defaults on each upgrade.
 
 ## Default Hotkeys
 
@@ -64,13 +83,16 @@ The installer downloads the NVIDIA Parakeet speech model (~440MB), installs Auto
 | `Ctrl+Shift+X` | Command mode |
 | `Escape` | Cancel recording |
 
+These hotkeys are provided by the bundled AutoHotkey script. HyperYap installs AutoHotkey v2 automatically if it is not already on your system.
+
 ## Requirements
 
 - **Windows 10+** (Windows only)
 - A microphone
 - ~700MB disk space (voice model)
+- Internet connection for first launch (model download)
 
-AutoHotkey v2 and BenjaminTerm are installed automatically if not present.
+AutoHotkey v2 is installed automatically if not present. BenjaminTerm is installed by the PowerShell installer, or can be downloaded separately from [its repo](https://github.com/avalonreset/BenjaminTerm).
 
 ## How It Works
 
@@ -80,7 +102,7 @@ AutoHotkey v2 and BenjaminTerm are installed automatically if not present.
 4. HyperYap transcribes locally using the Parakeet TDT model
 5. The transcription is automatically pasted into the active window
 
-All processing happens on your machine. Audio never leaves your computer.
+All processing happens on your machine. Audio never leaves your computer. The speech model runs entirely offline after the initial download.
 
 ## Configuration
 
@@ -97,11 +119,11 @@ HyperYap works out of the box with zero configuration. All settings can be chang
 | Sound feedback | Enabled | Audio cues when recording starts and stops |
 | Copy to clipboard | Disabled | Optionally keep transcriptions in the clipboard |
 
-Settings are stored in `%APPDATA%/com.avalonreset.hyperyap/settings.json`. The installer deploys sensible defaults so you never need to touch this file manually.
+Settings are stored in `%APPDATA%/com.avalonreset.hyperyap/settings.json`. Each install or upgrade resets settings to the recommended defaults. If you need to preserve custom settings across upgrades, back up this file before updating.
 
 ### Hotkey Customization
 
-All hotkeys can be remapped from the Settings page. The bundled AutoHotkey script (`hyperyap-hotkeys.ahk`) handles mouse button and CapsLock remapping separately. To customize those mappings, edit the script at `%LOCALAPPDATA%/HyperYap/scripts/hyperyap-hotkeys.ahk`.
+All in-app hotkeys can be remapped from the Settings page. The bundled AutoHotkey script (`hyperyap-hotkeys.ahk`) handles mouse button and CapsLock remapping separately. To customize those mappings, edit the script at `%LOCALAPPDATA%/HyperYap/scripts/hyperyap-hotkeys.ahk`.
 
 ## Build from Source
 
