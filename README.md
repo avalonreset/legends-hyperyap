@@ -16,6 +16,8 @@ HyperYap is a local voice-to-text application that bundles speech recognition, a
 - [What You Get](#what-you-get)
 - [Install](#install)
 - [Default Hotkeys](#default-hotkeys)
+  - [CapsLock Remapping](#capslock-remapping)
+  - [Smart Paste](#smart-paste)
 - [Requirements](#requirements)
 - [How It Works](#how-it-works)
 - [Configuration](#configuration)
@@ -84,6 +86,28 @@ Run the installer again over an existing install. HyperYap upgrades in-place wit
 | `Escape` | Cancel recording |
 
 These hotkeys are provided by the bundled AutoHotkey script. HyperYap installs AutoHotkey v2 automatically if it is not already on your system.
+
+### CapsLock Remapping
+
+HyperYap disables CapsLock and repurposes it as a speech-to-text key. Press CapsLock to start recording, press it again to stop. Your transcription is pasted into whatever window is focused. CapsLock is permanently set to off so you never accidentally activate it.
+
+### Smart Paste
+
+Normally, pasting in a terminal requires `Ctrl+Shift+V` instead of `Ctrl+V`. HyperYap fixes this. When you press `Ctrl+V` in a supported terminal, HyperYap intercepts the keystroke and handles it correctly. If your clipboard contains an image, it saves the image as a timestamped PNG in `~/screenshots/` and pastes the file path instead. In all other applications, `Ctrl+V` works exactly as it normally does.
+
+Supported terminals:
+
+| Terminal | Process |
+|----------|---------|
+| BenjaminTerm | `benjaminterm-gui.exe` |
+| WezTerm | `wezterm-gui.exe` |
+| Windows Terminal | `windowsterminal.exe` |
+| PowerShell | `powershell.exe` |
+| PowerShell 7+ | `pwsh.exe` |
+| Command Prompt | `cmd.exe` |
+| Alacritty | `alacritty.exe` |
+
+To add your own terminal, edit the script at `%LOCALAPPDATA%/HyperYap/scripts/hyperyap-hotkeys.ahk` and add the process name to the detection list.
 
 ## Requirements
 
