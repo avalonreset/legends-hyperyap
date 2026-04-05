@@ -93,7 +93,11 @@ Write-Host "[1/5] Installing HyperYap voice engine..." -ForegroundColor Yellow
 try {
     $releaseApi = "https://api.github.com/repos/$repo/releases/latest"
     $release = Invoke-RestMethod -Uri $releaseApi -Headers @{ "User-Agent" = "HyperYap-Installer" }
-    $msiAsset = $release.assets | Where-Object { $_.name -match "\.(msi|exe)$" -and $_.name -match "x64" } | Select-Object -First 1
+    # Prefer NSIS exe over MSI - exe handles running processes and upgrades better
+    $msiAsset = $release.assets | Where-Object { $_.name -match "setup\.exe$" -and $_.name -match "x64" } | Select-Object -First 1
+    if (-not $msiAsset) {
+        $msiAsset = $release.assets | Where-Object { $_.name -match "\.(msi|exe)$" -and $_.name -match "x64" } | Select-Object -First 1
+    }
     if (-not $msiAsset) {
         $msiAsset = $release.assets | Where-Object { $_.name -match "\.(msi|exe)$" } | Select-Object -First 1
     }
