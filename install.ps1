@@ -90,30 +90,9 @@ if ($murmureUninstall) {
 # -----------------------------------------------------------
 Write-Host "[1/5] Installing HyperYap voice engine..." -ForegroundColor Yellow
 
-# Kill any running HyperYap before installing
+# Kill any running HyperYap before installing (NSIS upgrades in-place, no uninstall needed)
 Get-Process -Name "hyperyap", "HyperYap" -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue
 Start-Sleep -Seconds 1
-
-# Silently uninstall previous HyperYap if present (clean upgrade)
-$hyperyapUninstall = Get-ItemProperty "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\*",
-    "HKLM:\SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\*",
-    "HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\*" -ErrorAction SilentlyContinue |
-    Where-Object { $_.DisplayName -match "hyperyap" -or $_.DisplayName -match "HyperYap" } |
-    Select-Object -First 1
-
-if ($hyperyapUninstall) {
-    Write-Host "  Removing previous HyperYap install..." -ForegroundColor DarkGray
-    $uninstallStr = $hyperyapUninstall.UninstallString
-    if ($uninstallStr) {
-        if ($uninstallStr -match "msiexec") {
-            $productCode = $hyperyapUninstall.PSChildName
-            Start-Process msiexec.exe -ArgumentList "/x $productCode /quiet /norestart" -Wait -ErrorAction SilentlyContinue
-        } else {
-            Start-Process cmd.exe -ArgumentList "/c `"$uninstallStr`" /S" -Wait -ErrorAction SilentlyContinue
-        }
-    }
-    Write-Host "  Previous version removed." -ForegroundColor DarkGray
-}
 
 try {
     $releaseApi = "https://api.github.com/repos/$repo/releases/latest"

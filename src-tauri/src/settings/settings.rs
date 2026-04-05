@@ -1,3 +1,4 @@
+use log::info;
 use std::{fs, path::PathBuf};
 use tauri::{AppHandle, Manager};
 
@@ -11,6 +12,39 @@ fn settings_path(app: &AppHandle) -> Result<PathBuf, String> {
     Ok(dir.join("settings.json"))
 }
 
+fn load_bundled_preset(app: &AppHandle) -> AppSettings {
+    // Try the resource resolver first (looks in resources/ subdirs)
+    if let Some(preset_path) =
+        crate::utils::resources::resolve_resource_path(app, "settings.json")
+    {
+        if let Ok(content) = fs::read_to_string(&preset_path) {
+            if let Ok(settings) = serde_json::from_str::<AppSettings>(&content) {
+                info!("Loaded bundled HyperYap preset settings");
+                return settings;
+            }
+        }
+    }
+    // Fallback: check resource root directly (Tauri places individual resource files here)
+    if let Ok(preset_path) = app
+        .path()
+        .resolve("settings.json", tauri::path::BaseDirectory::Resource)
+    {
+        if preset_path.exists() {
+            if let Ok(content) = fs::read_to_string(&preset_path) {
+                if let Ok(settings) = serde_json::from_str::<AppSettings>(&content) {
+                    info!(
+                        "Loaded bundled HyperYap preset from resource root: {}",
+                        preset_path.display()
+                    );
+                    return settings;
+                }
+            }
+        }
+    }
+    info!("Bundled preset not found, using defaults");
+    AppSettings::default()
+}
+
 pub fn load_settings(app: &AppHandle) -> AppSettings {
     let path = match settings_path(app) {
         Ok(p) => p,
@@ -20,7 +54,7 @@ pub fn load_settings(app: &AppHandle) -> AppSettings {
     match fs::read_to_string(&path) {
         Ok(content) => serde_json::from_str::<AppSettings>(&content).unwrap_or_default(),
         Err(_) => {
-            let defaults = AppSettings::default();
+            let defaults = load_bundled_preset(app);
             let _ = save_settings(app, &defaults);
             defaults
         }
