@@ -34,10 +34,10 @@ HyperYap bundles three tools into a single grab-and-go package:
 |-----------|:-:|-------------|
 | **HyperYap voice engine** | <img src="assets/logo.webp" alt="HyperYap" width="48"> | Local speech-to-text powered by NVIDIA [Parakeet TDT 0.6B v3](https://huggingface.co/nvidia/parakeet-tdt-0.6b-v3) |
 | **[BenjaminTerm](https://github.com/avalonreset/BenjaminTerm)** | <img src="assets/benterm-logo.webp" alt="BenjaminTerm" width="48"> | Hacker-styled WezTerm terminal with smart clipboard, 86 dark themes, and borderless mode |
-| **Hotkey scripts** | Mouse side buttons to F13 (record), CapsLock to F13, Mouse Forward to Enter |
-| **Smart paste** | Ctrl+V in BenjaminTerm auto-saves clipboard images as PNGs |
-| **Auto-boot** | Everything starts on login. No setup after reboot. |
-| **Preset configs** | Toggle-to-talk, English, overlay on bottom, all shortcuts pre-mapped |
+| **Hotkey daemon** | | Mouse side buttons to F13 (record), CapsLock to F13, Mouse Forward to Enter. Runs as its own tray icon process. |
+| **Smart paste** | | Ctrl+V in terminals auto-saves clipboard images as PNGs and pastes the file path |
+| **Auto-boot** | | Everything starts on login. No setup after reboot. |
+| **Preset configs** | | Toggle-to-talk, English, overlay on bottom, all shortcuts pre-mapped |
 
 Everything is preconfigured. You do not need to set up shortcuts, change settings, or configure anything after install.
 
@@ -92,7 +92,13 @@ HyperYap disables CapsLock and repurposes it as a speech-to-text key. Press Caps
 
 ### Smart Paste
 
-Normally, pasting in a terminal requires `Ctrl+Shift+V` instead of `Ctrl+V`. HyperYap fixes this. When you press `Ctrl+V` in a supported terminal, HyperYap intercepts the keystroke and handles it correctly. If your clipboard contains an image, it saves the image as a timestamped PNG in `~/screenshots/` and pastes the file path instead. In all other applications, `Ctrl+V` works exactly as it normally does.
+HyperYap's hotkey daemon is terminal-aware. It detects which application is focused and adapts Ctrl+V behavior accordingly:
+
+**In regular applications** (browsers, editors, chat apps), Ctrl+V works exactly as it normally does. HyperYap does not interfere.
+
+**In supported terminals**, HyperYap intercepts Ctrl+V and adds clipboard image intelligence. If your clipboard contains a screenshot or image, HyperYap automatically saves it as a timestamped PNG in `~/screenshots/` and replaces the clipboard with the file path before pasting. This means you can take a screenshot, switch to your terminal, press Ctrl+V, and get a usable file path instead of garbled binary data. Text clipboard contents paste normally.
+
+This is especially useful for vibe coding workflows where you screenshot errors, UI mockups, or terminal output and need to reference them by path in a command or prompt.
 
 Supported terminals:
 
@@ -105,8 +111,8 @@ Supported terminals:
 | PowerShell 7+ | `pwsh.exe` |
 | Command Prompt | `cmd.exe` |
 | Alacritty | `alacritty.exe` |
-
-Additional terminals (ConEmu, Hyper) are also supported by the hotkey daemon.
+| ConEmu | `conemu.exe` / `conemu64.exe` |
+| Hyper | `hyper.exe` |
 
 ## Requirements
 
@@ -152,6 +158,10 @@ All in-app hotkeys can be remapped from the Settings page. Mouse button and Caps
 
 ```bash
 pnpm install
+
+# Build the hotkey daemon first
+cd hotkeys && cargo build --release && cd ..
+
 pnpm tauri dev      # development
 pnpm tauri build    # production build
 ```
