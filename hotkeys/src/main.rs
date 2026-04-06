@@ -218,11 +218,14 @@ unsafe extern "system" fn wnd_proc(hwnd: HWND, msg: u32, wparam: WPARAM, lparam:
                 IDM_PAUSE => {
                     let was_paused = PAUSED.load(Ordering::SeqCst);
                     PAUSED.store(!was_paused, Ordering::SeqCst);
-                    update_tray_tip(hwnd, if was_paused {
-                        "HYPERYAP HOTKEYS"
+                    let hinstance = GetModuleHandleW(std::ptr::null());
+                    if was_paused {
+                        update_tray_tip(hwnd, "HYPERYAP HOTKEYS");
+                        update_tray_icon(hwnd, LoadIconW(hinstance, 1 as *const u16));
                     } else {
-                        "HYPERYAP HOTKEYS (PAUSED)"
-                    });
+                        update_tray_tip(hwnd, "HYPERYAP HOTKEYS (PAUSED)");
+                        update_tray_icon(hwnd, LoadIconW(hinstance, 2 as *const u16));
+                    }
                 }
                 IDM_EXIT => {
                     remove_tray_icon(hwnd);
@@ -363,8 +366,8 @@ unsafe fn show_tray_menu(hwnd: HWND) {
     // Separator
     AppendMenuW(menu, MF_SEPARATOR, 0, std::ptr::null());
 
-    let exit_text = wide("Exit");
-    AppendMenuW(menu, MF_STRING, IDM_EXIT as usize, exit_text.as_ptr());
+    let quit_text = wide("Quit");
+    AppendMenuW(menu, MF_STRING, IDM_EXIT as usize, quit_text.as_ptr());
 
     let mut pt: POINT = zeroed();
     GetCursorPos(&mut pt);
@@ -373,6 +376,16 @@ unsafe fn show_tray_menu(hwnd: HWND) {
     SetForegroundWindow(hwnd);
     TrackPopupMenu(menu, TPM_RIGHTALIGN | TPM_BOTTOMALIGN, pt.x, pt.y, 0, hwnd, std::ptr::null());
     DestroyMenu(menu);
+}
+
+unsafe fn update_tray_icon(hwnd: HWND, hicon: HICON) {
+    let mut nid: NOTIFYICONDATAW = zeroed();
+    nid.cbSize = size_of::<NOTIFYICONDATAW>() as u32;
+    nid.hWnd = hwnd;
+    nid.uID = 1;
+    nid.uFlags = NIF_ICON;
+    nid.hIcon = hicon;
+    Shell_NotifyIconW(NIM_MODIFY, &nid);
 }
 
 unsafe fn update_tray_tip(hwnd: HWND, tip_str: &str) {
