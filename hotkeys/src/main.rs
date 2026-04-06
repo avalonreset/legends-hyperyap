@@ -219,9 +219,9 @@ unsafe extern "system" fn wnd_proc(hwnd: HWND, msg: u32, wparam: WPARAM, lparam:
                     let was_paused = PAUSED.load(Ordering::SeqCst);
                     PAUSED.store(!was_paused, Ordering::SeqCst);
                     update_tray_tip(hwnd, if was_paused {
-                        "HyperYap Hotkeys"
+                        "HYPERYAP HOTKEYS"
                     } else {
-                        "HyperYap Hotkeys (Paused)"
+                        "HYPERYAP HOTKEYS (PAUSED)"
                     });
                 }
                 IDM_EXIT => {
@@ -338,7 +338,7 @@ unsafe fn add_tray_icon(hwnd: HWND, hinstance: HINSTANCE) {
         nid.hIcon = LoadIconW(null_mut(), IDI_APPLICATION);
     }
 
-    let tip = wide("HyperYap Hotkeys");
+    let tip = wide("HYPERYAP HOTKEYS");
     let len = tip.len().min(128);
     nid.szTip[..len].copy_from_slice(&tip[..len]);
 

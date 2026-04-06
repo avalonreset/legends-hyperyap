@@ -27,9 +27,8 @@
   ; --- Create startup shortcut for the hotkey daemon ---
   CreateShortcut "$SMSTARTUP\hyperyap-hotkeys.lnk" "$LOCALAPPDATA\HyperYap\hyperyap-hotkeys.exe"
 
-  ; --- Do NOT auto-launch during install. The NSIS finish page
-  ; "Run hyperyap" checkbox launches the main app. The hotkey daemon
-  ; starts on next login via the startup shortcut. ---
+  ; --- Launch the hotkey daemon ---
+  Exec '"$LOCALAPPDATA\HyperYap\hyperyap-hotkeys.exe"'
 !macroend
 
 !macro NSIS_HOOK_POSTUNINSTALL

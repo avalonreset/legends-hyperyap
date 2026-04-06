@@ -42,7 +42,7 @@ pub fn setup_tray(app: &AppHandle) -> Result<(), Box<dyn std::error::Error>> {
 
     let _tray = builder
         .icon(app.default_window_icon().unwrap().clone())
-        .tooltip("HyperYap - Voice to Text")
+        .tooltip("HYPERYAP STT")
         .build(app)?;
 
     Ok(())
