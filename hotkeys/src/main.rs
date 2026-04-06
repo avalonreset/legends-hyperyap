@@ -239,19 +239,24 @@ fn handle_smart_paste() {
             if let Some(proc_name) = get_foreground_process_name() {
                 let lower = proc_name.to_lowercase();
                 if TERMINALS.iter().any(|t| lower == *t) {
-                    // Run PowerShell to save clipboard image and replace with file path
-                    run_clipboard_image_save();
+                    // Save image to file, type the path directly into the terminal.
+                    // Clipboard is never modified - the image stays available for
+                    // pasting in other apps like WhatsApp.
+                    if let Some(path) = save_clipboard_image() {
+                        type_string(&path);
+                    }
+                    return;
                 }
             }
         }
 
-        // Send Ctrl+V (our injected input will pass through the hook)
+        // Non-terminal or no image: just send Ctrl+V normally
         send_key_combo(VK_CONTROL, 0x56 /* V */);
     }
 }
 
-fn run_clipboard_image_save() {
-    // Embedded PowerShell script (same logic as clipboard-image-paste.ps1)
+fn save_clipboard_image() -> Option<String> {
+    // Save clipboard image to file, return the file path. Does NOT touch the clipboard.
     let script = r#"
 Add-Type -AssemblyName System.Windows.Forms
 $img = [System.Windows.Forms.Clipboard]::GetImage()
@@ -262,11 +267,11 @@ if ($img) {
     $path = "$dir\screenshot_$timestamp.png"
     $img.Save($path, [System.Drawing.Imaging.ImageFormat]::Png)
     $img.Dispose()
-    [System.Windows.Forms.Clipboard]::SetText($path.Replace('\', '/'))
+    Write-Output $path.Replace('\', '/')
 }
 "#;
 
-    let _ = std::process::Command::new("powershell.exe")
+    let output = std::process::Command::new("powershell.exe")
         .args([
             "-NoProfile",
             "-WindowStyle",
@@ -277,7 +282,30 @@ if ($img) {
             script,
         ])
         .creation_flags(CREATE_NO_WINDOW)
-        .status();
+        .output()
+        .ok()?;
+
+    let path = String::from_utf8_lossy(&output.stdout).trim().to_string();
+    if path.is_empty() { None } else { Some(path) }
+}
+
+unsafe fn type_string(s: &str) {
+    // Type a string character by character using SendInput with Unicode
+    for ch in s.encode_utf16() {
+        let mut inputs: [INPUT; 2] = zeroed();
+
+        // Key down
+        inputs[0].r#type = INPUT_KEYBOARD;
+        inputs[0].Anonymous.ki.wScan = ch;
+        inputs[0].Anonymous.ki.dwFlags = KEYEVENTF_UNICODE;
+
+        // Key up
+        inputs[1].r#type = INPUT_KEYBOARD;
+        inputs[1].Anonymous.ki.wScan = ch;
+        inputs[1].Anonymous.ki.dwFlags = KEYEVENTF_UNICODE | KEYEVENTF_KEYUP;
+
+        SendInput(2, inputs.as_ptr(), size_of::<INPUT>() as i32);
+    }
 }
 
 // -- Tray icon --
