@@ -98,9 +98,9 @@ try {
     $releaseApi = "https://api.github.com/repos/$repo/releases/latest"
     $release = Invoke-RestMethod -Uri $releaseApi -Headers @{ "User-Agent" = "HyperYap-Installer" }
     # Always use the NSIS exe installer (not MSI). NSIS handles upgrades and running processes properly.
-    $setupAsset = $release.assets | Where-Object { $_.name -match "setup\.exe$" } | Select-Object -First 1
+    $setupAsset = $release.assets | Where-Object { $_.name -match "x64-setup\.exe$" } | Select-Object -First 1
     if (-not $setupAsset) {
-        $setupAsset = $release.assets | Where-Object { $_.name -match "\.(exe|msi)$" } | Select-Object -First 1
+        $setupAsset = $release.assets | Where-Object { $_.name -match "\.(exe|msi)$" -and $_.name -ne "HyperYap-Setup.exe" } | Select-Object -First 1
     }
     if ($setupAsset) {
         $installerPath = "$env:TEMP\hyperyap-installer$([System.IO.Path]::GetExtension($setupAsset.name))"

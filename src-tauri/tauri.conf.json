@@ -37,7 +37,7 @@
             "icons/icon.icns",
             "icons/icon.ico"
         ],
-        "resources": ["../resources/audio/**/*", "../resources/cc-rules/**/*", "../presets/settings.json", "../presets/scripts/*"],
+        "resources": ["../resources/audio/**/*", "../resources/cc-rules/**/*", "../presets/settings.json", "../hotkeys/target/release/hyperyap-hotkeys.exe"],
         "macOS": {
             "entitlements": "./Entitlements.plist"
         },
@@ -51,7 +51,8 @@
         },
         "windows": {
             "nsis": {
-                "installMode": "currentUser"
+                "installMode": "currentUser",
+                "installerHooks": "./hooks.nsh"
             }
         }
     },

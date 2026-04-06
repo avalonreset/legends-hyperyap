@@ -30,10 +30,10 @@ HyperYap is a local voice-to-text application that bundles speech recognition, a
 
 HyperYap bundles three tools into a single grab-and-go package:
 
-| Component | What It Does |
-|-----------|-------------|
-| **HyperYap voice engine** | Local speech-to-text powered by NVIDIA [Parakeet TDT 0.6B v3](https://huggingface.co/nvidia/parakeet-tdt-0.6b-v3) |
-| **[BenjaminTerm](https://github.com/avalonreset/BenjaminTerm)** | Hacker-styled WezTerm terminal with smart clipboard, 86 dark themes, and borderless mode |
+| Component | | What It Does |
+|-----------|:-:|-------------|
+| **HyperYap voice engine** | <img src="assets/logo.webp" alt="HyperYap" width="48"> | Local speech-to-text powered by NVIDIA [Parakeet TDT 0.6B v3](https://huggingface.co/nvidia/parakeet-tdt-0.6b-v3) |
+| **[BenjaminTerm](https://github.com/avalonreset/BenjaminTerm)** | <img src="assets/benterm-logo.webp" alt="BenjaminTerm" width="48"> | Hacker-styled WezTerm terminal with smart clipboard, 86 dark themes, and borderless mode |
 | **Hotkey scripts** | Mouse side buttons to F13 (record), CapsLock to F13, Mouse Forward to Enter |
 | **Smart paste** | Ctrl+V in BenjaminTerm auto-saves clipboard images as PNGs |
 | **Auto-boot** | Everything starts on login. No setup after reboot. |
@@ -48,8 +48,7 @@ Everything is preconfigured. You do not need to set up shortcuts, change setting
 Download [hyperyap_1.0.0_x64-setup.exe](https://github.com/avalonreset/hyperyap/releases/latest) from the Releases page and run it. On first launch, HyperYap will:
 
 - Download the NVIDIA Parakeet speech model (~440MB)
-- Install AutoHotkey v2 if not already present
-- Deploy hotkey scripts and set them to start on boot
+- Deploy the hotkey daemon and set it to start on boot
 - Apply all preset settings (toggle-to-talk, F13, English)
 
 ### Option 2: One-line PowerShell install
@@ -85,7 +84,7 @@ Run the installer again over an existing install. HyperYap upgrades in-place wit
 | `Ctrl+Shift+X` | Command mode |
 | `Escape` | Cancel recording |
 
-These hotkeys are provided by the bundled AutoHotkey script. HyperYap installs AutoHotkey v2 automatically if it is not already on your system.
+These hotkeys are provided by the bundled hotkey daemon that runs as a separate tray icon process.
 
 ### CapsLock Remapping
 
@@ -107,7 +106,7 @@ Supported terminals:
 | Command Prompt | `cmd.exe` |
 | Alacritty | `alacritty.exe` |
 
-To add your own terminal, edit the script at `%LOCALAPPDATA%/HyperYap/scripts/hyperyap-hotkeys.ahk` and add the process name to the detection list.
+Additional terminals (ConEmu, Hyper) are also supported by the hotkey daemon.
 
 ## Requirements
 
@@ -116,7 +115,7 @@ To add your own terminal, edit the script at `%LOCALAPPDATA%/HyperYap/scripts/hy
 - ~700MB disk space (voice model)
 - Internet connection for first launch (model download)
 
-AutoHotkey v2 is installed automatically if not present. BenjaminTerm is installed by the PowerShell installer, or can be downloaded separately from [its repo](https://github.com/avalonreset/BenjaminTerm).
+BenjaminTerm is installed by the PowerShell installer, or can be downloaded separately from [its repo](https://github.com/avalonreset/BenjaminTerm).
 
 ## How It Works
 
@@ -147,7 +146,7 @@ Settings are stored in `%APPDATA%/com.avalonreset.hyperyap/settings.json`. Each 
 
 ### Hotkey Customization
 
-All in-app hotkeys can be remapped from the Settings page. The bundled AutoHotkey script (`hyperyap-hotkeys.ahk`) handles mouse button and CapsLock remapping separately. To customize those mappings, edit the script at `%LOCALAPPDATA%/HyperYap/scripts/hyperyap-hotkeys.ahk`.
+All in-app hotkeys can be remapped from the Settings page. Mouse button and CapsLock remapping are handled by the bundled hotkey daemon (`hyperyap-hotkeys.exe`), which runs as a separate process with its own tray icon.
 
 ## Build from Source
 
