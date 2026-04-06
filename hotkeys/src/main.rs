@@ -30,6 +30,10 @@ const TERMINALS: &[&str] = &[
     "conemu.exe",
     "conemu64.exe",
     "hyper.exe",
+    "mintty.exe",
+    "tabby.exe",
+    "warp.exe",
+    "mobaxterm.exe",
 ];
 
 // -- Globals (required for hook callbacks) --

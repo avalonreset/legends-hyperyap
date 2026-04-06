@@ -113,6 +113,10 @@ Supported terminals:
 | Alacritty | `alacritty.exe` |
 | ConEmu | `conemu.exe` / `conemu64.exe` |
 | Hyper | `hyper.exe` |
+| Git Bash (mintty) | `mintty.exe` |
+| Tabby | `tabby.exe` |
+| Warp | `warp.exe` |
+| MobaXterm | `mobaxterm.exe` |
 
 ## Requirements
 
