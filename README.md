@@ -32,9 +32,9 @@ HyperYap bundles three tools into a single grab-and-go package:
 
 | Component | | What It Does |
 |-----------|:-:|-------------|
-| **HyperYap voice engine** | <img src="assets/logo.webp" alt="HyperYap" width="48"> | Local speech-to-text powered by NVIDIA [Parakeet TDT 0.6B v3](https://huggingface.co/nvidia/parakeet-tdt-0.6b-v3) |
+| **HyperYap voice engine** | <img src="assets/logo-yap.webp" alt="YAP" width="48"> | Local speech-to-text powered by NVIDIA [Parakeet TDT 0.6B v3](https://huggingface.co/nvidia/parakeet-tdt-0.6b-v3) |
 | **[BenjaminTerm](https://github.com/avalonreset/BenjaminTerm)** | <img src="assets/benterm-logo.webp" alt="BenjaminTerm" width="48"> | Hacker-styled WezTerm terminal with smart clipboard, 86 dark themes, and borderless mode |
-| **Hotkey daemon** | | Mouse side buttons to F13 (record), CapsLock to F13, Mouse Forward to Enter. Runs as its own tray icon process. |
+| **Hotkey daemon** | <img src="assets/logo-hyper.webp" alt="HYPER" width="48"> | Mouse side buttons to F13 (record), CapsLock to F13, Mouse Forward to Enter. Runs as its own tray icon process. |
 | **Smart paste** | | Ctrl+V in terminals auto-saves clipboard images as PNGs and pastes the file path |
 | **Auto-boot** | | Everything starts on login. No setup after reboot. |
 | **Preset configs** | | Toggle-to-talk, English, overlay on bottom, all shortcuts pre-mapped |

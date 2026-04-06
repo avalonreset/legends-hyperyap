@@ -14,7 +14,8 @@ use windows_sys::Win32::UI::WindowsAndMessaging::*;
 
 const WM_TRAYICON: u32 = WM_APP + 1;
 const WM_SMART_PASTE: u32 = WM_APP + 2;
-const IDM_EXIT: u16 = 1;
+const IDM_PAUSE: u16 = 1;
+const IDM_EXIT: u16 = 2;
 const VK_F13: u16 = 0x7C;
 const CREATE_NO_WINDOW: u32 = 0x08000000;
 
@@ -39,6 +40,7 @@ const TERMINALS: &[&str] = &[
 // -- Globals (required for hook callbacks) --
 
 static SUPPRESS_V_UP: AtomicBool = AtomicBool::new(false);
+static PAUSED: AtomicBool = AtomicBool::new(false);
 static mut HWND_MAIN: HWND = null_mut();
 static mut KB_HOOK: HHOOK = null_mut();
 static mut MOUSE_HOOK: HHOOK = null_mut();
@@ -111,7 +113,7 @@ fn main() {
 // -- Keyboard hook --
 
 unsafe extern "system" fn keyboard_hook(code: i32, wparam: WPARAM, lparam: LPARAM) -> LRESULT {
-    if code >= 0 {
+    if code >= 0 && !PAUSED.load(Ordering::Relaxed) {
         let kb = &*(lparam as *const KBDLLHOOKSTRUCT);
 
         // Skip injected events (our own SendInput calls)
@@ -156,7 +158,7 @@ unsafe extern "system" fn keyboard_hook(code: i32, wparam: WPARAM, lparam: LPARA
 // -- Mouse hook --
 
 unsafe extern "system" fn mouse_hook(code: i32, wparam: WPARAM, lparam: LPARAM) -> LRESULT {
-    if code >= 0 {
+    if code >= 0 && !PAUSED.load(Ordering::Relaxed) {
         let ms = &*(lparam as *const MSLLHOOKSTRUCT);
 
         // Skip injected
@@ -212,9 +214,21 @@ unsafe extern "system" fn wnd_proc(hwnd: HWND, msg: u32, wparam: WPARAM, lparam:
         }
 
         WM_COMMAND => {
-            if (wparam & 0xFFFF) as u16 == IDM_EXIT {
-                remove_tray_icon(hwnd);
-                PostQuitMessage(0);
+            match (wparam & 0xFFFF) as u16 {
+                IDM_PAUSE => {
+                    let was_paused = PAUSED.load(Ordering::SeqCst);
+                    PAUSED.store(!was_paused, Ordering::SeqCst);
+                    update_tray_tip(hwnd, if was_paused {
+                        "HyperYap Hotkeys"
+                    } else {
+                        "HyperYap Hotkeys (Paused)"
+                    });
+                }
+                IDM_EXIT => {
+                    remove_tray_icon(hwnd);
+                    PostQuitMessage(0);
+                }
+                _ => {}
             }
             0
         }
@@ -341,6 +355,14 @@ unsafe fn remove_tray_icon(hwnd: HWND) {
 
 unsafe fn show_tray_menu(hwnd: HWND) {
     let menu = CreatePopupMenu();
+
+    let is_paused = PAUSED.load(Ordering::SeqCst);
+    let pause_text = if is_paused { wide("Resume Hotkeys") } else { wide("Pause Hotkeys") };
+    AppendMenuW(menu, MF_STRING, IDM_PAUSE as usize, pause_text.as_ptr());
+
+    // Separator
+    AppendMenuW(menu, MF_SEPARATOR, 0, std::ptr::null());
+
     let exit_text = wide("Exit");
     AppendMenuW(menu, MF_STRING, IDM_EXIT as usize, exit_text.as_ptr());
 
@@ -351,6 +373,20 @@ unsafe fn show_tray_menu(hwnd: HWND) {
     SetForegroundWindow(hwnd);
     TrackPopupMenu(menu, TPM_RIGHTALIGN | TPM_BOTTOMALIGN, pt.x, pt.y, 0, hwnd, std::ptr::null());
     DestroyMenu(menu);
+}
+
+unsafe fn update_tray_tip(hwnd: HWND, tip_str: &str) {
+    let mut nid: NOTIFYICONDATAW = zeroed();
+    nid.cbSize = size_of::<NOTIFYICONDATAW>() as u32;
+    nid.hWnd = hwnd;
+    nid.uID = 1;
+    nid.uFlags = NIF_TIP;
+
+    let tip = wide(tip_str);
+    let len = tip.len().min(128);
+    nid.szTip[..len].copy_from_slice(&tip[..len]);
+
+    Shell_NotifyIconW(NIM_MODIFY, &nid);
 }
 
 // -- Input helpers --
