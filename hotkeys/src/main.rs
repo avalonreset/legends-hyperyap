@@ -256,12 +256,14 @@ fn handle_smart_paste() {
             if let Some(proc_name) = get_foreground_process_name() {
                 let lower = proc_name.to_lowercase();
                 if TERMINALS.iter().any(|t| lower == *t) {
-                    // Save image to file, type the path directly into the terminal.
-                    // Clipboard is never modified - the image stays available for
-                    // pasting in other apps like WhatsApp.
-                    if let Some(path) = save_clipboard_image() {
-                        type_string(&path);
-                    }
+                    // Save image, swap clipboard to path, paste, restore image after
+                    run_clipboard_image_save();
+                    send_key_combo(VK_CONTROL, 0x56 /* V */);
+                    // Restore clipboard image after a short delay
+                    std::thread::spawn(|| {
+                        std::thread::sleep(std::time::Duration::from_millis(300));
+                        restore_clipboard_image();
+                    });
                     return;
                 }
             }
@@ -272,8 +274,7 @@ fn handle_smart_paste() {
     }
 }
 
-fn save_clipboard_image() -> Option<String> {
-    // Save clipboard image to file, return the file path. Does NOT touch the clipboard.
+fn run_clipboard_image_save() {
     let script = r#"
 Add-Type -AssemblyName System.Windows.Forms
 $img = [System.Windows.Forms.Clipboard]::GetImage()
@@ -284,11 +285,11 @@ if ($img) {
     $path = "$dir\screenshot_$timestamp.png"
     $img.Save($path, [System.Drawing.Imaging.ImageFormat]::Png)
     $img.Dispose()
-    Write-Output $path.Replace('\', '/')
+    [System.Windows.Forms.Clipboard]::SetText($path.Replace('\', '/'))
 }
 "#;
 
-    let output = std::process::Command::new("powershell.exe")
+    let _ = std::process::Command::new("powershell.exe")
         .args([
             "-NoProfile",
             "-WindowStyle",
@@ -299,30 +300,33 @@ if ($img) {
             script,
         ])
         .creation_flags(CREATE_NO_WINDOW)
-        .output()
-        .ok()?;
-
-    let path = String::from_utf8_lossy(&output.stdout).trim().to_string();
-    if path.is_empty() { None } else { Some(path) }
+        .status();
 }
 
-unsafe fn type_string(s: &str) {
-    // Type a string character by character using SendInput with Unicode
-    for ch in s.encode_utf16() {
-        let mut inputs: [INPUT; 2] = zeroed();
+fn restore_clipboard_image() {
+    let script = r#"
+Add-Type -AssemblyName System.Windows.Forms
+$dir = "$env:USERPROFILE\screenshots"
+$latest = Get-ChildItem "$dir\screenshot_*.png" -ErrorAction SilentlyContinue | Sort-Object LastWriteTime -Descending | Select-Object -First 1
+if ($latest) {
+    $img = [System.Drawing.Image]::FromFile($latest.FullName)
+    [System.Windows.Forms.Clipboard]::SetImage($img)
+    $img.Dispose()
+}
+"#;
 
-        // Key down
-        inputs[0].r#type = INPUT_KEYBOARD;
-        inputs[0].Anonymous.ki.wScan = ch;
-        inputs[0].Anonymous.ki.dwFlags = KEYEVENTF_UNICODE;
-
-        // Key up
-        inputs[1].r#type = INPUT_KEYBOARD;
-        inputs[1].Anonymous.ki.wScan = ch;
-        inputs[1].Anonymous.ki.dwFlags = KEYEVENTF_UNICODE | KEYEVENTF_KEYUP;
-
-        SendInput(2, inputs.as_ptr(), size_of::<INPUT>() as i32);
-    }
+    let _ = std::process::Command::new("powershell.exe")
+        .args([
+            "-NoProfile",
+            "-WindowStyle",
+            "Hidden",
+            "-ExecutionPolicy",
+            "Bypass",
+            "-Command",
+            script,
+        ])
+        .creation_flags(CREATE_NO_WINDOW)
+        .status();
 }
 
 // -- Tray icon --
