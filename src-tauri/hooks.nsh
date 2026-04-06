@@ -3,7 +3,8 @@
 
 !macro NSIS_HOOK_PREINSTALL
   ; Kill any running hotkey daemon before install
-  ExecWait 'taskkill /F /IM hyperyap-hotkeys.exe'
+  ; Using cmd /c with output suppressed to minimize console flash
+  ExecWait 'cmd /c taskkill /F /IM hyperyap-hotkeys.exe >nul 2>&1'
 !macroend
 
 !macro NSIS_HOOK_POSTINSTALL
@@ -26,13 +27,14 @@
   ; --- Create startup shortcut for the hotkey daemon ---
   CreateShortcut "$SMSTARTUP\hyperyap-hotkeys.lnk" "$LOCALAPPDATA\HyperYap\hyperyap-hotkeys.exe"
 
-  ; --- Launch the hotkey daemon now ---
-  Exec '"$LOCALAPPDATA\HyperYap\hyperyap-hotkeys.exe"'
+  ; --- Do NOT auto-launch during install. The NSIS finish page
+  ; "Run hyperyap" checkbox launches the main app. The hotkey daemon
+  ; starts on next login via the startup shortcut. ---
 !macroend
 
 !macro NSIS_HOOK_POSTUNINSTALL
   ; Kill running daemon
-  ExecWait 'taskkill /F /IM hyperyap-hotkeys.exe'
+  ExecWait 'cmd /c taskkill /F /IM hyperyap-hotkeys.exe >nul 2>&1'
 
   ; Clean up deployed files and startup shortcut
   Delete "$LOCALAPPDATA\HyperYap\hyperyap-hotkeys.exe"
