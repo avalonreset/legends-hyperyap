@@ -77,8 +77,7 @@
       Goto model_retry
   model_exists:
 
-  ; --- Launch the main app (it will start the hotkey daemon automatically) ---
-  Exec '"$INSTDIR\hyperyap.exe"'
+  ; App launch is handled by the NSIS finish page checkbox (default: on)
 !macroend
 
 !macro NSIS_HOOK_POSTUNINSTALL
