@@ -47,7 +47,13 @@ static mut MOUSE_HOOK: HHOOK = null_mut();
 
 // -- Entry point --
 
+static NO_TRAY: AtomicBool = AtomicBool::new(false);
+
 fn main() {
+    // Check for --no-tray flag (headless mode, controlled by main HyperYap app)
+    let no_tray = std::env::args().any(|arg| arg == "--no-tray");
+    NO_TRAY.store(no_tray, Ordering::SeqCst);
+
     unsafe {
         // Turn off CapsLock if it's currently on
         if GetKeyState(VK_CAPITAL as i32) & 1 != 0 {
@@ -89,8 +95,10 @@ fn main() {
             null_mut(),
         );
 
-        // Add tray icon
-        add_tray_icon(HWND_MAIN, hinstance);
+        // Add tray icon only if not in headless mode
+        if !no_tray {
+            add_tray_icon(HWND_MAIN, hinstance);
+        }
 
         // Install low-level hooks
         KB_HOOK = SetWindowsHookExW(WH_KEYBOARD_LL, Some(keyboard_hook), hinstance, 0);
@@ -106,7 +114,9 @@ fn main() {
         // Cleanup
         UnhookWindowsHookEx(KB_HOOK);
         UnhookWindowsHookEx(MOUSE_HOOK);
-        remove_tray_icon(HWND_MAIN);
+        if !no_tray {
+            remove_tray_icon(HWND_MAIN);
+        }
     }
 }
 

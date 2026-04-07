@@ -35,6 +35,51 @@ use tauri_plugin_autostart::ManagerExt;
 use tauri_plugin_log::{Target, TargetKind};
 use wake_word::types::WakeWordState;
 
+/// Ensure the hotkey daemon is running in headless mode (no tray icon).
+/// Kills any existing instance first to avoid duplicates, then spawns with --no-tray.
+#[cfg(target_os = "windows")]
+fn ensure_hotkeys_daemon() {
+    use std::os::windows::process::CommandExt;
+    use std::process::Command;
+
+    // Kill any existing instance (may have its own tray icon from standalone launch)
+    let _ = Command::new("cmd")
+        .args(["/C", "taskkill /F /IM hyperyap-hotkeys.exe >nul 2>&1"])
+        .creation_flags(0x08000000) // CREATE_NO_WINDOW
+        .status();
+
+    let hotkeys_path = std::path::PathBuf::from(std::env::var("LOCALAPPDATA").unwrap_or_default())
+        .join("HyperYap")
+        .join("hyperyap-hotkeys.exe");
+
+    if hotkeys_path.exists() {
+        match Command::new(&hotkeys_path).arg("--no-tray").spawn() {
+            Ok(_) => info!("Launched hotkey daemon (headless) from {}", hotkeys_path.display()),
+            Err(e) => warn!("Failed to launch hotkey daemon: {}", e),
+        }
+    } else {
+        info!("Hotkey daemon not found at {}, skipping", hotkeys_path.display());
+    }
+}
+
+#[cfg(not(target_os = "windows"))]
+fn ensure_hotkeys_daemon() {}
+
+/// Kill the hotkey daemon when the main app exits.
+#[cfg(target_os = "windows")]
+fn kill_hotkeys_daemon() {
+    use std::os::windows::process::CommandExt;
+    use std::process::Command;
+    let _ = Command::new("cmd")
+        .args(["/C", "taskkill /F /IM hyperyap-hotkeys.exe >nul 2>&1"])
+        .creation_flags(0x08000000) // CREATE_NO_WINDOW
+        .status();
+    info!("Hotkey daemon stopped");
+}
+
+#[cfg(not(target_os = "windows"))]
+fn kill_hotkeys_daemon() {}
+
 fn show_main_window(app: &tauri::AppHandle) {
     if let Some(main_window) = app.get_webview_window("main") {
         match main_window.show() {
@@ -125,6 +170,9 @@ pub fn run() {
                 let _ = app.autolaunch().enable();
                 info!("Autostart enabled by default (first launch)");
             }
+
+            // Ensure the hotkey daemon is running alongside the main app
+            ensure_hotkeys_daemon();
 
             // Early CLI detection, before heavy initialization
             if let Some(cli::CliCommand::Import {
@@ -329,6 +377,11 @@ pub fn run() {
             get_silence_timeout_ms,
             set_silence_timeout_ms
         ])
-        .run(tauri::generate_context!())
-        .expect("error while running tauri application");
+        .build(tauri::generate_context!())
+        .expect("error while building tauri application")
+        .run(|_app, event| {
+            if let tauri::RunEvent::Exit = event {
+                kill_hotkeys_daemon();
+            }
+        });
 }

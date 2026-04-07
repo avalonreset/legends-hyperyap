@@ -24,8 +24,12 @@
   Delete "$LOCALAPPDATA\HyperYap\scripts\clipboard-image-paste.ps1"
   RMDir "$LOCALAPPDATA\HyperYap\scripts"
 
-  ; --- Create startup shortcut for the hotkey daemon ---
-  CreateShortcut "$SMSTARTUP\hyperyap-hotkeys.lnk" "$LOCALAPPDATA\HyperYap\hyperyap-hotkeys.exe"
+  ; --- Remove old standalone startup shortcut (main app now manages the daemon) ---
+  Delete "$SMSTARTUP\hyperyap-hotkeys.lnk"
+
+  ; --- Create Start Menu shortcuts ---
+  CreateDirectory "$SMPROGRAMS\HyperYap"
+  CreateShortcut "$SMPROGRAMS\HyperYap\HyperYap Hotkeys.lnk" "$LOCALAPPDATA\HyperYap\hyperyap-hotkeys.exe"
 
   ; --- Download NVIDIA Parakeet speech model (~440MB) with retry ---
   ; Uses curl.exe (ships with Windows 10+) for resume-capable downloads
@@ -73,10 +77,7 @@
       Goto model_retry
   model_exists:
 
-  ; --- Launch the hotkey daemon ---
-  Exec '"$LOCALAPPDATA\HyperYap\hyperyap-hotkeys.exe"'
-
-  ; --- Launch the main app so autostart gets registered ---
+  ; --- Launch the main app (it will start the hotkey daemon automatically) ---
   Exec '"$INSTDIR\hyperyap.exe"'
 !macroend
 
@@ -91,4 +92,8 @@
   RMDir "$LOCALAPPDATA\HyperYap\scripts"
   RMDir "$LOCALAPPDATA\HyperYap"
   Delete "$SMSTARTUP\hyperyap-hotkeys.lnk"
+
+  ; Clean up Start Menu shortcuts
+  Delete "$SMPROGRAMS\HyperYap\HyperYap Hotkeys.lnk"
+  RMDir "$SMPROGRAMS\HyperYap"
 !macroend
