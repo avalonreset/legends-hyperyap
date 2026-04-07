@@ -28,16 +28,13 @@ HyperYap is a local voice-to-text application that bundles speech recognition, a
 
 ## What You Get
 
-HyperYap bundles three tools into a single grab-and-go package:
+One installer, one tray icon, everything just works:
 
-| Component | | What It Does |
-|-----------|:-:|-------------|
-| **HyperYap voice engine** | <img src="assets/logo-yap.webp" alt="YAP" width="48"> | Local speech-to-text powered by NVIDIA [Parakeet TDT 0.6B v3](https://huggingface.co/nvidia/parakeet-tdt-0.6b-v3) |
-| **[BenjaminTerm](https://github.com/avalonreset/BenjaminTerm)** | <img src="assets/benterm-logo.webp" alt="BenjaminTerm" width="48"> | Hacker-styled WezTerm terminal with smart clipboard, 86 dark themes, and borderless mode |
-| **Hotkey daemon** | <img src="assets/logo-hyper.webp" alt="HYPER" width="48"> | Mouse side buttons to F13 (record), CapsLock to F13, Mouse Forward to Enter. Runs as its own tray icon process. |
-| **Smart paste** | | Ctrl+V in terminals auto-saves clipboard images as PNGs and pastes the file path |
-| **Auto-boot** | | Everything starts on login. No setup after reboot. |
-| **Preset configs** | | Toggle-to-talk, English, overlay on bottom, all shortcuts pre-mapped |
+- **Local speech-to-text** powered by NVIDIA [Parakeet TDT 0.6B v3](https://huggingface.co/nvidia/parakeet-tdt-0.6b-v3). No cloud, no internet after first install.
+- **Hotkey remapping** turns CapsLock and mouse side buttons into recording triggers. Mouse Forward becomes Enter.
+- **Smart paste** detects terminals and auto-saves clipboard images as PNGs, pasting the file path instead of garbled data.
+- **[BenjaminTerm](https://github.com/avalonreset/BenjaminTerm)** included. Hacker-styled WezTerm terminal with smart clipboard, 86 dark themes, and borderless mode.
+- **Auto-boot** on login. Preset configs. Zero setup after install.
 
 Everything is preconfigured. You do not need to set up shortcuts, change settings, or configure anything after install.
 
@@ -48,7 +45,7 @@ Everything is preconfigured. You do not need to set up shortcuts, change setting
 Download [hyperyap_1.0.0_x64-setup.exe](https://github.com/avalonreset/hyperyap/releases/latest) from the Releases page and run it. On first launch, HyperYap will:
 
 - Download the NVIDIA Parakeet speech model (~440MB)
-- Deploy the hotkey daemon and set it to start on boot
+- Set up the hotkey engine and register autostart
 - Apply all preset settings (toggle-to-talk, F13, English)
 
 ### Option 2: One-line PowerShell install
@@ -84,7 +81,7 @@ Run the installer again over an existing install. HyperYap upgrades in-place wit
 | `Ctrl+Shift+X` | Command mode |
 | `Escape` | Cancel recording |
 
-These hotkeys are provided by the bundled hotkey daemon that runs as a separate tray icon process.
+These hotkeys are built in. You can pause and resume them from the tray icon's right-click menu.
 
 ### CapsLock Remapping
 
@@ -92,7 +89,7 @@ HyperYap disables CapsLock and repurposes it as a speech-to-text key. Press Caps
 
 ### Smart Paste
 
-HyperYap's hotkey daemon is terminal-aware. It detects which application is focused and adapts Ctrl+V behavior accordingly:
+HyperYap's hotkey engine is terminal-aware. It detects which application is focused and adapts Ctrl+V behavior accordingly:
 
 **In regular applications** (browsers, editors, chat apps), Ctrl+V works exactly as it normally does. HyperYap does not interfere.
 
@@ -156,14 +153,14 @@ Settings are stored in `%APPDATA%/com.avalonreset.hyperyap/settings.json`. Each 
 
 ### Hotkey Customization
 
-All in-app hotkeys can be remapped from the Settings page. Mouse button and CapsLock remapping are handled by the bundled hotkey daemon (`hyperyap-hotkeys.exe`), which runs as a separate process with its own tray icon.
+All in-app hotkeys can be remapped from the Settings page. Mouse button and CapsLock remapping are handled by the bundled hotkey engine, which runs alongside the main app and can be toggled from the tray menu.
 
 ## Build from Source
 
 ```bash
 pnpm install
 
-# Build the hotkey daemon first
+# Build the hotkey engine first
 cd hotkeys && cargo build --release && cd ..
 
 pnpm tauri dev      # development
