@@ -38,7 +38,9 @@ jobs:
 
             - uses: swatinem/rust-cache@779680da715d629ac1d338a641029a2f4372abb5
               with:
-                  workspaces: './src-tauri -> target'
+                  workspaces: |
+                      ./src-tauri -> target
+                      ./hotkeys -> target
 
             - name: Install pnpm
               run: npm install -g pnpm
@@ -56,6 +58,10 @@ jobs:
                   Write-Host "Expanding into .\resources"
                   Expand-Archive -Path $zip -DestinationPath resources -Force
                   Get-ChildItem .\resources -Recurse | Select-Object FullName, Length
+
+            - name: Build hotkey daemon
+              run: cargo build --release --manifest-path hotkeys/Cargo.toml
+              shell: pwsh
 
             - name: Install frontend deps
               run: pnpm install
