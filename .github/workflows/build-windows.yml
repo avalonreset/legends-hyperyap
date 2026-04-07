@@ -76,8 +76,11 @@ jobs:
               shell: pwsh
               run: |
                   New-Item -ItemType Directory -Force -Path "unsigned_artifacts" | Out-Null
-                  $msi = Get-ChildItem -Path "src-tauri/target/release/bundle/msi" -Filter *.msi | Select-Object -First 1
-                  Copy-Item $msi.FullName -Destination "unsigned_artifacts/HyperYap_x64.msi"
+                  $msiDir = "src-tauri/target/release/bundle/msi"
+                  if (Test-Path $msiDir) {
+                      $msi = Get-ChildItem -Path $msiDir -Filter *.msi | Select-Object -First 1
+                      if ($msi) { Copy-Item $msi.FullName -Destination "unsigned_artifacts/HyperYap_x64.msi" }
+                  }
                   $exe = Get-ChildItem -Path "src-tauri/target/release/bundle/nsis" -Filter *.exe | Select-Object -First 1
                   Copy-Item $exe.FullName -Destination "unsigned_artifacts/HyperYap_x64-setup.exe"
 
