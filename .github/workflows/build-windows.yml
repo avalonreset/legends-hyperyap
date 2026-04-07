@@ -95,7 +95,8 @@ jobs:
                   if-no-files-found: error
 
             - name: SignPath Sign
-              if: ${{ inputs.dry == false }}
+              if: ${{ inputs.dry == false && secrets.SIGNPATH_API_TOKEN != '' }}
+              id: signpath
               uses: signpath/github-action-submit-signing-request@v2
               with:
                   api-token: '${{ secrets.SIGNPATH_API_TOKEN }}'
@@ -107,7 +108,7 @@ jobs:
                   output-artifact-directory: 'signed_artifacts'
 
             - name: Restore Tauri signing key
-              if: ${{ inputs.dry == false }}
+              if: ${{ inputs.dry == false && secrets.TAURI_PRIVATE_KEY != '' }}
               env:
                   TAURI_PRIVATE_KEY: ${{ secrets.TAURI_PRIVATE_KEY }}
               run: |
@@ -115,7 +116,7 @@ jobs:
               shell: pwsh
 
             - name: Sign & Package
-              if: ${{ inputs.dry == false }}
+              if: ${{ inputs.dry == false && steps.signpath.outcome == 'success' }}
               env:
                   TAURI_PRIVATE_KEY_PATH: tauri.key
                   TAURI_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_KEY_PASSWORD }}
@@ -126,7 +127,7 @@ jobs:
                   New-Item -ItemType Directory -Force -Path $releaseDir | Out-Null
 
                   # MSI
-                  $msi = Get-ChildItem -Path "signed_artifacts" -Filter *.msi | Select-Object -First 1
+                  $msi = Get-ChildItem -Path "signed_artifacts" -Filter *.msi -ErrorAction SilentlyContinue | Select-Object -First 1
                   if ($msi) {
                       $finalMsi = Join-Path $releaseDir "HyperYap_x64.msi"
                       Copy-Item $msi.FullName -Destination $finalMsi -Force
@@ -134,12 +135,22 @@ jobs:
                   }
 
                   # EXE
-                  $exe = Get-ChildItem -Path "signed_artifacts" -Filter *.exe | Select-Object -First 1
+                  $exe = Get-ChildItem -Path "signed_artifacts" -Filter *.exe -ErrorAction SilentlyContinue | Select-Object -First 1
                   if ($exe) {
                       $finalExe = Join-Path $releaseDir "HyperYap_x64-setup.exe"
                       Copy-Item $exe.FullName -Destination $finalExe -Force
                       pnpm tauri signer sign $finalExe
                   }
+
+            - name: Prepare release bundle (unsigned fallback)
+              if: ${{ inputs.dry == false && steps.signpath.outcome != 'success' }}
+              shell: pwsh
+              run: |
+                  $releaseDir = "release-bundle"
+                  if (Test-Path $releaseDir) { Remove-Item $releaseDir -Recurse -Force }
+                  New-Item -ItemType Directory -Force -Path $releaseDir | Out-Null
+                  Copy-Item "unsigned_artifacts/*" -Destination $releaseDir -Force
+                  Write-Host "Using unsigned artifacts (SignPath not configured or failed)"
 
             - name: Upload artifact (1 day)
               if: ${{ inputs.dry == false }}
