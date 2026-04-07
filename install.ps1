@@ -184,11 +184,35 @@ if (Test-Path "$modelDir\encoder-model.int8.onnx") {
     Write-Host "  Model already downloaded." -ForegroundColor Green
 } else {
     $modelZip = "$env:TEMP\parakeet-model.zip"
-    Write-Host "  Downloading from GitHub..." -ForegroundColor DarkGray
-    Invoke-WebRequest -Uri $modelUrl -OutFile $modelZip -UseBasicParsing
+    $maxRetries = 30
+    $downloaded = $false
+
+    for ($attempt = 1; $attempt -le $maxRetries; $attempt++) {
+        Write-Host "  Downloading from GitHub (attempt $attempt/$maxRetries)..." -ForegroundColor DarkGray
+        # Use curl.exe with resume support — handles flaky connections gracefully
+        & curl.exe -L -C - -o $modelZip --retry 3 --retry-delay 2 --connect-timeout 30 $modelUrl 2>&1 | Write-Host
+        if ($LASTEXITCODE -eq 0) {
+            $downloaded = $true
+            break
+        }
+        Write-Host "  Download interrupted, retrying in 3 seconds..." -ForegroundColor Yellow
+        Start-Sleep -Seconds 3
+    }
+
+    if (-not $downloaded) {
+        throw "Failed to download speech model after $maxRetries attempts. Check your internet connection."
+    }
+
     Write-Host "  Extracting model..." -ForegroundColor DarkGray
     New-Item -ItemType Directory -Path $targetResourceDir -Force | Out-Null
     Expand-Archive -Path $modelZip -DestinationPath $targetResourceDir -Force
+
+    # Verify the model was extracted correctly
+    if (-not (Test-Path "$modelDir\encoder-model.int8.onnx")) {
+        Remove-Item $modelZip -Force -ErrorAction SilentlyContinue
+        throw "Model extraction failed — encoder-model.int8.onnx not found. The download may have been corrupted."
+    }
+
     Remove-Item $modelZip -Force
     Write-Host "  Model installed." -ForegroundColor Green
 }
