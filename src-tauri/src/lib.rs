@@ -278,9 +278,9 @@ pub fn run() {
             Ok(())
         })
         .on_window_event(|window, event| {
-            if let tauri::WindowEvent::CloseRequested { api, .. } = event {
-                api.prevent_close();
-                let _ = window.hide();
+            if let tauri::WindowEvent::CloseRequested { .. } = event {
+                // Close the app entirely (daemon gets killed via RunEvent::Exit)
+                window.app_handle().exit(0);
             }
         })
         .invoke_handler(tauri::generate_handler![
