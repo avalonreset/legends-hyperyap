@@ -54,3 +54,56 @@ jobs:
             APPLE_ID: ${{ secrets.APPLE_ID }}
             APPLE_ID_PASSWORD: ${{ secrets.APPLE_ID_PASSWORD }}
             APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+
+    publish:
+        needs: [windows]
+        if: ${{ always() && (needs.windows.result == 'success') }}
+        runs-on: ubuntu-latest
+        permissions:
+            contents: write
+        steps:
+            - uses: actions/checkout@v4
+
+            - name: Download Windows artifacts
+              uses: actions/download-artifact@v4
+              with:
+                  name: hyperyap-windows-x64
+                  path: release-assets
+
+            - name: Get version
+              id: version
+              run: |
+                  VERSION=$(grep '"version"' src-tauri/tauri.conf.json | head -1 | sed 's/.*"\([0-9.]*\)".*/\1/')
+                  echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+            - name: Rename assets for release
+              run: |
+                  cd release-assets
+                  for f in *.exe; do
+                    mv "$f" "hyperyap_${{ steps.version.outputs.version }}_x64-setup.exe" 2>/dev/null || true
+                  done
+                  ls -la
+
+            - name: Create or update GitHub Release
+              env:
+                  GH_TOKEN: ${{ github.token }}
+              run: |
+                  TAG="v${{ steps.version.outputs.version }}"
+                  # Delete existing release if it exists (for re-releases)
+                  gh release delete "$TAG" --yes 2>/dev/null || true
+                  # Create new release
+                  gh release create "$TAG" \
+                    --title "HyperYap $TAG" \
+                    --notes "## HyperYap $TAG
+
+                  Download and run the installer. It handles everything:
+                  - HyperYap voice engine
+                  - Hotkey daemon (F13/CapsLock/Mouse Back for recording)
+                  - NVIDIA Parakeet speech model (~440MB, downloaded on install)
+
+                  ### Quick install (PowerShell)
+                  \`\`\`powershell
+                  irm https://raw.githubusercontent.com/avalonreset/hyperyap/main/install.ps1 | iex
+                  \`\`\`" \
+                    --latest \
+                    release-assets/*

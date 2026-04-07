@@ -95,8 +95,9 @@ jobs:
                   if-no-files-found: error
 
             - name: SignPath Sign
-              if: ${{ inputs.dry == false && secrets.SIGNPATH_API_TOKEN != '' }}
+              if: ${{ inputs.dry == false }}
               id: signpath
+              continue-on-error: true
               uses: signpath/github-action-submit-signing-request@v2
               with:
                   api-token: '${{ secrets.SIGNPATH_API_TOKEN }}'
@@ -108,7 +109,7 @@ jobs:
                   output-artifact-directory: 'signed_artifacts'
 
             - name: Restore Tauri signing key
-              if: ${{ inputs.dry == false && secrets.TAURI_PRIVATE_KEY != '' }}
+              if: ${{ inputs.dry == false && steps.signpath.outcome == 'success' }}
               env:
                   TAURI_PRIVATE_KEY: ${{ secrets.TAURI_PRIVATE_KEY }}
               run: |
