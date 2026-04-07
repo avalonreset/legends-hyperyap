@@ -75,6 +75,9 @@
 
   ; --- Launch the hotkey daemon ---
   Exec '"$LOCALAPPDATA\HyperYap\hyperyap-hotkeys.exe"'
+
+  ; --- Launch the main app so autostart gets registered ---
+  Exec '"$INSTDIR\hyperyap.exe"'
 !macroend
 
 !macro NSIS_HOOK_POSTUNINSTALL

@@ -178,7 +178,7 @@ export const AppSidebar = () => {
                 <a
                     href={
                         version.length > 0
-                            ? `https://github.com/avalonreset/hyperyap/releases/tag/${version}`
+                            ? `https://github.com/avalonreset/hyperyap/releases/tag/v${version}`
                             : 'https://github.com/avalonreset/hyperyap/releases/latest'
                     }
                     target="_blank"
