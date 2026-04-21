@@ -23,16 +23,19 @@ sources:
 
 ## Entities
 
+- [[Entities Index]]: focused catalog for entity notes.
 - [[HyperYap]]: privacy-first local speech-to-text application.
 - [[Benjamin Term]]: preferred terminal target for smart screenshot paste.
 
 ## Concepts
 
+- [[Concepts Index]]: focused catalog for concept notes.
 - [[Privacy First Local Processing]]: local-only processing and persistence boundaries.
 - [[Clipboard Preservation]]: save, replace, paste, and restore clipboard behavior.
 
 ## Modules
 
+- [[Modules Index]]: focused catalog for module notes.
 - [[HyperYap App]]: Tauri desktop app.
 - [[Rust Tauri Backend]]: backend modules and command surface.
 - [[React TypeScript Frontend]]: UI structure and conventions.
@@ -40,14 +43,16 @@ sources:
 
 ## Flows
 
+- [[Flows Index]]: focused catalog for workflow notes.
 - [[Push To Talk Transcription]]: speech-to-text recording and paste flow.
 - [[Smart Screenshot Paste]]: terminal screenshot paste as a filesystem path.
 
 ## Decisions
 
+- [[Decisions Index]]: focused catalog for decision notes.
 - [[ADR 2026-04-21 Smart Paste Guard]]: terminal Ctrl+V guard for fresh screenshots.
 - [[ADR 2026-04-21 Mouse Back Uses F13]]: Mouse Back maps to F13 for toggle-to-talk.
 
 ## Questions
 
-- No saved questions yet.
+- [[Questions Index]]: saved durable answers and analysis.

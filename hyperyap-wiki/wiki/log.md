@@ -15,6 +15,13 @@ sources:
 
 # Vault Log
 
+## 2026-04-21 lint | project-wiki-tooling scaffold completion
+
+- Ran the `project-wiki-tooling` skill against `hyperyap-wiki`.
+- Added sub-indexes for sources, entities, concepts, modules, flows, decisions, and questions.
+- Added tracked placeholders for `.raw/` source categories and `_attachments/`.
+- Updated [[Hot Cache]] and [[HyperYap Vault Index]].
+
 ## 2026-04-21 scaffold | HyperYap Wiki
 
 - Created initial Obsidian vault scaffold.

@@ -18,7 +18,7 @@ sources:
 
 ## Last Updated
 
-2026-04-21. HyperYap local install and GitHub release are at `v1.0.4`.
+2026-04-21. HyperYap local install and GitHub release are at `v1.0.4`. The `project-wiki-tooling` skill was used after restart to lint and complete the `hyperyap-wiki` scaffold.
 
 ## Key Recent Facts
 
@@ -32,6 +32,7 @@ sources:
 - Created [[ADR 2026-04-21 Smart Paste Guard]].
 - Created [[ADR 2026-04-21 Mouse Back Uses F13]].
 - Created [[Smart Screenshot Paste]] and [[Hotkey Daemon]] seed notes.
+- Added folder sub-indexes and placeholder raw/attachment folders for a complete Obsidian vault structure.
 
 ## Active Threads
 
