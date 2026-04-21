@@ -23,8 +23,8 @@ sources:
 
 ## Release State
 
-- Latest known release: `v1.0.4`
-- Latest known installer: `hyperyap_1.0.4_x64-setup.exe`
+- Latest known release: `v1.0.5`
+- Latest known installer: `hyperyap_1.0.5_x64-setup.exe`
 
 ## Open Checks
 

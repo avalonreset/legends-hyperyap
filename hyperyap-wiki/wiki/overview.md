@@ -18,7 +18,7 @@ sources:
 
 HyperYap is a privacy-first local speech-to-text desktop app built with Tauri, Rust, React, and TypeScript. It runs transcription locally and is designed around a small, controlled data persistence model.
 
-The current release line includes smart screenshot paste support for terminal workflows. The most recent release context in this vault is `v1.0.4`, which adds a Ctrl state guard to reduce stale modifier risk while preserving fast screenshot paste interception.
+The current release line includes smart screenshot paste support for terminal workflows. The most recent release context in this vault is `v1.0.5`, which adds vanilla WezTerm compatibility by tracking recent screenshot intent and using the terminal paste shortcut after image-to-path conversion.
 
 ## Core Areas
 

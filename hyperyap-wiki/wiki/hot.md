@@ -18,12 +18,14 @@ sources:
 
 ## Last Updated
 
-2026-04-21. HyperYap local install and GitHub release are at `v1.0.4`. The `project-wiki-tooling` skill was used after restart to lint and complete the `hyperyap-wiki` scaffold. A separate private GitHub repo now exists for [[Project Wiki Tooling]].
+2026-04-21. HyperYap local install and GitHub release are at `v1.0.5`. The latest release fixes vanilla WezTerm smart screenshot paste by tracking recent screenshot intent and pasting converted paths with the terminal paste shortcut. The `project-wiki-tooling` skill was used after restart to lint and complete the `hyperyap-wiki` scaffold. A separate private GitHub repo now exists for [[Project Wiki Tooling]].
 
 ## Key Recent Facts
 
 - Smart screenshot paste targets Benjamin Term and similar terminal windows.
 - The hotkey daemon waits for fresh clipboard images before pasting a saved screenshot path.
+- Recent Win+Shift+S and PrintScreen shortcuts are tracked for 10 seconds so fast Ctrl+V waits for image data instead of falling back to stale text.
+- Vanilla WezTerm receives converted paths through Ctrl+Shift+V, so Codex does not see the original Ctrl+V image-paste command.
 - If the clipboard is empty or unstable during terminal Ctrl+V, the daemon suppresses fallback paste so a stray `v` should not appear.
 - Mouse Back should keep translating to F13 for toggle-to-talk compatibility.
 - [[Project Wiki Tooling]] lives at `[local path redacted]` and is tracked separately at `[project setup redacted]`.

@@ -36,5 +36,6 @@ The hotkey daemon should intercept terminal Ctrl+V using low-level Ctrl key trac
 
 - Windows local install was updated to `v1.0.4`.
 - GitHub release `v1.0.4` was created with installer asset.
-- Windows local hotkey daemon was updated with the `v1.0.5` WezTerm paste behavior.
+- Windows local install was updated to `v1.0.5`.
+- GitHub release `v1.0.5` was created with installer asset.
 - Ubuntu validation is still a release checklist item for future cross-platform changes.
