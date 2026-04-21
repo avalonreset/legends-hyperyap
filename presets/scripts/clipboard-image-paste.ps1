@@ -2,7 +2,7 @@ Add-Type -AssemblyName System.Windows.Forms
 Add-Type -AssemblyName System.Drawing
 
 $img = $null
-$deadline = (Get-Date).AddMilliseconds(2500)
+$deadline = (Get-Date).AddMilliseconds(5000)
 
 while ((Get-Date) -lt $deadline -and -not $img) {
     try {

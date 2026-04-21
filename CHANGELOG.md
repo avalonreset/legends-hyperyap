@@ -4,6 +4,7 @@
 
 | Version       | Date       | Notes |
 | ------------- | ---------- | ----- |
+| `1.0.2`       | 2026-04-21 | **Bug Fixes**<br>- Prevent terminal smart paste from typing a stray `v` when Windows has not finished publishing a screenshot to the clipboard.<br>- Keep terminal text paste fast while waiting longer for empty or unstable screenshot clipboard states.<br>- Extend the empty clipboard screenshot wait window to 5 seconds before suppressing paste. |
 | `1.0.1`       | 2026-04-21 | **Bug Fixes**<br>- Harden smart screenshot paste for terminals by waiting for Windows clipboard image formats before falling back to normal paste.<br>- Run clipboard image conversion in STA PowerShell with retry handling so Snipping Tool screenshots are captured reliably.<br>- Restore the exact pasted screenshot image after paste instead of restoring the latest file from the screenshots folder.<br>- Update the legacy AutoHotkey smart paste scripts with the same image format retry behavior. |
 | `1.0.0`       | 2026-04-04 | Forked from MURmure 1.8.1 and rebranded as HyperYap. Bundled Parakeet model, preset configs, AutoHotkey scripts, and PowerShell installer for grab-and-go local speech-to-text on Windows. |
 

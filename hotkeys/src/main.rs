@@ -18,10 +18,13 @@ const IDM_PAUSE: u16 = 1;
 const IDM_EXIT: u16 = 2;
 const VK_F13: u16 = 0x7C;
 const CREATE_NO_WINDOW: u32 = 0x08000000;
+const CF_TEXT: u32 = 1;
 const CF_BITMAP: u32 = 2;
 const CF_DIB: u32 = 8;
+const CF_UNICODETEXT: u32 = 13;
 const CF_DIBV5: u32 = 17;
-const SMART_PASTE_IMAGE_WAIT_MS: u64 = 1_500;
+const SMART_PASTE_INITIAL_IMAGE_GRACE_MS: u64 = 120;
+const SMART_PASTE_IMAGE_WAIT_MS: u64 = 5_000;
 const SMART_PASTE_RETRY_INTERVAL_MS: u64 = 40;
 const SMART_PASTE_RESTORE_DELAY_MS: u64 = 750;
 
@@ -272,26 +275,49 @@ fn handle_smart_paste() {
     unsafe {
         if let Some(proc_name) = get_foreground_process_name() {
             let lower = proc_name.to_lowercase();
-            if TERMINALS.iter().any(|t| lower == *t)
-                && wait_for_clipboard_image(std::time::Duration::from_millis(
-                    SMART_PASTE_IMAGE_WAIT_MS,
-                ))
-            {
-                if let Ok(image_path) = run_clipboard_image_save() {
-                    send_key_combo(VK_CONTROL, 0x56 /* V */);
-                    std::thread::spawn(move || {
-                        std::thread::sleep(std::time::Duration::from_millis(
-                            SMART_PASTE_RESTORE_DELAY_MS,
-                        ));
-                        let _ = restore_clipboard_image(&image_path);
-                    });
+            if TERMINALS.iter().any(|t| lower == *t) {
+                if wait_for_clipboard_image(std::time::Duration::from_millis(
+                    SMART_PASTE_INITIAL_IMAGE_GRACE_MS,
+                )) && paste_clipboard_image()
+                {
                     return;
                 }
+
+                if clipboard_has_text() {
+                    send_key_combo(VK_CONTROL, 0x56 /* V */);
+                    return;
+                }
+
+                if wait_for_clipboard_image(std::time::Duration::from_millis(
+                    SMART_PASTE_IMAGE_WAIT_MS,
+                )) && paste_clipboard_image()
+                {
+                    return;
+                }
+
+                return;
             }
         }
 
         // Non-terminal or no image: just send Ctrl+V normally
         send_key_combo(VK_CONTROL, 0x56 /* V */);
+    }
+}
+
+fn paste_clipboard_image() -> bool {
+    unsafe {
+        if let Ok(image_path) = run_clipboard_image_save() {
+            send_key_combo(VK_CONTROL, 0x56 /* V */);
+            std::thread::spawn(move || {
+                std::thread::sleep(std::time::Duration::from_millis(
+                    SMART_PASTE_RESTORE_DELAY_MS,
+                ));
+                let _ = restore_clipboard_image(&image_path);
+            });
+            true
+        } else {
+            false
+        }
     }
 }
 
@@ -320,13 +346,19 @@ fn clipboard_has_image() -> bool {
     }
 }
 
+fn clipboard_has_text() -> bool {
+    unsafe {
+        IsClipboardFormatAvailable(CF_UNICODETEXT) != 0 || IsClipboardFormatAvailable(CF_TEXT) != 0
+    }
+}
+
 fn run_clipboard_image_save() -> Result<String, String> {
     let script = r#"
 Add-Type -AssemblyName System.Windows.Forms
 Add-Type -AssemblyName System.Drawing
 
 $img = $null
-$deadline = (Get-Date).AddMilliseconds(2500)
+$deadline = (Get-Date).AddMilliseconds(5000)
 
 while ((Get-Date) -lt $deadline -and -not $img) {
     try {

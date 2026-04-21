@@ -24,9 +24,26 @@ $^v:: {
         exe := StrLower(WinGetProcessName("A"))
     }
 
-    if (IsSmartPasteTerminal(exe) && WaitForClipboardImage()) {
-        scriptDir := A_ScriptDir
-        RunWait('powershell.exe -NoProfile -Sta -WindowStyle Hidden -ExecutionPolicy Bypass -File "' scriptDir '\clipboard-image-paste.ps1"',, "Hide")
+    if (IsSmartPasteTerminal(exe)) {
+        if (WaitForClipboardImage(120)) {
+            scriptDir := A_ScriptDir
+            RunWait('powershell.exe -NoProfile -Sta -WindowStyle Hidden -ExecutionPolicy Bypass -File "' scriptDir '\clipboard-image-paste.ps1"',, "Hide")
+            Send "^v"
+            return
+        }
+
+        if (HasClipboardText()) {
+            Send "^v"
+            return
+        }
+
+        if (WaitForClipboardImage()) {
+            scriptDir := A_ScriptDir
+            RunWait('powershell.exe -NoProfile -Sta -WindowStyle Hidden -ExecutionPolicy Bypass -File "' scriptDir '\clipboard-image-paste.ps1"',, "Hide")
+            Send "^v"
+        }
+
+        return
     }
 
     Send "^v"
@@ -55,7 +72,12 @@ HasClipboardImage() {
         || DllCall("IsClipboardFormatAvailable", "UInt", 17)
 }
 
-WaitForClipboardImage(timeoutMs := 1500) {
+HasClipboardText() {
+    return DllCall("IsClipboardFormatAvailable", "UInt", 13)
+        || DllCall("IsClipboardFormatAvailable", "UInt", 1)
+}
+
+WaitForClipboardImage(timeoutMs := 5000) {
     start := A_TickCount
     while (A_TickCount - start <= timeoutMs) {
         if HasClipboardImage() {
