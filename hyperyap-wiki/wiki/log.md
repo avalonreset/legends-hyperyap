@@ -15,6 +15,14 @@ sources:
 
 # Vault Log
 
+## 2026-04-21 save | Project Wiki Tooling repo setup
+
+- Created [[Project Wiki Tooling]] entity note.
+- Recorded project setup: `[project setup redacted]`.
+- Latest known Project Wiki Tooling commit: `74859f3 Tone down public proprietary wording`.
+- Installed local workflow validates at `[local workflow path redacted]`.
+- Updated [[Hot Cache]] and [[HyperYap Vault Index]] before context compaction.
+
 ## 2026-04-21 lint | project-wiki-tooling scaffold completion
 
 - Ran the `project-wiki-tooling` skill against `hyperyap-wiki`.

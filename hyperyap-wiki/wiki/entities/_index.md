@@ -17,3 +17,4 @@ sources:
 
 - [[HyperYap]]: privacy-first local speech-to-text application.
 - [[Benjamin Term]]: terminal target for smart screenshot paste.
+- [[Project Wiki Tooling]]: private Codex skill project for maintaining Obsidian wiki vaults.

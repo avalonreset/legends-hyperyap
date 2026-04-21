@@ -26,6 +26,7 @@ sources:
 - [[Entities Index]]: focused catalog for entity notes.
 - [[HyperYap]]: privacy-first local speech-to-text application.
 - [[Benjamin Term]]: preferred terminal target for smart screenshot paste.
+- [[Project Wiki Tooling]]: private Codex skill project for Obsidian wiki vaults.
 
 ## Concepts
 
