@@ -1,0 +1,53 @@
+---
+type: meta
+title: "HyperYap Vault Index"
+created: 2026-04-21
+updated: 2026-04-21
+tags:
+  - hyperyap
+  - index
+status: developing
+related:
+  - "[[HyperYap Overview]]"
+sources:
+  - "[[Project Documentation]]"
+---
+
+# HyperYap Vault Index
+
+## Start Here
+
+- [[HyperYap Overview]]: executive summary of the app, architecture, and current release state.
+- [[Hot Cache]]: current working context for future sessions.
+- [[Project Documentation]]: source map for repository docs and code.
+
+## Entities
+
+- [[HyperYap]]: privacy-first local speech-to-text application.
+- [[Benjamin Term]]: preferred terminal target for smart screenshot paste.
+
+## Concepts
+
+- [[Privacy First Local Processing]]: local-only processing and persistence boundaries.
+- [[Clipboard Preservation]]: save, replace, paste, and restore clipboard behavior.
+
+## Modules
+
+- [[HyperYap App]]: Tauri desktop app.
+- [[Rust Tauri Backend]]: backend modules and command surface.
+- [[React TypeScript Frontend]]: UI structure and conventions.
+- [[Hotkey Daemon]]: global hotkey and smart paste companion.
+
+## Flows
+
+- [[Push To Talk Transcription]]: speech-to-text recording and paste flow.
+- [[Smart Screenshot Paste]]: terminal screenshot paste as a filesystem path.
+
+## Decisions
+
+- [[ADR 2026-04-21 Smart Paste Guard]]: terminal Ctrl+V guard for fresh screenshots.
+- [[ADR 2026-04-21 Mouse Back Uses F13]]: Mouse Back maps to F13 for toggle-to-talk.
+
+## Questions
+
+- No saved questions yet.

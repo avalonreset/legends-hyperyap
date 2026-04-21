@@ -1,0 +1,17 @@
+body {
+  --hyperyap-accent: #e8734a;
+  --hyperyap-flow: #00b23d;
+  --hyperyap-module: #3399ff;
+}
+
+.nav-file-title[data-path^="wiki/decisions/"] {
+  color: var(--hyperyap-accent);
+}
+
+.nav-file-title[data-path^="wiki/flows/"] {
+  color: var(--hyperyap-flow);
+}
+
+.nav-file-title[data-path^="wiki/modules/"] {
+  color: var(--hyperyap-module);
+}
