@@ -2,7 +2,8 @@
 
 use std::mem::{size_of, zeroed};
 use std::os::windows::process::CommandExt;
-use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
+use std::time::{SystemTime, UNIX_EPOCH};
 use windows_sys::Win32::Foundation::*;
 use windows_sys::Win32::System::LibraryLoader::GetModuleHandleW;
 use windows_sys::Win32::System::Threading::*;
@@ -30,6 +31,7 @@ const SMART_PASTE_INITIAL_IMAGE_GRACE_MS: u64 = 120;
 const SMART_PASTE_IMAGE_WAIT_MS: u64 = 5_000;
 const SMART_PASTE_RETRY_INTERVAL_MS: u64 = 40;
 const SMART_PASTE_RESTORE_DELAY_MS: u64 = 750;
+const TRACKED_CTRL_GRACE_MS: u64 = 750;
 
 // Terminal process names (lowercase) that get smart image paste
 const TERMINALS: &[&str] = &[
@@ -53,6 +55,7 @@ const TERMINALS: &[&str] = &[
 
 static SUPPRESS_V_UP: AtomicBool = AtomicBool::new(false);
 static CTRL_HELD: AtomicBool = AtomicBool::new(false);
+static LAST_CTRL_DOWN_MS: AtomicU64 = AtomicU64::new(0);
 static PAUSED: AtomicBool = AtomicBool::new(false);
 static mut HWND_MAIN: HWND = null_mut();
 static mut KB_HOOK: HHOOK = null_mut();
@@ -151,6 +154,7 @@ unsafe extern "system" fn keyboard_hook(code: i32, wparam: WPARAM, lparam: LPARA
         if is_ctrl_key(vk_code) {
             if is_down {
                 CTRL_HELD.store(true, Ordering::SeqCst);
+                LAST_CTRL_DOWN_MS.store(now_ms(), Ordering::SeqCst);
             } else if is_up {
                 CTRL_HELD.store(is_ctrl_held(), Ordering::SeqCst);
             }
@@ -607,11 +611,26 @@ unsafe fn is_ctrl_held() -> bool {
 }
 
 fn is_smart_paste_modifier_held() -> bool {
-    CTRL_HELD.load(Ordering::SeqCst) || unsafe { is_ctrl_held() }
+    if unsafe { is_ctrl_held() } {
+        return true;
+    }
+
+    if !CTRL_HELD.load(Ordering::SeqCst) {
+        return false;
+    }
+
+    now_ms().saturating_sub(LAST_CTRL_DOWN_MS.load(Ordering::SeqCst)) <= TRACKED_CTRL_GRACE_MS
 }
 
 fn is_ctrl_key(vk_code: u16) -> bool {
     vk_code == VK_CONTROL || vk_code == VK_LCONTROL_KEY || vk_code == VK_RCONTROL_KEY
+}
+
+fn now_ms() -> u64 {
+    SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .map(|duration| duration.as_millis() as u64)
+        .unwrap_or_default()
 }
 
 // -- Process detection --
