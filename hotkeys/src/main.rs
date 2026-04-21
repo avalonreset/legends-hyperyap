@@ -1,11 +1,21 @@
 #![windows_subsystem = "windows"]
 
+use image::{ColorType, ImageFormat, ImageReader};
 use std::mem::{size_of, zeroed};
 use std::os::windows::process::CommandExt;
+use std::path::PathBuf;
 use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
+use std::sync::{Mutex, OnceLock};
 use std::time::{SystemTime, UNIX_EPOCH};
 use windows_sys::Win32::Foundation::*;
+use windows_sys::Win32::Graphics::Gdi::{BITMAPINFOHEADER, BI_RGB};
+use windows_sys::Win32::System::DataExchange::{
+    CloseClipboard, EmptyClipboard, GetClipboardData, OpenClipboard, SetClipboardData,
+};
 use windows_sys::Win32::System::LibraryLoader::GetModuleHandleW;
+use windows_sys::Win32::System::Memory::{
+    GlobalAlloc, GlobalLock, GlobalSize, GlobalUnlock, GMEM_MOVEABLE,
+};
 use windows_sys::Win32::System::Threading::*;
 use windows_sys::Win32::UI::Input::KeyboardAndMouse::*;
 use windows_sys::Win32::UI::Shell::*;
@@ -37,6 +47,7 @@ const SMART_PASTE_IMAGE_WAIT_MS: u64 = 5_000;
 const SMART_PASTE_RETRY_INTERVAL_MS: u64 = 40;
 const SMART_PASTE_RESTORE_DELAY_MS: u64 = 750;
 const SMART_PASTE_SCREENSHOT_INTENT_MS: u64 = 10_000;
+const SMART_PASTE_CACHED_PATH_MS: u64 = 30_000;
 const TRACKED_CTRL_GRACE_MS: u64 = 750;
 
 // Terminal process names (lowercase) that get smart image paste
@@ -63,10 +74,17 @@ static SUPPRESS_V_UP: AtomicBool = AtomicBool::new(false);
 static CTRL_HELD: AtomicBool = AtomicBool::new(false);
 static LAST_CTRL_DOWN_MS: AtomicU64 = AtomicU64::new(0);
 static LAST_SCREENSHOT_INTENT_MS: AtomicU64 = AtomicU64::new(0);
+static SCREENSHOT_PREPARE_IN_FLIGHT: AtomicBool = AtomicBool::new(false);
 static PAUSED: AtomicBool = AtomicBool::new(false);
 static mut HWND_MAIN: HWND = null_mut();
 static mut KB_HOOK: HHOOK = null_mut();
 static mut MOUSE_HOOK: HHOOK = null_mut();
+
+#[derive(Clone)]
+struct PreparedScreenshot {
+    path: String,
+    created_ms: u64,
+}
 
 // -- Entry point --
 
@@ -159,7 +177,7 @@ unsafe extern "system" fn keyboard_hook(code: i32, wparam: WPARAM, lparam: LPARA
         let vk_code = kb.vkCode as u16;
 
         if is_down && is_screenshot_shortcut(vk_code) {
-            LAST_SCREENSHOT_INTENT_MS.store(now_ms(), Ordering::SeqCst);
+            mark_screenshot_intent();
         }
 
         if is_ctrl_key(vk_code) {
@@ -304,6 +322,11 @@ fn handle_smart_paste() {
         if let Some(proc_name) = get_foreground_process_name() {
             let lower = proc_name.to_lowercase();
             if TERMINALS.iter().any(|t| lower == *t) {
+                if let Some(image_path) = take_prepared_screenshot_path() {
+                    paste_image_path(image_path);
+                    return;
+                }
+
                 if wait_for_clipboard_image(std::time::Duration::from_millis(
                     SMART_PASTE_INITIAL_IMAGE_GRACE_MS,
                 )) && paste_clipboard_image()
@@ -312,6 +335,13 @@ fn handle_smart_paste() {
                 }
 
                 if has_recent_screenshot_intent() {
+                    if let Some(image_path) =
+                        wait_for_prepared_screenshot(SMART_PASTE_IMAGE_WAIT_MS)
+                    {
+                        paste_image_path(image_path);
+                        return;
+                    }
+
                     if wait_for_clipboard_image(std::time::Duration::from_millis(
                         SMART_PASTE_IMAGE_WAIT_MS,
                     )) && paste_clipboard_image()
@@ -345,8 +375,17 @@ fn handle_smart_paste() {
 }
 
 fn paste_clipboard_image() -> bool {
+    if let Ok(image_path) = run_clipboard_image_save() {
+        paste_image_path(image_path);
+        true
+    } else {
+        false
+    }
+}
+
+fn paste_image_path(image_path: String) {
     unsafe {
-        if let Ok(image_path) = run_clipboard_image_save() {
+        if set_clipboard_text(&image_path.replace('\\', "/")).is_ok() {
             send_terminal_paste();
             LAST_SCREENSHOT_INTENT_MS.store(0, Ordering::SeqCst);
             std::thread::spawn(move || {
@@ -355,9 +394,6 @@ fn paste_clipboard_image() -> bool {
                 ));
                 let _ = restore_clipboard_image(&image_path);
             });
-            true
-        } else {
-            false
         }
     }
 }
@@ -394,6 +430,10 @@ fn clipboard_has_text() -> bool {
 }
 
 fn run_clipboard_image_save() -> Result<String, String> {
+    if let Ok(image_path) = save_clipboard_image_native() {
+        return Ok(image_path);
+    }
+
     let script = r#"
 Add-Type -AssemblyName System.Windows.Forms
 Add-Type -AssemblyName System.Drawing
@@ -461,6 +501,10 @@ try {
 }
 
 fn restore_clipboard_image(image_path: &str) -> Result<(), String> {
+    if set_clipboard_image_native(image_path).is_ok() {
+        return Ok(());
+    }
+
     let script = r#"
 Add-Type -AssemblyName System.Windows.Forms
 Add-Type -AssemblyName System.Drawing
@@ -503,6 +547,420 @@ try {
     } else {
         Err("Clipboard image restore script failed".to_string())
     }
+}
+
+// -- Native screenshot preparation --
+
+fn mark_screenshot_intent() {
+    LAST_SCREENSHOT_INTENT_MS.store(now_ms(), Ordering::SeqCst);
+
+    if SCREENSHOT_PREPARE_IN_FLIGHT
+        .compare_exchange(false, true, Ordering::SeqCst, Ordering::SeqCst)
+        .is_err()
+    {
+        return;
+    }
+
+    std::thread::spawn(|| {
+        let started_at = std::time::Instant::now();
+        let timeout = std::time::Duration::from_millis(SMART_PASTE_IMAGE_WAIT_MS);
+
+        while started_at.elapsed() <= timeout {
+            if clipboard_has_image() {
+                if let Ok(path) = save_clipboard_image_native() {
+                    store_prepared_screenshot(path);
+                    break;
+                }
+            }
+
+            std::thread::sleep(std::time::Duration::from_millis(
+                SMART_PASTE_RETRY_INTERVAL_MS,
+            ));
+        }
+
+        SCREENSHOT_PREPARE_IN_FLIGHT.store(false, Ordering::SeqCst);
+    });
+}
+
+fn prepared_screenshot() -> &'static Mutex<Option<PreparedScreenshot>> {
+    static PREPARED_SCREENSHOT: OnceLock<Mutex<Option<PreparedScreenshot>>> = OnceLock::new();
+    PREPARED_SCREENSHOT.get_or_init(|| Mutex::new(None))
+}
+
+fn store_prepared_screenshot(path: String) {
+    if let Ok(mut prepared) = prepared_screenshot().lock() {
+        *prepared = Some(PreparedScreenshot {
+            path,
+            created_ms: now_ms(),
+        });
+    }
+}
+
+fn take_prepared_screenshot_path() -> Option<String> {
+    if !clipboard_has_image() {
+        return None;
+    }
+
+    let mut prepared = prepared_screenshot().lock().ok()?;
+    let screenshot = prepared.as_ref()?;
+    if now_ms().saturating_sub(screenshot.created_ms) > SMART_PASTE_CACHED_PATH_MS {
+        *prepared = None;
+        return None;
+    }
+
+    let path = screenshot.path.clone();
+    *prepared = None;
+    Some(path)
+}
+
+fn wait_for_prepared_screenshot(timeout_ms: u64) -> Option<String> {
+    let started_at = std::time::Instant::now();
+    let timeout = std::time::Duration::from_millis(timeout_ms);
+
+    while started_at.elapsed() <= timeout {
+        if let Some(path) = take_prepared_screenshot_path() {
+            return Some(path);
+        }
+
+        std::thread::sleep(std::time::Duration::from_millis(
+            SMART_PASTE_RETRY_INTERVAL_MS,
+        ));
+    }
+
+    None
+}
+
+fn save_clipboard_image_native() -> Result<String, String> {
+    let image = read_clipboard_dib()?;
+    let path = screenshot_path()?;
+
+    image::save_buffer_with_format(
+        &path,
+        &image.rgba,
+        image.width,
+        image.height,
+        ColorType::Rgba8,
+        ImageFormat::Png,
+    )
+    .map_err(|e| format!("Failed to save clipboard image natively: {}", e))?;
+
+    Ok(path.to_string_lossy().to_string())
+}
+
+struct ClipboardImage {
+    width: u32,
+    height: u32,
+    rgba: Vec<u8>,
+}
+
+fn read_clipboard_dib() -> Result<ClipboardImage, String> {
+    unsafe {
+        with_open_clipboard(|| {
+            let handle = GetClipboardData(CF_DIB);
+            if handle.is_null() {
+                return Err("Clipboard does not contain CF_DIB image data".to_string());
+            }
+
+            let size = GlobalSize(handle) as usize;
+            if size < size_of::<BITMAPINFOHEADER>() {
+                return Err("Clipboard DIB is too small".to_string());
+            }
+
+            let locked = GlobalLock(handle);
+            if locked.is_null() {
+                return Err("Failed to lock clipboard DIB".to_string());
+            }
+
+            let bytes = std::slice::from_raw_parts(locked as *const u8, size);
+            let result = parse_dib_rgba(bytes);
+            GlobalUnlock(handle);
+            result
+        })
+    }
+}
+
+fn parse_dib_rgba(bytes: &[u8]) -> Result<ClipboardImage, String> {
+    if bytes.len() < size_of::<BITMAPINFOHEADER>() {
+        return Err("DIB header is missing".to_string());
+    }
+
+    let header_size = read_u32(bytes, 0)? as usize;
+    if header_size < size_of::<BITMAPINFOHEADER>() || bytes.len() < header_size {
+        return Err("Unsupported DIB header size".to_string());
+    }
+
+    let width = read_i32(bytes, 4)?;
+    let height = read_i32(bytes, 8)?;
+    let planes = read_u16(bytes, 12)?;
+    let bit_count = read_u16(bytes, 14)?;
+    let compression = read_u32(bytes, 16)?;
+    let clr_used = read_u32(bytes, 32)?;
+
+    if width <= 0 || height == 0 {
+        return Err("Invalid DIB dimensions".to_string());
+    }
+    if planes != 1 {
+        return Err("Unsupported DIB plane count".to_string());
+    }
+    if compression != BI_RGB {
+        return Err("Unsupported compressed DIB format".to_string());
+    }
+    if bit_count != 24 && bit_count != 32 {
+        return Err(format!("Unsupported DIB bit depth: {}", bit_count));
+    }
+
+    let width_u32 = width as u32;
+    let height_u32 = height.unsigned_abs();
+    let color_count = if clr_used > 0 {
+        clr_used as usize
+    } else if bit_count <= 8 {
+        1usize << bit_count
+    } else {
+        0
+    };
+    let pixel_offset = header_size + color_count * 4;
+    let stride = (width_u32 as usize * bit_count as usize).div_ceil(32) * 4;
+    let needed = pixel_offset + stride * height_u32 as usize;
+
+    if bytes.len() < needed {
+        return Err("DIB pixel data is truncated".to_string());
+    }
+
+    let bottom_up = height > 0;
+    let bytes_per_pixel = (bit_count / 8) as usize;
+    let mut rgba = vec![0u8; width_u32 as usize * height_u32 as usize * 4];
+    let mut any_alpha = false;
+
+    for y in 0..height_u32 as usize {
+        let source_y = if bottom_up {
+            height_u32 as usize - 1 - y
+        } else {
+            y
+        };
+        let source_row = pixel_offset + source_y * stride;
+
+        for x in 0..width_u32 as usize {
+            let source = source_row + x * bytes_per_pixel;
+            let target = (y * width_u32 as usize + x) * 4;
+
+            rgba[target] = bytes[source + 2];
+            rgba[target + 1] = bytes[source + 1];
+            rgba[target + 2] = bytes[source];
+            rgba[target + 3] = if bit_count == 32 {
+                let alpha = bytes[source + 3];
+                any_alpha |= alpha != 0;
+                alpha
+            } else {
+                255
+            };
+        }
+    }
+
+    if bit_count == 32 && !any_alpha {
+        for alpha in rgba.iter_mut().skip(3).step_by(4) {
+            *alpha = 255;
+        }
+    }
+
+    Ok(ClipboardImage {
+        width: width_u32,
+        height: height_u32,
+        rgba,
+    })
+}
+
+fn set_clipboard_text(text: &str) -> Result<(), String> {
+    let wide_text = wide(text);
+    let byte_len = wide_text.len() * size_of::<u16>();
+
+    unsafe {
+        with_open_clipboard(|| {
+            let handle = GlobalAlloc(GMEM_MOVEABLE, byte_len);
+            if handle.is_null() {
+                return Err("Failed to allocate clipboard text memory".to_string());
+            }
+
+            let locked = GlobalLock(handle);
+            if locked.is_null() {
+                GlobalFree(handle);
+                return Err("Failed to lock clipboard text memory".to_string());
+            }
+
+            std::ptr::copy_nonoverlapping(
+                wide_text.as_ptr() as *const u8,
+                locked as *mut u8,
+                byte_len,
+            );
+            GlobalUnlock(handle);
+
+            if EmptyClipboard() == 0 {
+                GlobalFree(handle);
+                return Err("Failed to empty clipboard for text paste".to_string());
+            }
+
+            if SetClipboardData(CF_UNICODETEXT, handle).is_null() {
+                GlobalFree(handle);
+                return Err("Failed to set clipboard text".to_string());
+            }
+
+            Ok(())
+        })
+    }
+}
+
+fn set_clipboard_image_native(image_path: &str) -> Result<(), String> {
+    let image = ImageReader::open(image_path)
+        .map_err(|e| format!("Failed to open saved image for clipboard restore: {}", e))?
+        .decode()
+        .map_err(|e| format!("Failed to decode saved image for clipboard restore: {}", e))?
+        .to_rgba8();
+    let width = image.width();
+    let height = image.height();
+    let dib = rgba_to_dib(width, height, image.as_raw())?;
+
+    unsafe {
+        with_open_clipboard(|| {
+            let handle = GlobalAlloc(GMEM_MOVEABLE, dib.len());
+            if handle.is_null() {
+                return Err("Failed to allocate clipboard image memory".to_string());
+            }
+
+            let locked = GlobalLock(handle);
+            if locked.is_null() {
+                GlobalFree(handle);
+                return Err("Failed to lock clipboard image memory".to_string());
+            }
+
+            std::ptr::copy_nonoverlapping(dib.as_ptr(), locked as *mut u8, dib.len());
+            GlobalUnlock(handle);
+
+            if EmptyClipboard() == 0 {
+                GlobalFree(handle);
+                return Err("Failed to empty clipboard for image restore".to_string());
+            }
+
+            if SetClipboardData(CF_DIB, handle).is_null() {
+                GlobalFree(handle);
+                return Err("Failed to set clipboard image".to_string());
+            }
+
+            Ok(())
+        })
+    }
+}
+
+fn rgba_to_dib(width: u32, height: u32, rgba: &[u8]) -> Result<Vec<u8>, String> {
+    let expected = width as usize * height as usize * 4;
+    if rgba.len() != expected {
+        return Err("Invalid RGBA image buffer size".to_string());
+    }
+
+    let header_size = size_of::<BITMAPINFOHEADER>();
+    let stride = width as usize * 4;
+    let mut dib = vec![0u8; header_size + stride * height as usize];
+
+    write_u32(&mut dib, 0, header_size as u32)?;
+    write_i32(&mut dib, 4, width as i32)?;
+    write_i32(&mut dib, 8, height as i32)?;
+    write_u16(&mut dib, 12, 1)?;
+    write_u16(&mut dib, 14, 32)?;
+    write_u32(&mut dib, 16, BI_RGB)?;
+    write_u32(&mut dib, 20, (stride * height as usize) as u32)?;
+
+    for y in 0..height as usize {
+        let source_y = height as usize - 1 - y;
+        let target_row = header_size + y * stride;
+
+        for x in 0..width as usize {
+            let source = (source_y * width as usize + x) * 4;
+            let target = target_row + x * 4;
+
+            dib[target] = rgba[source + 2];
+            dib[target + 1] = rgba[source + 1];
+            dib[target + 2] = rgba[source];
+            dib[target + 3] = rgba[source + 3];
+        }
+    }
+
+    Ok(dib)
+}
+
+unsafe fn with_open_clipboard<T>(
+    operation: impl FnOnce() -> Result<T, String>,
+) -> Result<T, String> {
+    let mut opened = false;
+    for _ in 0..20 {
+        if OpenClipboard(HWND_MAIN) != 0 {
+            opened = true;
+            break;
+        }
+
+        std::thread::sleep(std::time::Duration::from_millis(10));
+    }
+
+    if !opened {
+        return Err("Failed to open clipboard".to_string());
+    }
+
+    let result = operation();
+    CloseClipboard();
+    result
+}
+
+fn screenshot_path() -> Result<PathBuf, String> {
+    let mut dir = std::env::var_os("USERPROFILE")
+        .map(PathBuf::from)
+        .ok_or_else(|| "USERPROFILE is not set".to_string())?;
+    dir.push("screenshots");
+    std::fs::create_dir_all(&dir)
+        .map_err(|e| format!("Failed to create screenshots directory: {}", e))?;
+    dir.push(format!("screenshot_{}.png", now_ms()));
+    Ok(dir)
+}
+
+fn read_u16(bytes: &[u8], offset: usize) -> Result<u16, String> {
+    let data = bytes
+        .get(offset..offset + 2)
+        .ok_or_else(|| "Unexpected end of DIB data".to_string())?;
+    Ok(u16::from_le_bytes([data[0], data[1]]))
+}
+
+fn read_u32(bytes: &[u8], offset: usize) -> Result<u32, String> {
+    let data = bytes
+        .get(offset..offset + 4)
+        .ok_or_else(|| "Unexpected end of DIB data".to_string())?;
+    Ok(u32::from_le_bytes([data[0], data[1], data[2], data[3]]))
+}
+
+fn read_i32(bytes: &[u8], offset: usize) -> Result<i32, String> {
+    let data = bytes
+        .get(offset..offset + 4)
+        .ok_or_else(|| "Unexpected end of DIB data".to_string())?;
+    Ok(i32::from_le_bytes([data[0], data[1], data[2], data[3]]))
+}
+
+fn write_u16(bytes: &mut [u8], offset: usize, value: u16) -> Result<(), String> {
+    let target = bytes
+        .get_mut(offset..offset + 2)
+        .ok_or_else(|| "Unexpected end of DIB buffer".to_string())?;
+    target.copy_from_slice(&value.to_le_bytes());
+    Ok(())
+}
+
+fn write_u32(bytes: &mut [u8], offset: usize, value: u32) -> Result<(), String> {
+    let target = bytes
+        .get_mut(offset..offset + 4)
+        .ok_or_else(|| "Unexpected end of DIB buffer".to_string())?;
+    target.copy_from_slice(&value.to_le_bytes());
+    Ok(())
+}
+
+fn write_i32(bytes: &mut [u8], offset: usize, value: i32) -> Result<(), String> {
+    let target = bytes
+        .get_mut(offset..offset + 4)
+        .ok_or_else(|| "Unexpected end of DIB buffer".to_string())?;
+    target.copy_from_slice(&value.to_le_bytes());
+    Ok(())
 }
 
 // -- Tray icon --
@@ -736,6 +1194,11 @@ unsafe fn get_foreground_process_name() -> Option<String> {
 extern "system" {
     fn IsClipboardFormatAvailable(format: u32) -> BOOL;
     fn RegisterClipboardFormatW(lpszFormat: *const u16) -> u32;
+}
+
+#[link(name = "kernel32")]
+extern "system" {
+    fn GlobalFree(hmem: HGLOBAL) -> HGLOBAL;
 }
 
 // -- Utility --

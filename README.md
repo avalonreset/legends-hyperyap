@@ -42,7 +42,7 @@ Everything is preconfigured. You do not need to set up shortcuts, change setting
 
 ### Option 1: Download the installer
 
-Download [hyperyap_1.0.5_x64-setup.exe](https://github.com/avalonreset/hyperyap/releases/latest) from the Releases page and run it. On first launch, HyperYap will:
+Download [hyperyap_1.0.6_x64-setup.exe](https://github.com/avalonreset/hyperyap/releases/latest) from the Releases page and run it. On first launch, HyperYap will:
 
 - Download the NVIDIA Parakeet speech model (~440MB)
 - Set up the hotkey engine and register autostart
@@ -93,7 +93,7 @@ HyperYap's hotkey engine is terminal-aware. It detects which application is focu
 
 **In regular applications** (browsers, editors, chat apps), Ctrl+V works exactly as it normally does. HyperYap does not interfere.
 
-**In supported terminals**, HyperYap intercepts Ctrl+V and adds clipboard image intelligence. If your clipboard contains a screenshot or image, HyperYap waits for Windows to finish publishing the image, saves it as a timestamped PNG in `~/screenshots/`, and replaces the clipboard with the file path before pasting through the terminal paste shortcut. If Windows is still preparing a recent Win+Shift+S or PrintScreen capture, HyperYap keeps waiting instead of falling back to stale text or typing a stray `v`. Text clipboard contents paste normally.
+**In supported terminals**, HyperYap intercepts Ctrl+V and adds clipboard image intelligence. When you take a Win+Shift+S or PrintScreen capture, the hotkey daemon prepares the screenshot path as soon as Windows publishes image data. It saves a timestamped PNG in `~/screenshots/`, caches the path briefly, and pastes that path through the terminal paste shortcut. If the path is not ready yet, HyperYap waits for image data instead of falling back to stale text or typing a stray `v`. Text clipboard contents paste normally.
 
 This is especially useful for vibe coding workflows where you screenshot errors, UI mockups, or terminal output and need to reference them by path in a command or prompt.
 

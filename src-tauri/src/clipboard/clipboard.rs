@@ -4,6 +4,24 @@ use enigo::{Enigo, Key, Keyboard, Settings};
 use log::debug;
 use tauri_plugin_clipboard_manager::ClipboardExt;
 
+#[cfg(target_os = "windows")]
+const TERMINAL_PROCESSES: &[&str] = &[
+    "benjaminterm-gui.exe",
+    "wezterm-gui.exe",
+    "windowsterminal.exe",
+    "powershell.exe",
+    "pwsh.exe",
+    "cmd.exe",
+    "alacritty.exe",
+    "conemu.exe",
+    "conemu64.exe",
+    "hyper.exe",
+    "mintty.exe",
+    "tabby.exe",
+    "warp.exe",
+    "mobaxterm.exe",
+];
+
 pub fn paste(text: &str, app_handle: &tauri::AppHandle) -> Result<(), String> {
     paste_with_delay(text, app_handle, 100)
 }
@@ -39,7 +57,8 @@ fn paste_with_delay(
     #[cfg(target_os = "windows")]
     std::thread::sleep(std::time::Duration::from_millis(50));
 
-    send_paste(&app_settings.paste_method)?;
+    let paste_method = effective_paste_method(&app_settings.paste_method);
+    send_paste(&paste_method)?;
 
     #[cfg(target_os = "linux")]
     std::thread::sleep(std::time::Duration::from_millis(200));
@@ -54,6 +73,19 @@ fn paste_with_delay(
             .map_err(|e| format!("Failed to restore clipboard: {}", e))?;
     }
     Ok(())
+}
+
+#[cfg(target_os = "windows")]
+fn effective_paste_method(configured: &PasteMethod) -> PasteMethod {
+    match configured {
+        PasteMethod::CtrlV if foreground_process_is_terminal() => PasteMethod::CtrlShiftV,
+        _ => configured.clone(),
+    }
+}
+
+#[cfg(not(target_os = "windows"))]
+fn effective_paste_method(configured: &PasteMethod) -> PasteMethod {
+    configured.clone()
 }
 
 fn paste_direct(text: &str) -> Result<(), String> {
@@ -112,6 +144,57 @@ fn send_paste(paste_method: &PasteMethod) -> Result<(), String> {
         .map_err(|e| format!("Failed to release modifier key: {}", e))?;
 
     Ok(())
+}
+
+#[cfg(target_os = "windows")]
+fn foreground_process_is_terminal() -> bool {
+    foreground_process_name()
+        .map(|name| {
+            let lower = name.to_lowercase();
+            TERMINAL_PROCESSES.iter().any(|terminal| lower == *terminal)
+        })
+        .unwrap_or(false)
+}
+
+#[cfg(target_os = "windows")]
+fn foreground_process_name() -> Option<String> {
+    use windows_sys::Win32::Foundation::{CloseHandle, FALSE};
+    use windows_sys::Win32::System::Threading::{
+        OpenProcess, QueryFullProcessImageNameW, PROCESS_QUERY_LIMITED_INFORMATION,
+    };
+    use windows_sys::Win32::UI::WindowsAndMessaging::{
+        GetForegroundWindow, GetWindowThreadProcessId,
+    };
+
+    unsafe {
+        let foreground_window = GetForegroundWindow();
+        if foreground_window.is_null() {
+            return None;
+        }
+
+        let mut process_id: u32 = 0;
+        GetWindowThreadProcessId(foreground_window, &mut process_id);
+        if process_id == 0 {
+            return None;
+        }
+
+        let process_handle = OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, FALSE, process_id);
+        if process_handle.is_null() {
+            return None;
+        }
+
+        let mut buffer = [0u16; 260];
+        let mut length = buffer.len() as u32;
+        let ok = QueryFullProcessImageNameW(process_handle, 0, buffer.as_mut_ptr(), &mut length);
+        CloseHandle(process_handle);
+
+        if ok == 0 || length == 0 {
+            return None;
+        }
+
+        let path = String::from_utf16_lossy(&buffer[..length as usize]);
+        path.rsplit('\\').next().map(|name| name.to_string())
+    }
 }
 
 pub fn get_selected_text(app_handle: &tauri::AppHandle) -> Result<String, String> {

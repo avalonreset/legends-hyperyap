@@ -23,10 +23,12 @@ sources:
 
 ## Release State
 
-- Latest known release: `v1.0.5`
-- Latest known installer: `hyperyap_1.0.5_x64-setup.exe`
+- Latest known release: `v1.0.6`
+- Latest known installer: `hyperyap_1.0.6_x64-setup.exe`
 
 ## Open Checks
 
 - Keep stress testing fast screenshot paste in Benjamin Term.
+- Confirm `v1.0.6` native prepared screenshot paste after installer install.
+- Run future installer and app relaunch tests detached from the active Codex terminal. See [[ADR 2026-04-21 Detached Installer Runs]].
 - Record future Ubuntu validation results when release-impacting changes occur.

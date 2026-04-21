@@ -1,6 +1,6 @@
 [package]
 name = "hyperyap"
-version = "1.0.5"
+version = "1.0.6"
 description = "Voice-to-text that just works"
 authors = ["avalonreset"]
 edition = "2021"
@@ -73,4 +73,4 @@ core-foundation = "0.10"
 core-foundation-sys = "0.8"
 
 [target.'cfg(target_os = "windows")'.dependencies]
-windows-sys = { version = "0.61", features = ["Win32_UI_Input_KeyboardAndMouse", "Win32_System_Console"] }
+windows-sys = { version = "0.61", features = ["Win32_Foundation", "Win32_UI_Input_KeyboardAndMouse", "Win32_UI_WindowsAndMessaging", "Win32_System_Console", "Win32_System_Threading"] }

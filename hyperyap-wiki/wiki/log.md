@@ -15,6 +15,18 @@ sources:
 
 # Vault Log
 
+## 2026-04-21 save | native prepared screenshot paths
+
+- Created [[ADR 2026-04-21 Native Prepared Screenshot Paths]].
+- Recorded that `v1.0.6` prepares screenshot paths natively in the hotkey daemon before terminal Ctrl+V.
+- Updated [[Smart Screenshot Paste]], [[Hot Cache]], [[HyperYap Overview]], [[Dashboard]], [[HyperYap Vault Index]], and [[Decisions Index]].
+
+## 2026-04-21 save | detached installer run rule
+
+- Created [[ADR 2026-04-21 Detached Installer Runs]].
+- Recorded that installer, upgrade, and app relaunch tests should run detached from the active Codex terminal.
+- Updated [[Hot Cache]], [[HyperYap Vault Index]], [[Decisions Index]], and [[Dashboard]].
+
 ## 2026-04-21 save | Project Wiki Tooling repo setup
 
 - Created [[Project Wiki Tooling]] entity note.
