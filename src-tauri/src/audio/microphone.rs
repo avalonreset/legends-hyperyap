@@ -34,10 +34,10 @@ pub fn get_mic_list() -> Vec<MicInfo> {
 pub fn resolve_device_for_recording(
     mic_id: &str,
 ) -> Result<(cpal::Device, Option<String>), anyhow::Error> {
-    let host = cpal::default_host();
-
     #[cfg(target_os = "linux")]
     {
+        let host = cpal::default_host();
+
         // Verify the source still exists before trying to use it
         if !is_pulse_source_available(mic_id) {
             return Err(anyhow::anyhow!("Selected microphone is unavailable"));
@@ -70,9 +70,9 @@ pub fn resolve_device_for_recording(
 
     #[cfg(not(target_os = "linux"))]
     {
-        return find_device_by_identifier(mic_id)
+        find_device_by_identifier(mic_id)
             .map(|device| (device, None))
-            .ok_or_else(|| anyhow::anyhow!("Selected microphone is unavailable"));
+            .ok_or_else(|| anyhow::anyhow!("Selected microphone is unavailable"))
     }
 }
 
@@ -208,13 +208,16 @@ fn set_pulse_default_source(source_name: &str) {
     }
 }
 
+#[cfg(target_os = "linux")]
 pub fn restore_default_source_after_recording(previous_source: Option<String>) {
-    #[cfg(target_os = "linux")]
     if let Some(source_name) = previous_source {
         set_pulse_default_source(&source_name);
         info!("Restored PulseAudio default source: {}", source_name);
     }
 }
+
+#[cfg(not(target_os = "linux"))]
+pub fn restore_default_source_after_recording(_previous_source: Option<String>) {}
 
 // ── CPAL-based enumeration (macOS/Windows fallback) ──
 

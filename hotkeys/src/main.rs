@@ -18,6 +18,12 @@ const IDM_PAUSE: u16 = 1;
 const IDM_EXIT: u16 = 2;
 const VK_F13: u16 = 0x7C;
 const CREATE_NO_WINDOW: u32 = 0x08000000;
+const CF_BITMAP: u32 = 2;
+const CF_DIB: u32 = 8;
+const CF_DIBV5: u32 = 17;
+const SMART_PASTE_IMAGE_WAIT_MS: u64 = 1_500;
+const SMART_PASTE_RETRY_INTERVAL_MS: u64 = 40;
+const SMART_PASTE_RESTORE_DELAY_MS: u64 = 750;
 
 // Terminal process names (lowercase) that get smart image paste
 const TERMINALS: &[&str] = &[
@@ -72,7 +78,7 @@ fn main() {
             style: 0,
             cbClsExtra: 0,
             cbWndExtra: 0,
-            hIcon: LoadIconW(hinstance, 1 as *const u16), // embedded icon resource ID 1
+            hIcon: LoadIconW(hinstance, int_resource(1)), // embedded icon resource ID 1
             hCursor: null_mut(),
             hbrBackground: null_mut(),
             lpszMenuName: std::ptr::null(),
@@ -205,7 +211,12 @@ unsafe extern "system" fn mouse_hook(code: i32, wparam: WPARAM, lparam: LPARAM) 
 
 // -- Window procedure --
 
-unsafe extern "system" fn wnd_proc(hwnd: HWND, msg: u32, wparam: WPARAM, lparam: LPARAM) -> LRESULT {
+unsafe extern "system" fn wnd_proc(
+    hwnd: HWND,
+    msg: u32,
+    wparam: WPARAM,
+    lparam: LPARAM,
+) -> LRESULT {
     match msg {
         WM_SMART_PASTE => {
             handle_smart_paste();
@@ -231,10 +242,10 @@ unsafe extern "system" fn wnd_proc(hwnd: HWND, msg: u32, wparam: WPARAM, lparam:
                     let hinstance = GetModuleHandleW(std::ptr::null());
                     if was_paused {
                         update_tray_tip(hwnd, "HYPERYAP HOTKEYS");
-                        update_tray_icon(hwnd, LoadIconW(hinstance, 1 as *const u16));
+                        update_tray_icon(hwnd, LoadIconW(hinstance, int_resource(1)));
                     } else {
                         update_tray_tip(hwnd, "HYPERYAP HOTKEYS (PAUSED)");
-                        update_tray_icon(hwnd, LoadIconW(hinstance, 2 as *const u16));
+                        update_tray_icon(hwnd, LoadIconW(hinstance, int_resource(2)));
                     }
                 }
                 IDM_EXIT => {
@@ -259,20 +270,20 @@ unsafe extern "system" fn wnd_proc(hwnd: HWND, msg: u32, wparam: WPARAM, lparam:
 
 fn handle_smart_paste() {
     unsafe {
-        // Check if clipboard has a bitmap (CF_BITMAP = 2)
-        let has_image = IsClipboardFormatAvailable(2) != 0;
-
-        if has_image {
-            if let Some(proc_name) = get_foreground_process_name() {
-                let lower = proc_name.to_lowercase();
-                if TERMINALS.iter().any(|t| lower == *t) {
-                    // Save image, swap clipboard to path, paste, restore image after
-                    run_clipboard_image_save();
+        if let Some(proc_name) = get_foreground_process_name() {
+            let lower = proc_name.to_lowercase();
+            if TERMINALS.iter().any(|t| lower == *t)
+                && wait_for_clipboard_image(std::time::Duration::from_millis(
+                    SMART_PASTE_IMAGE_WAIT_MS,
+                ))
+            {
+                if let Ok(image_path) = run_clipboard_image_save() {
                     send_key_combo(VK_CONTROL, 0x56 /* V */);
-                    // Restore clipboard image after a short delay
-                    std::thread::spawn(|| {
-                        std::thread::sleep(std::time::Duration::from_millis(300));
-                        restore_clipboard_image();
+                    std::thread::spawn(move || {
+                        std::thread::sleep(std::time::Duration::from_millis(
+                            SMART_PASTE_RESTORE_DELAY_MS,
+                        ));
+                        let _ = restore_clipboard_image(&image_path);
                     });
                     return;
                 }
@@ -284,24 +295,75 @@ fn handle_smart_paste() {
     }
 }
 
-fn run_clipboard_image_save() {
+fn wait_for_clipboard_image(timeout: std::time::Duration) -> bool {
+    let started_at = std::time::Instant::now();
+
+    while started_at.elapsed() <= timeout {
+        if clipboard_has_image() {
+            return true;
+        }
+
+        std::thread::sleep(std::time::Duration::from_millis(
+            SMART_PASTE_RETRY_INTERVAL_MS,
+        ));
+    }
+
+    false
+}
+
+fn clipboard_has_image() -> bool {
+    unsafe {
+        IsClipboardFormatAvailable(CF_BITMAP) != 0
+            || IsClipboardFormatAvailable(CF_DIB) != 0
+            || IsClipboardFormatAvailable(CF_DIBV5) != 0
+            || IsClipboardFormatAvailable(RegisterClipboardFormatW(wide("PNG").as_ptr())) != 0
+    }
+}
+
+fn run_clipboard_image_save() -> Result<String, String> {
     let script = r#"
 Add-Type -AssemblyName System.Windows.Forms
-$img = [System.Windows.Forms.Clipboard]::GetImage()
-if ($img) {
+Add-Type -AssemblyName System.Drawing
+
+$img = $null
+$deadline = (Get-Date).AddMilliseconds(2500)
+
+while ((Get-Date) -lt $deadline -and -not $img) {
+    try {
+        $img = [System.Windows.Forms.Clipboard]::GetImage()
+    } catch {
+        $img = $null
+    }
+
+    if (-not $img) {
+        Start-Sleep -Milliseconds 50
+    }
+}
+
+if (-not $img) {
+    exit 1
+}
+
+try {
     $dir = "$env:USERPROFILE\screenshots"
     if (-not (Test-Path $dir)) { New-Item -ItemType Directory -Path $dir | Out-Null }
-    $timestamp = Get-Date -Format "yyyy-MM-dd_HH-mm-ss"
+    $timestamp = Get-Date -Format "yyyy-MM-dd_HH-mm-ss_fff"
     $path = "$dir\screenshot_$timestamp.png"
     $img.Save($path, [System.Drawing.Imaging.ImageFormat]::Png)
-    $img.Dispose()
     [System.Windows.Forms.Clipboard]::SetText($path.Replace('\', '/'))
+    Write-Output $path
+    exit 0
+} catch {
+    exit 1
+} finally {
+    $img.Dispose()
 }
 "#;
 
-    let _ = std::process::Command::new("powershell.exe")
+    let output = std::process::Command::new("powershell.exe")
         .args([
             "-NoProfile",
+            "-Sta",
             "-WindowStyle",
             "Hidden",
             "-ExecutionPolicy",
@@ -310,24 +372,47 @@ if ($img) {
             script,
         ])
         .creation_flags(CREATE_NO_WINDOW)
-        .status();
+        .output()
+        .map_err(|e| format!("Failed to run clipboard image save script: {}", e))?;
+
+    if !output.status.success() {
+        return Err("Clipboard image save script did not find an image".to_string());
+    }
+
+    let image_path = String::from_utf8_lossy(&output.stdout).trim().to_string();
+    if image_path.is_empty() {
+        return Err("Clipboard image save script returned an empty path".to_string());
+    }
+
+    Ok(image_path)
 }
 
-fn restore_clipboard_image() {
+fn restore_clipboard_image(image_path: &str) -> Result<(), String> {
     let script = r#"
 Add-Type -AssemblyName System.Windows.Forms
-$dir = "$env:USERPROFILE\screenshots"
-$latest = Get-ChildItem "$dir\screenshot_*.png" -ErrorAction SilentlyContinue | Sort-Object LastWriteTime -Descending | Select-Object -First 1
-if ($latest) {
-    $img = [System.Drawing.Image]::FromFile($latest.FullName)
+Add-Type -AssemblyName System.Drawing
+
+$path = $env:HYPERYAP_SMART_PASTE_IMAGE_PATH
+if ([string]::IsNullOrWhiteSpace($path) -or -not (Test-Path -LiteralPath $path)) {
+    exit 1
+}
+
+$img = $null
+try {
+    $img = [System.Drawing.Image]::FromFile($path)
     [System.Windows.Forms.Clipboard]::SetImage($img)
+    exit 0
+} catch {
+    exit 1
+} finally {
     $img.Dispose()
 }
 "#;
 
-    let _ = std::process::Command::new("powershell.exe")
+    let status = std::process::Command::new("powershell.exe")
         .args([
             "-NoProfile",
+            "-Sta",
             "-WindowStyle",
             "Hidden",
             "-ExecutionPolicy",
@@ -335,8 +420,16 @@ if ($latest) {
             "-Command",
             script,
         ])
+        .env("HYPERYAP_SMART_PASTE_IMAGE_PATH", image_path)
         .creation_flags(CREATE_NO_WINDOW)
-        .status();
+        .status()
+        .map_err(|e| format!("Failed to run clipboard image restore script: {}", e))?;
+
+    if status.success() {
+        Ok(())
+    } else {
+        Err("Clipboard image restore script failed".to_string())
+    }
 }
 
 // -- Tray icon --
@@ -348,7 +441,7 @@ unsafe fn add_tray_icon(hwnd: HWND, hinstance: HINSTANCE) {
     nid.uID = 1;
     nid.uFlags = NIF_ICON | NIF_MESSAGE | NIF_TIP;
     nid.uCallbackMessage = WM_TRAYICON;
-    nid.hIcon = LoadIconW(hinstance, 1 as *const u16);
+    nid.hIcon = LoadIconW(hinstance, int_resource(1));
 
     // If embedded icon failed, use default application icon
     if nid.hIcon.is_null() {
@@ -374,7 +467,11 @@ unsafe fn show_tray_menu(hwnd: HWND) {
     let menu = CreatePopupMenu();
 
     let is_paused = PAUSED.load(Ordering::SeqCst);
-    let pause_text = if is_paused { wide("Resume Hotkeys") } else { wide("Pause Hotkeys") };
+    let pause_text = if is_paused {
+        wide("Resume Hotkeys")
+    } else {
+        wide("Pause Hotkeys")
+    };
     AppendMenuW(menu, MF_STRING, IDM_PAUSE as usize, pause_text.as_ptr());
 
     // Separator
@@ -388,7 +485,15 @@ unsafe fn show_tray_menu(hwnd: HWND) {
 
     // Required for the menu to dismiss when clicking elsewhere
     SetForegroundWindow(hwnd);
-    TrackPopupMenu(menu, TPM_RIGHTALIGN | TPM_BOTTOMALIGN, pt.x, pt.y, 0, hwnd, std::ptr::null());
+    TrackPopupMenu(
+        menu,
+        TPM_RIGHTALIGN | TPM_BOTTOMALIGN,
+        pt.x,
+        pt.y,
+        0,
+        hwnd,
+        std::ptr::null(),
+    );
     DestroyMenu(menu);
 }
 
@@ -491,6 +596,7 @@ unsafe fn get_foreground_process_name() -> Option<String> {
 #[link(name = "user32")]
 extern "system" {
     fn IsClipboardFormatAvailable(format: u32) -> BOOL;
+    fn RegisterClipboardFormatW(lpszFormat: *const u16) -> u32;
 }
 
 // -- Utility --
@@ -501,6 +607,10 @@ fn wide(s: &str) -> Vec<u16> {
 
 fn hiword(dword: u32) -> u16 {
     (dword >> 16) as u16
+}
+
+fn int_resource(resource_id: u16) -> *const u16 {
+    std::ptr::without_provenance(resource_id as usize)
 }
 
 // null_mut helper for statics

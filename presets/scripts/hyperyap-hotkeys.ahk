@@ -19,22 +19,49 @@ CapsLock::F13        ; CapsLock → start/stop recording
 ; In terminals: save clipboard image as PNG, swap clipboard to file path, paste.
 ; Everywhere else: normal Ctrl+V, clipboard untouched.
 $^v:: {
-    if DllCall("IsClipboardFormatAvailable", "UInt", 2) {
-        exe := ""
-        try {
-            exe := StrLower(WinGetProcessName("A"))
-        }
-        ; Add your terminal executables here
-        if (exe = "benjaminterm-gui.exe"
-            || exe = "wezterm-gui.exe"
-            || exe = "windowsterminal.exe"
-            || exe = "powershell.exe"
-            || exe = "pwsh.exe"
-            || exe = "cmd.exe"
-            || exe = "alacritty.exe") {
-            scriptDir := A_ScriptDir
-            RunWait('powershell.exe -NoProfile -WindowStyle Hidden -ExecutionPolicy Bypass -File "' scriptDir '\clipboard-image-paste.ps1"',, "Hide")
-        }
+    exe := ""
+    try {
+        exe := StrLower(WinGetProcessName("A"))
     }
+
+    if (IsSmartPasteTerminal(exe) && WaitForClipboardImage()) {
+        scriptDir := A_ScriptDir
+        RunWait('powershell.exe -NoProfile -Sta -WindowStyle Hidden -ExecutionPolicy Bypass -File "' scriptDir '\clipboard-image-paste.ps1"',, "Hide")
+    }
+
     Send "^v"
+}
+
+IsSmartPasteTerminal(exe) {
+    return exe = "benjaminterm-gui.exe"
+        || exe = "wezterm-gui.exe"
+        || exe = "windowsterminal.exe"
+        || exe = "powershell.exe"
+        || exe = "pwsh.exe"
+        || exe = "cmd.exe"
+        || exe = "alacritty.exe"
+        || exe = "conemu.exe"
+        || exe = "conemu64.exe"
+        || exe = "hyper.exe"
+        || exe = "mintty.exe"
+        || exe = "tabby.exe"
+        || exe = "warp.exe"
+        || exe = "mobaxterm.exe"
+}
+
+HasClipboardImage() {
+    return DllCall("IsClipboardFormatAvailable", "UInt", 2)
+        || DllCall("IsClipboardFormatAvailable", "UInt", 8)
+        || DllCall("IsClipboardFormatAvailable", "UInt", 17)
+}
+
+WaitForClipboardImage(timeoutMs := 1500) {
+    start := A_TickCount
+    while (A_TickCount - start <= timeoutMs) {
+        if HasClipboardImage() {
+            return true
+        }
+        Sleep 40
+    }
+    return false
 }

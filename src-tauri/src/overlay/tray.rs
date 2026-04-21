@@ -5,14 +5,10 @@ use tauri::{AppHandle, Manager};
 
 static HOTKEYS_PAUSED: AtomicBool = AtomicBool::new(false);
 
-/// Check whether the user has paused hotkeys from the tray menu.
-pub fn are_hotkeys_paused() -> bool {
-    HOTKEYS_PAUSED.load(Ordering::SeqCst)
-}
-
 pub fn setup_tray(app: &AppHandle) -> Result<(), Box<dyn std::error::Error>> {
     let show_i = MenuItem::with_id(app, "show", "Open HyperYap", true, None::<&str>)?;
-    let hotkeys_i = CheckMenuItem::with_id(app, "hotkeys", "Hotkeys Enabled", true, true, None::<&str>)?;
+    let hotkeys_i =
+        CheckMenuItem::with_id(app, "hotkeys", "Hotkeys Enabled", true, true, None::<&str>)?;
     let quit_i = MenuItem::with_id(app, "quit", "Quit", true, None::<&str>)?;
     let menu = Menu::with_items(app, &[&show_i, &hotkeys_i, &quit_i])?;
 
@@ -74,9 +70,10 @@ fn toggle_hotkeys_daemon(pause: bool) {
             .creation_flags(0x08000000)
             .status();
     } else {
-        let hotkeys_path = std::path::PathBuf::from(std::env::var("LOCALAPPDATA").unwrap_or_default())
-            .join("HyperYap")
-            .join("hyperyap-hotkeys.exe");
+        let hotkeys_path =
+            std::path::PathBuf::from(std::env::var("LOCALAPPDATA").unwrap_or_default())
+                .join("HyperYap")
+                .join("hyperyap-hotkeys.exe");
         if hotkeys_path.exists() {
             let _ = Command::new(&hotkeys_path).arg("--no-tray").spawn();
         }
