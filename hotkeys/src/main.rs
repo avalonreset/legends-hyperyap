@@ -16,7 +16,10 @@ const WM_TRAYICON: u32 = WM_APP + 1;
 const WM_SMART_PASTE: u32 = WM_APP + 2;
 const IDM_PAUSE: u16 = 1;
 const IDM_EXIT: u16 = 2;
+const VK_V: u16 = 0x56;
 const VK_F13: u16 = 0x7C;
+const VK_LCONTROL_KEY: u16 = 0xA2;
+const VK_RCONTROL_KEY: u16 = 0xA3;
 const CREATE_NO_WINDOW: u32 = 0x08000000;
 const CF_TEXT: u32 = 1;
 const CF_BITMAP: u32 = 2;
@@ -49,6 +52,7 @@ const TERMINALS: &[&str] = &[
 // -- Globals (required for hook callbacks) --
 
 static SUPPRESS_V_UP: AtomicBool = AtomicBool::new(false);
+static CTRL_HELD: AtomicBool = AtomicBool::new(false);
 static PAUSED: AtomicBool = AtomicBool::new(false);
 static mut HWND_MAIN: HWND = null_mut();
 static mut KB_HOOK: HHOOK = null_mut();
@@ -142,8 +146,17 @@ unsafe extern "system" fn keyboard_hook(code: i32, wparam: WPARAM, lparam: LPARA
 
         let is_down = wparam == WM_KEYDOWN as usize || wparam == WM_SYSKEYDOWN as usize;
         let is_up = wparam == WM_KEYUP as usize || wparam == WM_SYSKEYUP as usize;
+        let vk_code = kb.vkCode as u16;
 
-        match kb.vkCode as u16 {
+        if is_ctrl_key(vk_code) {
+            if is_down {
+                CTRL_HELD.store(true, Ordering::SeqCst);
+            } else if is_up {
+                CTRL_HELD.store(is_ctrl_held(), Ordering::SeqCst);
+            }
+        }
+
+        match vk_code {
             // CapsLock -> F13
             VK_CAPITAL => {
                 if is_down {
@@ -155,8 +168,8 @@ unsafe extern "system" fn keyboard_hook(code: i32, wparam: WPARAM, lparam: LPARA
             }
 
             // Ctrl+V smart paste intercept
-            0x56 /* VK_V */ if is_ctrl_held() => {
-                if is_down {
+            VK_V => {
+                if is_down && is_smart_paste_modifier_held() {
                     // Suppress this V keydown, handle asynchronously
                     SUPPRESS_V_UP.store(true, Ordering::SeqCst);
                     PostMessageW(HWND_MAIN, WM_SMART_PASTE, 0, 0);
@@ -589,6 +602,16 @@ unsafe fn send_key_combo(modifier: u16, key: u16) {
 
 unsafe fn is_ctrl_held() -> bool {
     GetAsyncKeyState(VK_CONTROL as i32) < 0
+        || GetAsyncKeyState(VK_LCONTROL_KEY as i32) < 0
+        || GetAsyncKeyState(VK_RCONTROL_KEY as i32) < 0
+}
+
+fn is_smart_paste_modifier_held() -> bool {
+    CTRL_HELD.load(Ordering::SeqCst) || unsafe { is_ctrl_held() }
+}
+
+fn is_ctrl_key(vk_code: u16) -> bool {
+    vk_code == VK_CONTROL || vk_code == VK_LCONTROL_KEY || vk_code == VK_RCONTROL_KEY
 }
 
 // -- Process detection --
