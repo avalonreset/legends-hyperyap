@@ -93,7 +93,7 @@ HyperYap's hotkey engine is terminal-aware. It detects which application is focu
 
 **In regular applications** (browsers, editors, chat apps), Ctrl+V works exactly as it normally does. HyperYap does not interfere.
 
-**In supported terminals**, HyperYap intercepts Ctrl+V and adds clipboard image intelligence. If your clipboard contains a screenshot or image, HyperYap waits for Windows to finish publishing the image, saves it as a timestamped PNG in `~/screenshots/`, and replaces the clipboard with the file path before pasting. If the clipboard is still empty or unstable, HyperYap suppresses the paste instead of typing a stray `v`. Text clipboard contents paste normally.
+**In supported terminals**, HyperYap intercepts Ctrl+V and adds clipboard image intelligence. If your clipboard contains a screenshot or image, HyperYap waits for Windows to finish publishing the image, saves it as a timestamped PNG in `~/screenshots/`, and replaces the clipboard with the file path before pasting through the terminal paste shortcut. If Windows is still preparing a recent Win+Shift+S or PrintScreen capture, HyperYap keeps waiting instead of falling back to stale text or typing a stray `v`. Text clipboard contents paste normally.
 
 This is especially useful for vibe coding workflows where you screenshot errors, UI mockups, or terminal output and need to reference them by path in a command or prompt.
 

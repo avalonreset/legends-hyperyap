@@ -18,9 +18,14 @@ const WM_SMART_PASTE: u32 = WM_APP + 2;
 const IDM_PAUSE: u16 = 1;
 const IDM_EXIT: u16 = 2;
 const VK_V: u16 = 0x56;
+const VK_S: u16 = 0x53;
 const VK_F13: u16 = 0x7C;
 const VK_LCONTROL_KEY: u16 = 0xA2;
 const VK_RCONTROL_KEY: u16 = 0xA3;
+const VK_LSHIFT_KEY: u16 = 0xA0;
+const VK_RSHIFT_KEY: u16 = 0xA1;
+const VK_LWIN_KEY: u16 = 0x5B;
+const VK_RWIN_KEY: u16 = 0x5C;
 const CREATE_NO_WINDOW: u32 = 0x08000000;
 const CF_TEXT: u32 = 1;
 const CF_BITMAP: u32 = 2;
@@ -31,6 +36,7 @@ const SMART_PASTE_INITIAL_IMAGE_GRACE_MS: u64 = 120;
 const SMART_PASTE_IMAGE_WAIT_MS: u64 = 5_000;
 const SMART_PASTE_RETRY_INTERVAL_MS: u64 = 40;
 const SMART_PASTE_RESTORE_DELAY_MS: u64 = 750;
+const SMART_PASTE_SCREENSHOT_INTENT_MS: u64 = 10_000;
 const TRACKED_CTRL_GRACE_MS: u64 = 750;
 
 // Terminal process names (lowercase) that get smart image paste
@@ -56,6 +62,7 @@ const TERMINALS: &[&str] = &[
 static SUPPRESS_V_UP: AtomicBool = AtomicBool::new(false);
 static CTRL_HELD: AtomicBool = AtomicBool::new(false);
 static LAST_CTRL_DOWN_MS: AtomicU64 = AtomicU64::new(0);
+static LAST_SCREENSHOT_INTENT_MS: AtomicU64 = AtomicU64::new(0);
 static PAUSED: AtomicBool = AtomicBool::new(false);
 static mut HWND_MAIN: HWND = null_mut();
 static mut KB_HOOK: HHOOK = null_mut();
@@ -150,6 +157,10 @@ unsafe extern "system" fn keyboard_hook(code: i32, wparam: WPARAM, lparam: LPARA
         let is_down = wparam == WM_KEYDOWN as usize || wparam == WM_SYSKEYDOWN as usize;
         let is_up = wparam == WM_KEYUP as usize || wparam == WM_SYSKEYUP as usize;
         let vk_code = kb.vkCode as u16;
+
+        if is_down && is_screenshot_shortcut(vk_code) {
+            LAST_SCREENSHOT_INTENT_MS.store(now_ms(), Ordering::SeqCst);
+        }
 
         if is_ctrl_key(vk_code) {
             if is_down {
@@ -300,8 +311,20 @@ fn handle_smart_paste() {
                     return;
                 }
 
+                if has_recent_screenshot_intent() {
+                    if wait_for_clipboard_image(std::time::Duration::from_millis(
+                        SMART_PASTE_IMAGE_WAIT_MS,
+                    )) && paste_clipboard_image()
+                    {
+                        return;
+                    }
+
+                    LAST_SCREENSHOT_INTENT_MS.store(0, Ordering::SeqCst);
+                    return;
+                }
+
                 if clipboard_has_text() {
-                    send_key_combo(VK_CONTROL, 0x56 /* V */);
+                    send_terminal_paste();
                     return;
                 }
 
@@ -324,7 +347,8 @@ fn handle_smart_paste() {
 fn paste_clipboard_image() -> bool {
     unsafe {
         if let Ok(image_path) = run_clipboard_image_save() {
-            send_key_combo(VK_CONTROL, 0x56 /* V */);
+            send_terminal_paste();
+            LAST_SCREENSHOT_INTENT_MS.store(0, Ordering::SeqCst);
             std::thread::spawn(move || {
                 std::thread::sleep(std::time::Duration::from_millis(
                     SMART_PASTE_RESTORE_DELAY_MS,
@@ -604,10 +628,46 @@ unsafe fn send_key_combo(modifier: u16, key: u16) {
     SendInput(4, inputs.as_ptr(), size_of::<INPUT>() as i32);
 }
 
+unsafe fn send_terminal_paste() {
+    let ctrl_already_down = is_ctrl_held();
+    let shift_already_down = is_shift_held();
+
+    if !ctrl_already_down {
+        send_key(VK_CONTROL, false);
+    }
+    if !shift_already_down {
+        send_key(VK_SHIFT, false);
+    }
+
+    send_key(VK_V, false);
+    send_key(VK_V, true);
+
+    if !shift_already_down {
+        send_key(VK_SHIFT, true);
+    }
+    if !ctrl_already_down {
+        send_key(VK_CONTROL, true);
+    }
+}
+
 unsafe fn is_ctrl_held() -> bool {
     GetAsyncKeyState(VK_CONTROL as i32) < 0
         || GetAsyncKeyState(VK_LCONTROL_KEY as i32) < 0
         || GetAsyncKeyState(VK_RCONTROL_KEY as i32) < 0
+}
+
+unsafe fn is_shift_held() -> bool {
+    GetAsyncKeyState(VK_SHIFT as i32) < 0
+        || GetAsyncKeyState(VK_LSHIFT_KEY as i32) < 0
+        || GetAsyncKeyState(VK_RSHIFT_KEY as i32) < 0
+}
+
+unsafe fn is_win_held() -> bool {
+    GetAsyncKeyState(VK_LWIN_KEY as i32) < 0 || GetAsyncKeyState(VK_RWIN_KEY as i32) < 0
+}
+
+unsafe fn is_screenshot_shortcut(vk_code: u16) -> bool {
+    vk_code == VK_SNAPSHOT || (vk_code == VK_S && is_shift_held() && is_win_held())
 }
 
 fn is_smart_paste_modifier_held() -> bool {
@@ -620,6 +680,11 @@ fn is_smart_paste_modifier_held() -> bool {
     }
 
     now_ms().saturating_sub(LAST_CTRL_DOWN_MS.load(Ordering::SeqCst)) <= TRACKED_CTRL_GRACE_MS
+}
+
+fn has_recent_screenshot_intent() -> bool {
+    now_ms().saturating_sub(LAST_SCREENSHOT_INTENT_MS.load(Ordering::SeqCst))
+        <= SMART_PASTE_SCREENSHOT_INTENT_MS
 }
 
 fn is_ctrl_key(vk_code: u16) -> bool {

@@ -4,6 +4,7 @@
 
 | Version       | Date       | Notes |
 | ------------- | ---------- | ----- |
+| `1.0.5`       | 2026-04-21 | **Bug Fixes**<br>- Make smart screenshot paste work in vanilla WezTerm by using the terminal paste chord after HyperYap converts images to saved PNG paths.<br>- Track recent Windows screenshot shortcuts so fast Ctrl+V waits for the screenshot image instead of falling back to stale text paste.<br>- Update the bundled AutoHotkey fallback script with the same WezTerm-safe paste behavior. |
 | `1.0.4`       | 2026-04-21 | **Bug Fixes**<br>- Add a 750ms safety window to the tracked Ctrl state used by smart paste so a missed Ctrl keyup cannot cause later plain `v` keystrokes to be intercepted.<br>- Keep the fast Ctrl+V race fix while reducing the risk of stale modifier state side effects. |
 | `1.0.3`       | 2026-04-21 | **Bug Fixes**<br>- Fix a fast Ctrl+V race where Windows could report Ctrl as not held and let a raw `v` through to BenjaminTerm before smart paste handled the screenshot.<br>- Track physical Ctrl state inside the low-level keyboard hook and suppress the matching `V` keyup even if Ctrl is released during smart paste handling. |
 | `1.0.2`       | 2026-04-21 | **Bug Fixes**<br>- Prevent terminal smart paste from typing a stray `v` when Windows has not finished publishing a screenshot to the clipboard.<br>- Keep terminal text paste fast while waiting longer for empty or unstable screenshot clipboard states.<br>- Extend the empty clipboard screenshot wait window to 5 seconds before suppressing paste. |

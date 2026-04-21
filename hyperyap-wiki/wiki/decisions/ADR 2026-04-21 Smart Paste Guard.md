@@ -23,16 +23,18 @@ Fast screenshot then Ctrl+V in Benjamin Term could race the Windows clipboard. W
 
 ## Decision
 
-The hotkey daemon should intercept terminal Ctrl+V using low-level Ctrl key tracking, wait briefly for image clipboard formats, and fail closed when neither image nor text paste is safe.
+The hotkey daemon should intercept terminal Ctrl+V using low-level Ctrl key tracking, wait briefly for image clipboard formats, and fail closed when neither image nor text paste is safe. It should also track recent Windows screenshot shortcuts and use the terminal paste chord after converting an image to a path, so vanilla WezTerm does not receive the original Ctrl+V command.
 
 ## Consequences
 
 - Reduces stray `v` inserts during screenshot stress tests.
 - Keeps normal text clipboard paste available.
 - Needs a stale Ctrl guard so a later plain `v` is not intercepted after Ctrl has already been released.
+- Allows vanilla WezTerm compatibility without depending on Benjamin Term's custom paste behavior.
 
 ## Validation
 
 - Windows local install was updated to `v1.0.4`.
 - GitHub release `v1.0.4` was created with installer asset.
+- Windows local hotkey daemon was updated with the `v1.0.5` WezTerm paste behavior.
 - Ubuntu validation is still a release checklist item for future cross-platform changes.

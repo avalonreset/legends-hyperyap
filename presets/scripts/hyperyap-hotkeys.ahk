@@ -15,6 +15,12 @@ XButton1::F13        ; Mouse back button → start/stop recording
 XButton2::Enter      ; Mouse forward button → Enter key
 CapsLock::F13        ; CapsLock → start/stop recording
 
+; === Screenshot intent tracking ===
+global LastScreenshotIntent := 0
+
+~PrintScreen::MarkScreenshotIntent()
+~#+s::MarkScreenshotIntent()
+
 ; === Smart Paste: Ctrl+V intercept ===
 ; In terminals: save clipboard image as PNG, swap clipboard to file path, paste.
 ; Everywhere else: normal Ctrl+V, clipboard untouched.
@@ -28,19 +34,34 @@ $^v:: {
         if (WaitForClipboardImage(120)) {
             scriptDir := A_ScriptDir
             RunWait('powershell.exe -NoProfile -Sta -WindowStyle Hidden -ExecutionPolicy Bypass -File "' scriptDir '\clipboard-image-paste.ps1"',, "Hide")
-            Send "^v"
+            Send "^+v"
+            LastScreenshotIntent := 0
+            return
+        }
+
+        if (HasRecentScreenshotIntent()) {
+            if (WaitForClipboardImage()) {
+                scriptDir := A_ScriptDir
+                RunWait('powershell.exe -NoProfile -Sta -WindowStyle Hidden -ExecutionPolicy Bypass -File "' scriptDir '\clipboard-image-paste.ps1"',, "Hide")
+                Send "^+v"
+                LastScreenshotIntent := 0
+            } else {
+                LastScreenshotIntent := 0
+            }
+
             return
         }
 
         if (HasClipboardText()) {
-            Send "^v"
+            Send "^+v"
             return
         }
 
         if (WaitForClipboardImage()) {
             scriptDir := A_ScriptDir
             RunWait('powershell.exe -NoProfile -Sta -WindowStyle Hidden -ExecutionPolicy Bypass -File "' scriptDir '\clipboard-image-paste.ps1"',, "Hide")
-            Send "^v"
+            Send "^+v"
+            LastScreenshotIntent := 0
         }
 
         return
@@ -86,4 +107,14 @@ WaitForClipboardImage(timeoutMs := 5000) {
         Sleep 40
     }
     return false
+}
+
+MarkScreenshotIntent() {
+    global LastScreenshotIntent
+    LastScreenshotIntent := A_TickCount
+}
+
+HasRecentScreenshotIntent() {
+    global LastScreenshotIntent
+    return LastScreenshotIntent > 0 && A_TickCount - LastScreenshotIntent <= 10000
 }
