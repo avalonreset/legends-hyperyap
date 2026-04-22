@@ -25,6 +25,7 @@ sources:
 
 - Latest known release: `v1.0.7`
 - Latest known installer: `hyperyap_1.0.7_x64-setup.exe`
+- Latest known release URL: `https://github.com/avalonreset/hyperyap/releases/tag/v1.0.7`
 
 ## Open Checks
 

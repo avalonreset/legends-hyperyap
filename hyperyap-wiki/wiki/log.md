@@ -23,6 +23,7 @@ sources:
 - Rebuilt `src-tauri/target/release/bundle/nsis/hyperyap_1.0.6_x64-setup.exe`, ran the installer, then restarted HyperYap from `installed HyperYap app`.
 - Verified the restarted daemon hash is `[rebuilt daemon hash]`.
 - Prepared a public `v1.0.7` patch release for the same hook responsiveness fix.
+- Published `v1.0.7 - Smart Paste Hook Responsiveness` on GitHub with `hyperyap_1.0.7_x64-setup.exe`.
 - Validated with `cargo fmt`, `cargo clippy -- -D warnings`, and `cargo build --release`.
 - Updated [[Hot Cache]], [[Smart Screenshot Paste]], [[Hotkey Daemon]], [[HyperYap Overview]], and [[HyperYap Vault Index]].
 
