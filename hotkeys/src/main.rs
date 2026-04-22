@@ -75,6 +75,8 @@ static CTRL_HELD: AtomicBool = AtomicBool::new(false);
 static LAST_CTRL_DOWN_MS: AtomicU64 = AtomicU64::new(0);
 static LAST_SCREENSHOT_INTENT_MS: AtomicU64 = AtomicU64::new(0);
 static SCREENSHOT_PREPARE_IN_FLIGHT: AtomicBool = AtomicBool::new(false);
+static SMART_PASTE_IN_FLIGHT: AtomicBool = AtomicBool::new(false);
+static SYNTHETIC_INPUT_UNTIL_MS: AtomicU64 = AtomicU64::new(0);
 static PAUSED: AtomicBool = AtomicBool::new(false);
 static mut HWND_MAIN: HWND = null_mut();
 static mut KB_HOOK: HHOOK = null_mut();
@@ -167,8 +169,7 @@ unsafe extern "system" fn keyboard_hook(code: i32, wparam: WPARAM, lparam: LPARA
     if code >= 0 && !PAUSED.load(Ordering::Relaxed) {
         let kb = &*(lparam as *const KBDLLHOOKSTRUCT);
 
-        // Skip injected events (our own SendInput calls)
-        if kb.flags & LLKHF_INJECTED != 0 {
+        if kb.flags & LLKHF_INJECTED != 0 && is_recent_synthetic_input() {
             return CallNextHookEx(KB_HOOK, code, wparam, lparam);
         }
 
@@ -268,7 +269,7 @@ unsafe extern "system" fn wnd_proc(
 ) -> LRESULT {
     match msg {
         WM_SMART_PASTE => {
-            handle_smart_paste();
+            start_smart_paste_worker();
             0
         }
 
@@ -316,6 +317,20 @@ unsafe extern "system" fn wnd_proc(
 }
 
 // -- Smart paste logic --
+
+fn start_smart_paste_worker() {
+    if SMART_PASTE_IN_FLIGHT
+        .compare_exchange(false, true, Ordering::SeqCst, Ordering::SeqCst)
+        .is_err()
+    {
+        return;
+    }
+
+    std::thread::spawn(|| {
+        handle_smart_paste();
+        SMART_PASTE_IN_FLIGHT.store(false, Ordering::SeqCst);
+    });
+}
 
 fn handle_smart_paste() {
     unsafe {
@@ -1059,6 +1074,7 @@ unsafe fn send_key(vk: u16, key_up: bool) {
     input.r#type = INPUT_KEYBOARD;
     input.Anonymous.ki.wVk = vk;
     input.Anonymous.ki.dwFlags = if key_up { KEYEVENTF_KEYUP } else { 0 };
+    mark_synthetic_input();
     SendInput(1, &input, size_of::<INPUT>() as i32);
 }
 
@@ -1083,6 +1099,7 @@ unsafe fn send_key_combo(modifier: u16, key: u16) {
     inputs[3].Anonymous.ki.wVk = modifier;
     inputs[3].Anonymous.ki.dwFlags = KEYEVENTF_KEYUP;
 
+    mark_synthetic_input();
     SendInput(4, inputs.as_ptr(), size_of::<INPUT>() as i32);
 }
 
@@ -1147,6 +1164,14 @@ fn has_recent_screenshot_intent() -> bool {
 
 fn is_ctrl_key(vk_code: u16) -> bool {
     vk_code == VK_CONTROL || vk_code == VK_LCONTROL_KEY || vk_code == VK_RCONTROL_KEY
+}
+
+fn mark_synthetic_input() {
+    SYNTHETIC_INPUT_UNTIL_MS.store(now_ms() + 250, Ordering::SeqCst);
+}
+
+fn is_recent_synthetic_input() -> bool {
+    now_ms() <= SYNTHETIC_INPUT_UNTIL_MS.load(Ordering::SeqCst)
 }
 
 fn now_ms() -> u64 {

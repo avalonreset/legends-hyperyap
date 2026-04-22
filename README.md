@@ -42,7 +42,7 @@ Everything is preconfigured. You do not need to set up shortcuts, change setting
 
 ### Option 1: Download the installer
 
-Download [hyperyap_1.0.6_x64-setup.exe](https://github.com/avalonreset/hyperyap/releases/latest) from the Releases page and run it. On first launch, HyperYap will:
+Download [hyperyap_1.0.7_x64-setup.exe](https://github.com/avalonreset/hyperyap/releases/latest) from the Releases page and run it. On first launch, HyperYap will:
 
 - Download the NVIDIA Parakeet speech model (~440MB)
 - Set up the hotkey engine and register autostart

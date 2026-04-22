@@ -2,7 +2,7 @@
 type: meta
 title: "Vault Log"
 created: 2026-04-21
-updated: 2026-04-21
+updated: 2026-04-22
 tags:
   - hyperyap
   - log
@@ -14,6 +14,17 @@ sources:
 ---
 
 # Vault Log
+
+## 2026-04-22 save | smart paste hook responsiveness
+
+- Patched `hotkeys/src/main.rs` so `WM_SMART_PASTE` starts a worker thread and does not block the low-level keyboard hook owner thread.
+- Added a daemon guard for HyperYap-generated injected input while allowing user-generated injected Ctrl+V chords to reach smart paste.
+- Rebuilt the release daemon, copied it to `installed hotkey daemon`, and restarted it headless.
+- Rebuilt `src-tauri/target/release/bundle/nsis/hyperyap_1.0.6_x64-setup.exe`, ran the installer, then restarted HyperYap from `installed HyperYap app`.
+- Verified the restarted daemon hash is `[rebuilt daemon hash]`.
+- Prepared a public `v1.0.7` patch release for the same hook responsiveness fix.
+- Validated with `cargo fmt`, `cargo clippy -- -D warnings`, and `cargo build --release`.
+- Updated [[Hot Cache]], [[Smart Screenshot Paste]], [[Hotkey Daemon]], [[HyperYap Overview]], and [[HyperYap Vault Index]].
 
 ## 2026-04-21 save | native prepared screenshot paths
 

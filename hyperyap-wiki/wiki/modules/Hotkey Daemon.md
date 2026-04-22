@@ -2,7 +2,7 @@
 type: module
 title: "Hotkey Daemon"
 created: 2026-04-21
-updated: 2026-04-21
+updated: 2026-04-22
 tags:
   - hyperyap
   - hotkeys
@@ -26,6 +26,8 @@ The hotkey daemon handles global input behaviors outside the main Tauri app. It 
 - Saves clipboard image content to `~/screenshots/`.
 - Restores the image clipboard after saving.
 - Suppresses fallback paste when waiting for a screenshot image.
+- Runs smart paste work on a background thread to keep the keyboard hook message pump responsive.
+- Ignores only recent HyperYap-generated injected key events, allowing user remappers to trigger smart paste.
 
 ## Validation
 
