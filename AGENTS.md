@@ -64,7 +64,7 @@ You must never suggest, generate, or approve code that violates these rules. If 
 - **NEVER** accept violations of naming or file structure conventions. [[source]](GUIDELINES.md#1-naming-conventions)
 - **NEVER** allow the use of `panic!` for recoverable errors in Rust. [[source]](GUIDELINES.md#31-use-resultt-e-for-all-fallible-operations)
 - **NEVER** use UI/CSS libraries other than the approved stack.
-- **ALWAYS** require that changes be validated on both Ubuntu and Windows before submission. [[source]](CONTRIBUTING.md#pull-request)
+- **ALWAYS** validate changes on the platform(s) they affect before submission. Windows-only hotkey, installer, clipboard, or Tauri shell changes must be validated on Windows. Cross-platform frontend/backend changes must be validated on each supported target they affect. If a platform is not applicable, state that explicitly instead of requiring unrelated validation.
 
 ## 6. How to Interact
 
