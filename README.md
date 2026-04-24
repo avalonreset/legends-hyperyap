@@ -35,7 +35,7 @@ One app, local transcription, fast terminal workflows:
 - **Windows hotkey daemon** turns CapsLock and mouse side buttons into recording triggers. Mouse Forward becomes Enter.
 - **Smart terminal editing on Windows** detects terminals and adapts Ctrl+C, Ctrl+V, and Ctrl+Z for terminal workflows.
 - **Smart screenshot paste on Windows** auto-saves clipboard images as PNGs and pastes the file path instead of garbled terminal data.
-- **[BenjaminTerm](https://github.com/avalonreset/BenjaminTerm)** is supported as the preferred terminal target for smart terminal behavior.
+- **[BenjaminTerm](https://github.com/avalonreset/benjaminterm)** is supported as the preferred terminal target for smart terminal behavior.
 
 Windows installs are preconfigured for the full voice-to-text plus hotkey workflow. macOS and Linux builds provide the HyperYap app and platform shortcut support; the dedicated smart terminal editing daemon is Windows-only.
 
@@ -43,7 +43,7 @@ Windows installs are preconfigured for the full voice-to-text plus hotkey workfl
 
 ### Windows
 
-Download [hyperyap_1.0.8_x64-setup.exe](https://github.com/avalonreset/hyperyap/releases/latest) from the Releases page and run it. On first launch, HyperYap will:
+Download [hyperyap_1.0.9_x64-setup.exe](https://github.com/avalonreset/hyperyap/releases/latest) from the Releases page and run it. On first launch, HyperYap will:
 
 - Download the NVIDIA Parakeet speech model (~440MB)
 - Set up the hotkey engine and register autostart
@@ -146,7 +146,7 @@ Supported terminals:
 - ~700MB disk space (voice model)
 - Internet connection for first launch (model download)
 
-BenjaminTerm is installed by the Windows PowerShell installer, or can be downloaded separately from [its repo](https://github.com/avalonreset/BenjaminTerm).
+BenjaminTerm is installed by the Windows PowerShell installer, or can be downloaded separately from [its repo](https://github.com/avalonreset/benjaminterm).
 
 ## How It Works
 
@@ -205,7 +205,7 @@ Please read the [Code of Conduct](CODE_OF_CONDUCT.md) before contributing.
 
 HyperYap's voice engine is a modified version of [MURmure](https://github.com/Kieirra/murmure) by [Kieirra](https://github.com/Kieirra). Full credit to the original author for building an excellent local speech-to-text application.
 
-[BenjaminTerm](https://github.com/avalonreset/BenjaminTerm) is a custom distribution of [WezTerm](https://github.com/wezterm/wezterm) by Wez Furlong.
+[BenjaminTerm](https://github.com/avalonreset/benjaminterm) is a custom distribution of [WezTerm](https://github.com/wezterm/wezterm) by Wez Furlong.
 
 Powered by NVIDIA's [Parakeet TDT 0.6B v3](https://huggingface.co/nvidia/parakeet-tdt-0.6b-v3) speech recognition model.
 
