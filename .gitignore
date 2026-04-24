@@ -12,6 +12,13 @@ dist
 dist-ssr
 *.local
 
+# Local release artifacts
+/*.exe
+/*.msi
+/*.dmg
+/*.AppImage
+/*.deb
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
@@ -30,6 +37,10 @@ appimagetool*
 stderr
 stdout
 resources/parakeet-tdt-0.6b-v3-int8/
+
+# Local design scratch
+assets/icon-concepts/
+assets/originals/
 
 e2e-tests/.tmp/*
 .pnpm-store/
