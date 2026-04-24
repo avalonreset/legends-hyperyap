@@ -17,7 +17,7 @@ $ahkInstallerUrl = "https://www.autohotkey.com/download/ahk-v2.exe"
 $appDataDir = "$env:APPDATA\com.avalonreset.hyperyap"
 $startupDir = "$env:APPDATA\Microsoft\Windows\Start Menu\Programs\Startup"
 $installDir = "$env:LOCALAPPDATA\Programs\HyperYap"
-$btRepo = "avalonreset/BenjaminTerm"
+$btRepo = "avalonreset/benjaminterm"
 $scriptsInstallDir = "$env:LOCALAPPDATA\HyperYap\scripts"
 
 Write-Host ""
@@ -127,13 +127,27 @@ try {
 Write-Host "[2/5] Installing BenjaminTerm terminal..." -ForegroundColor Yellow
 
 try {
-    $btReleaseApi = "https://api.github.com/repos/$btRepo/releases"
-    $btReleases = Invoke-RestMethod -Uri $btReleaseApi -Headers @{ "User-Agent" = "HyperYap-Installer" }
-    $btSetupAsset = $null
-    foreach ($rel in $btReleases) {
-        $btSetupAsset = $rel.assets | Where-Object { $_.name -match "Setup\.exe$" } | Select-Object -First 1
-        if ($btSetupAsset) { break }
+    $btHeaders = @{ "User-Agent" = "HyperYap-Installer" }
+    $btLatestReleaseApi = "https://api.github.com/repos/$btRepo/releases/latest"
+    try {
+        $btLatestRelease = Invoke-RestMethod -Uri $btLatestReleaseApi -Headers $btHeaders
+    } catch {
+        $btReleaseApi = "https://api.github.com/repos/$btRepo/releases"
+        $btLatestRelease = @(Invoke-RestMethod -Uri $btReleaseApi -Headers $btHeaders) |
+            Where-Object { -not $_.draft -and -not $_.prerelease } |
+            Select-Object -First 1
     }
+
+    if (-not $btLatestRelease) {
+        throw "No stable BenjaminTerm release found."
+    }
+
+    Write-Host "  Latest BenjaminTerm release: $($btLatestRelease.tag_name)" -ForegroundColor DarkGray
+
+    $btSetupAsset = @($btLatestRelease.assets) |
+        Where-Object { $_.name -match "(?i)setup\.exe$" } |
+        Select-Object -First 1
+
     if ($btSetupAsset) {
         $btInstallerPath = "$env:TEMP\BenjaminTerm-Setup.exe"
         Write-Host "  Downloading $($btSetupAsset.name)..." -ForegroundColor DarkGray
@@ -144,11 +158,9 @@ try {
         Write-Host "  BenjaminTerm installed." -ForegroundColor Green
     } else {
         # Fall back to portable zip
-        $btZipAsset = $null
-        foreach ($rel in $btReleases) {
-            $btZipAsset = $rel.assets | Where-Object { $_.name -match "windows.*\.zip$" -and $_.name -notmatch "sha256" } | Select-Object -First 1
-            if ($btZipAsset) { break }
-        }
+        $btZipAsset = @($btLatestRelease.assets) |
+            Where-Object { $_.name -match "(?i)windows.*\.zip$" -and $_.name -notmatch "(?i)sha256" } |
+            Select-Object -First 1
         if ($btZipAsset) {
             $btZipPath = "$env:TEMP\BenjaminTerm.zip"
             $btInstallDir = "$env:LOCALAPPDATA\Programs\BenjaminTerm"
