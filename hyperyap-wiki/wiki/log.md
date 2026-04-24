@@ -17,6 +17,14 @@ sources:
 
 # Vault Log
 
+## 2026-04-24 lint | v1.0.9 release wiki status
+
+- Ran [[Public Release Sanitization]] sensitive-pattern checks across the wiki.
+- Found no secret values or private local path leaks outside the sanitization policy examples.
+- Updated [[Hot Cache]], [[Dashboard]], [[HyperYap Overview]], and [[Terminal Editing Layer]] from stale `v1.0.8` release state to current `v1.0.9` release status.
+- Updated [[Benjamin Term]] to remove personal phrasing and record that the Windows installer resolves latest stable BenjaminTerm, currently `v1.4.3`.
+- Created [[Lint Report 2026-04-24]].
+
 ## 2026-04-24 save | terminal editing release prep
 
 - Created [[Terminal Editing Layer]] to name the missing concept behind smart terminal copy, smart paste, screenshot path paste, and basic paste undo.
