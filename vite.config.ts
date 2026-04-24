@@ -4,6 +4,9 @@ import tailwindcss from '@tailwindcss/vite';
 import { tanstackRouter } from '@tanstack/router-plugin/vite';
 import checker from 'vite-plugin-checker';
 import { resolve } from 'path';
+import { fileURLToPath } from 'url';
+
+const configDir = fileURLToPath(new URL('.', import.meta.url));
 
 // @ts-expect-error process is a nodejs global
 const host = process.env.TAURI_DEV_HOST;
@@ -26,8 +29,8 @@ export default defineConfig(async () => ({
     build: {
         rollupOptions: {
             input: {
-                main: resolve(__dirname, 'index.html'),
-                overlay: resolve(__dirname, 'src/overlay/index.html'),
+                main: resolve(configDir, 'index.html'),
+                overlay: resolve(configDir, 'src/overlay/index.html'),
             },
         },
     },
