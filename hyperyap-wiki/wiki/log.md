@@ -17,6 +17,17 @@ sources:
 
 # Vault Log
 
+## 2026-04-24 save | release housekeeping and current-main retrigger
+
+- Reframed the public README around cross-platform voice-to-text functionality and moved Windows-only CapsLock, mouse remapping, and smart terminal helper behavior into compatibility notes.
+- Removed stale tracked `latest.json`; it described `1.0.0` updater assets and was not referenced by the current app because updater endpoints are disabled.
+- Added `.gitignore` coverage for root-level local package artifacts and local design scratch folders.
+- Removed local untracked cleanup targets: root installer copy, `assets/icon-concepts/`, `assets/originals/`, `.github-audit/`, and `dist/`.
+- Verified `main` contains `package.json` and `src-tauri/tauri.conf.json` version `1.0.9`.
+- Verified `main` installer logic resolves `avalonreset/benjaminterm` through the GitHub latest stable release endpoint.
+- Retriggered the all-platform `v1.0.9` release workflow from current `main` with commit `424022c`.
+- Remaining external check: confirm the GitHub Actions run completed and the `v1.0.9` release assets were recreated from that current-main trigger.
+
 ## 2026-04-24 lint | v1.0.9 release wiki status
 
 - Ran [[Public Release Sanitization]] sensitive-pattern checks across the wiki.
