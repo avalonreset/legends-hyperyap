@@ -39,6 +39,10 @@ jobs:
     build-macos-intel:
         runs-on: macos-latest
         timeout-minutes: 200
+        env:
+            HAS_MACOS_CODESIGN: ${{ secrets.MACOS_CODESIGN_P12_B64 != '' && secrets.CERT_PASSWORD != '' && secrets.MACOS_CODESIGN_IDENTITY != '' }}
+            HAS_APPLE_NOTARY: ${{ secrets.APPLE_ID != '' && secrets.APPLE_ID_PASSWORD != '' && secrets.APPLE_TEAM_ID != '' }}
+            HAS_TAURI_SIGNING: ${{ secrets.TAURI_PRIVATE_KEY != '' }}
         steps:
             - uses: actions/checkout@v4
 
@@ -81,7 +85,7 @@ jobs:
 
             # ── Official Apple code signing ──────────────────────────────
             - name: Import Apple Developer ID certificate
-              if: ${{ inputs.dry == false }}
+              if: ${{ inputs.dry == false && env.HAS_MACOS_CODESIGN == 'true' }}
               shell: bash
               env:
                   MACOS_CODESIGN_P12_B64: ${{ secrets.MACOS_CODESIGN_P12_B64 }}
@@ -128,7 +132,7 @@ jobs:
               run: arch -x86_64 pnpm tauri build --target x86_64-apple-darwin --bundles dmg
 
             - name: Sign DMG
-              if: ${{ inputs.dry == false }}
+              if: ${{ inputs.dry == false && env.HAS_MACOS_CODESIGN == 'true' }}
               shell: bash
               run: |
                   set -euo pipefail
@@ -150,7 +154,7 @@ jobs:
 
             # ── Notarization ─────────────────────────────────────────────
             - name: Notarize DMG with Apple
-              if: ${{ inputs.dry == false }}
+              if: ${{ inputs.dry == false && env.HAS_MACOS_CODESIGN == 'true' && env.HAS_APPLE_NOTARY == 'true' }}
               shell: bash
               env:
                   APPLE_ID: ${{ secrets.APPLE_ID }}
@@ -181,7 +185,7 @@ jobs:
 
             # ── Tauri update signature ───────────────────────────────────
             - name: Restore Tauri signing key
-              if: ${{ inputs.dry == false }}
+              if: ${{ inputs.dry == false && env.HAS_TAURI_SIGNING == 'true' }}
               shell: bash
               env:
                   TAURI_PRIVATE_KEY: ${{ secrets.TAURI_PRIVATE_KEY }}
@@ -194,7 +198,7 @@ jobs:
                   fi
 
             - name: Sign DMG(s) with Tauri signer
-              if: ${{ inputs.dry == false }}
+              if: ${{ inputs.dry == false && env.HAS_TAURI_SIGNING == 'true' }}
               env:
                   TAURI_PRIVATE_KEY_PATH: tauri.key
                   TAURI_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_KEY_PASSWORD }}
