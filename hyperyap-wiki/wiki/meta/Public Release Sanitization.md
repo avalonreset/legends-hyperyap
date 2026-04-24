@@ -2,7 +2,7 @@
 type: meta
 title: "Public Release Sanitization"
 created: 2026-04-22
-updated: 2026-04-22
+updated: 2026-04-24
 tags:
   - hyperyap
   - sanitization
@@ -59,7 +59,7 @@ rg -n "C:\\|E:\\|Users\\|API[_ -]?KEY|SECRET|TOKEN|PASSWORD|BEGIN (RSA|OPENSSH|P
 Also scan for project-local identities and placeholder mistakes:
 
 ```powershell
-rg -n "Owner:|C:/|E:/|C:\\|E:\\|Users\\|\\.env|password|token|secret|api key" <vault-root>
+rg -n "Owner:|C:/|E:/|C:\\|E:\\|Users\\|\.env|password|token|secret|api key" <vault-root>
 ```
 
 Expected acceptable hits:
@@ -77,5 +77,7 @@ Expected acceptable hits:
 - Public-release changes are recorded in [[Vault Log]] and summarized in [[Hot Cache]].
 
 ## Current Status
+
+2026-04-24: Public-release scan found no secret values and no private local path leaks outside this policy page. Stale `v1.0.8` release status was updated to `v1.0.9`, and a personal phrasing in [[Benjamin Term]] was replaced with product-level wording. See [[Lint Report 2026-04-24]].
 
 2026-04-22: Initial scan found one local identity detail in vault operating instructions. It was replaced with `Owner: <project-owner>`. No secret values were found outside this policy.
