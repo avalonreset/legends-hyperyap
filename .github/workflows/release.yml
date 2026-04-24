@@ -135,6 +135,7 @@ jobs:
                   ### Windows
                   - hyperyap_${{ steps.version.outputs.version }}_x64-setup.exe
                   - Includes the Windows hotkey daemon for F13/CapsLock/Mouse Back recording, smart terminal paste, smart terminal copy, and basic paste undo.
+                  - The PowerShell installer installs the latest BenjaminTerm release from GitHub. For v1.0.9, that is BenjaminTerm v1.4.3.
 
                   ### Linux
                   - HyperYap_amd64.AppImage
