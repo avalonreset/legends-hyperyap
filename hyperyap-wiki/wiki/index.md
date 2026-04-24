@@ -66,3 +66,4 @@ sources:
 
 - [[Dashboard]]: current focus, release state, and open checks.
 - [[Public Release Sanitization]]: public-release safety policy and pre-publish scan checklist.
+- [[Lint Report 2026-04-24]]: release-readiness scan for wiki-sensitive content and stale release facts.
