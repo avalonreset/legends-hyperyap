@@ -20,7 +20,7 @@ sources:
 
 HyperYap is a privacy-first local speech-to-text desktop app built with Tauri, Rust, React, and TypeScript. It runs transcription locally and is designed around a small, controlled data persistence model.
 
-The current release line includes smart terminal editing support for Windows terminal workflows. `v1.0.6` added native prepared screenshot paths in the hotkey daemon for effectively instant terminal screenshot paste. `v1.0.7` moved smart paste waits to a worker thread. `v1.0.8` adds smart terminal copy and basic HyperYap-managed paste undo.
+The current release line includes smart terminal editing support for Windows terminal workflows. `v1.0.6` added native prepared screenshot paths in the hotkey daemon for effectively instant terminal screenshot paste. `v1.0.7` moved smart paste waits to a worker thread. `v1.0.8` adds smart terminal copy and basic HyperYap-managed paste undo. `v1.0.9` prepares the release path that installs the latest stable BenjaminTerm release, currently `v1.4.3`, through the Windows PowerShell installer.
 
 ## Core Areas
 
