@@ -20,13 +20,14 @@ sources:
 
 ## Last Updated
 
-2026-04-24. Prepared `v1.0.9` release state for HyperYap. The Windows PowerShell installer now resolves BenjaminTerm from the latest stable `avalonreset/benjaminterm` GitHub release; the current BenjaminTerm release is `v1.4.3`. A `.release-trigger` commit was pushed to start the all-platform GitHub Actions release path, but this Codex environment could not verify the run status because outbound GitHub CLI/API checks are blocked here.
+2026-04-24. HyperYap `main` is prepared for `v1.0.9` and the release workflow was retriggered from the current branch tip after README, release-note wording, and filesystem cleanup commits. The Windows PowerShell installer resolves BenjaminTerm from the latest stable `avalonreset/benjaminterm` GitHub release; the current target remains `v1.4.3`. This Codex environment can verify repository files through the GitHub connector, but direct release/API status checks are blocked by outbound socket policy.
 
 ## Key Recent Facts
 
 - Smart screenshot paste targets Benjamin Term and similar terminal windows.
 - BenjaminTerm is installed dynamically by the Windows PowerShell installer rather than embedded inside the HyperYap app bundle.
 - BenjaminTerm `v1.4.3` is the current upstream release line that HyperYap should install through the release endpoint.
+- `main` now has platform-neutral README positioning, cleanup ignore rules, and no tracked stale `latest.json` updater manifest.
 - The Windows hotkey daemon now treats smart copy, smart paste, smart screenshot paste, and paste undo as one terminal editing layer.
 - Terminal Ctrl+C first attempts Ctrl+Shift+C copy, then falls back to Ctrl+C when no clipboard change is detected.
 - Terminal Ctrl+Z only undoes recent HyperYap-managed pastes; it does not reverse commands after Enter submits them.
@@ -46,6 +47,9 @@ sources:
 - Bumped release metadata to `1.0.9`.
 - Updated the Windows installer to select the latest stable BenjaminTerm release and accept lowercase `benjaminterm` artifact naming.
 - Added `.release-trigger` and release workflow support so a deliberate trigger-file commit can start the all-platform release path.
+- Retriggered `.release-trigger` from current `main` after documentation and cleanup commits.
+- Reframed the README around cross-platform functionality and moved Windows-only behavior into compatibility notes.
+- Removed the stale tracked `latest.json` updater manifest and ignored local release/design scratch artifacts.
 - Created [[Lint Report 2026-04-24]] for the public-release wiki scan.
 - Created [[Public Release Sanitization]] and linked it from [[HyperYap Vault Index]], [[Dashboard]], and `CODEX.md`.
 - Added vault `.gitignore` rules for local/private/sensitive material.
@@ -60,7 +64,7 @@ sources:
 ## Active Threads
 
 - Run [[Public Release Sanitization]] checks before publishing vault changes.
-- Monitor the all-platform GitHub Actions release run for `v1.0.9`.
+- Monitor the all-platform GitHub Actions release run started by commit `424022c` for `v1.0.9`.
 - Validate the `v1.0.9` Windows installer after the release artifact is published.
 - Validate smart terminal copy/paste/undo manually on Windows before declaring terminal editing complete.
 - Use GitHub Actions for macOS and Linux build validation; local machine validation is Windows-only.
