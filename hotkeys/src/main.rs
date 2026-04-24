@@ -25,9 +25,13 @@ use windows_sys::Win32::UI::WindowsAndMessaging::*;
 
 const WM_TRAYICON: u32 = WM_APP + 1;
 const WM_SMART_PASTE: u32 = WM_APP + 2;
+const WM_SMART_COPY: u32 = WM_APP + 3;
+const WM_SMART_UNDO_PASTE: u32 = WM_APP + 4;
 const IDM_PAUSE: u16 = 1;
 const IDM_EXIT: u16 = 2;
+const VK_C: u16 = 0x43;
 const VK_V: u16 = 0x56;
+const VK_Z: u16 = 0x5A;
 const VK_S: u16 = 0x53;
 const VK_F13: u16 = 0x7C;
 const VK_LCONTROL_KEY: u16 = 0xA2;
@@ -48,6 +52,9 @@ const SMART_PASTE_RETRY_INTERVAL_MS: u64 = 40;
 const SMART_PASTE_RESTORE_DELAY_MS: u64 = 750;
 const SMART_PASTE_SCREENSHOT_INTENT_MS: u64 = 10_000;
 const SMART_PASTE_CACHED_PATH_MS: u64 = 30_000;
+const SMART_COPY_WAIT_MS: u64 = 350;
+const SMART_UNDO_PASTE_MS: u64 = 30_000;
+const SMART_UNDO_MAX_BACKSPACES: usize = 4_096;
 const TRACKED_CTRL_GRACE_MS: u64 = 750;
 
 // Terminal process names (lowercase) that get smart image paste
@@ -71,11 +78,15 @@ const TERMINALS: &[&str] = &[
 // -- Globals (required for hook callbacks) --
 
 static SUPPRESS_V_UP: AtomicBool = AtomicBool::new(false);
+static SUPPRESS_C_UP: AtomicBool = AtomicBool::new(false);
+static SUPPRESS_Z_UP: AtomicBool = AtomicBool::new(false);
 static CTRL_HELD: AtomicBool = AtomicBool::new(false);
 static LAST_CTRL_DOWN_MS: AtomicU64 = AtomicU64::new(0);
 static LAST_SCREENSHOT_INTENT_MS: AtomicU64 = AtomicU64::new(0);
 static SCREENSHOT_PREPARE_IN_FLIGHT: AtomicBool = AtomicBool::new(false);
 static SMART_PASTE_IN_FLIGHT: AtomicBool = AtomicBool::new(false);
+static SMART_COPY_IN_FLIGHT: AtomicBool = AtomicBool::new(false);
+static SMART_UNDO_IN_FLIGHT: AtomicBool = AtomicBool::new(false);
 static SYNTHETIC_INPUT_UNTIL_MS: AtomicU64 = AtomicU64::new(0);
 static PAUSED: AtomicBool = AtomicBool::new(false);
 static mut HWND_MAIN: HWND = null_mut();
@@ -86,6 +97,12 @@ static mut MOUSE_HOOK: HHOOK = null_mut();
 struct PreparedScreenshot {
     path: String,
     created_ms: u64,
+}
+
+#[derive(Clone)]
+struct TerminalPaste {
+    text: String,
+    pasted_ms: u64,
 }
 
 // -- Entry point --
@@ -201,6 +218,19 @@ unsafe extern "system" fn keyboard_hook(code: i32, wparam: WPARAM, lparam: LPARA
                 return 1; // suppress original CapsLock
             }
 
+            // Ctrl+C smart terminal copy intercept
+            VK_C => {
+                if is_down && is_plain_ctrl_hotkey_held() && is_foreground_terminal() {
+                    SUPPRESS_C_UP.store(true, Ordering::SeqCst);
+                    PostMessageW(HWND_MAIN, WM_SMART_COPY, 0, 0);
+                    return 1;
+                }
+                if is_up && SUPPRESS_C_UP.load(Ordering::SeqCst) {
+                    SUPPRESS_C_UP.store(false, Ordering::SeqCst);
+                    return 1;
+                }
+            }
+
             // Ctrl+V smart paste intercept
             VK_V => {
                 if is_down && is_smart_paste_modifier_held() {
@@ -212,6 +242,19 @@ unsafe extern "system" fn keyboard_hook(code: i32, wparam: WPARAM, lparam: LPARA
                 if is_up && SUPPRESS_V_UP.load(Ordering::SeqCst) {
                     SUPPRESS_V_UP.store(false, Ordering::SeqCst);
                     return 1; // suppress matching keyup
+                }
+            }
+
+            // Ctrl+Z smart terminal paste undo intercept
+            VK_Z => {
+                if is_down && is_plain_ctrl_hotkey_held() && is_foreground_terminal() {
+                    SUPPRESS_Z_UP.store(true, Ordering::SeqCst);
+                    PostMessageW(HWND_MAIN, WM_SMART_UNDO_PASTE, 0, 0);
+                    return 1;
+                }
+                if is_up && SUPPRESS_Z_UP.load(Ordering::SeqCst) {
+                    SUPPRESS_Z_UP.store(false, Ordering::SeqCst);
+                    return 1;
                 }
             }
 
@@ -273,6 +316,16 @@ unsafe extern "system" fn wnd_proc(
             0
         }
 
+        WM_SMART_COPY => {
+            start_smart_copy_worker();
+            0
+        }
+
+        WM_SMART_UNDO_PASTE => {
+            start_smart_undo_paste_worker();
+            0
+        }
+
         WM_TRAYICON => {
             let event = (lparam & 0xFFFF) as u32;
             match event {
@@ -314,6 +367,123 @@ unsafe extern "system" fn wnd_proc(
 
         _ => DefWindowProcW(hwnd, msg, wparam, lparam),
     }
+}
+
+// -- Smart terminal copy and paste undo logic --
+
+fn start_smart_copy_worker() {
+    if SMART_COPY_IN_FLIGHT
+        .compare_exchange(false, true, Ordering::SeqCst, Ordering::SeqCst)
+        .is_err()
+    {
+        return;
+    }
+
+    std::thread::spawn(|| {
+        handle_smart_copy();
+        SMART_COPY_IN_FLIGHT.store(false, Ordering::SeqCst);
+    });
+}
+
+fn handle_smart_copy() {
+    unsafe {
+        if !is_foreground_terminal() {
+            send_ctrl_key(VK_C);
+            return;
+        }
+
+        let before_sequence = GetClipboardSequenceNumber();
+        send_terminal_copy();
+
+        if wait_for_clipboard_sequence_change(before_sequence, SMART_COPY_WAIT_MS)
+            && clipboard_has_text()
+        {
+            return;
+        }
+
+        send_ctrl_key(VK_C);
+    }
+}
+
+fn start_smart_undo_paste_worker() {
+    if SMART_UNDO_IN_FLIGHT
+        .compare_exchange(false, true, Ordering::SeqCst, Ordering::SeqCst)
+        .is_err()
+    {
+        return;
+    }
+
+    std::thread::spawn(|| {
+        handle_smart_undo_paste();
+        SMART_UNDO_IN_FLIGHT.store(false, Ordering::SeqCst);
+    });
+}
+
+fn handle_smart_undo_paste() {
+    unsafe {
+        if !is_foreground_terminal() {
+            send_ctrl_key(VK_Z);
+            return;
+        }
+
+        let Some(paste) = take_recent_terminal_paste() else {
+            send_ctrl_key(VK_Z);
+            return;
+        };
+
+        send_backspaces(paste.text.chars().count());
+    }
+}
+
+fn wait_for_clipboard_sequence_change(before_sequence: u32, timeout_ms: u64) -> bool {
+    let started_at = std::time::Instant::now();
+    let timeout = std::time::Duration::from_millis(timeout_ms);
+
+    while started_at.elapsed() <= timeout {
+        unsafe {
+            if GetClipboardSequenceNumber() != before_sequence {
+                return true;
+            }
+        }
+
+        std::thread::sleep(std::time::Duration::from_millis(
+            SMART_PASTE_RETRY_INTERVAL_MS,
+        ));
+    }
+
+    false
+}
+
+fn recent_terminal_paste() -> &'static Mutex<Option<TerminalPaste>> {
+    static RECENT_TERMINAL_PASTE: OnceLock<Mutex<Option<TerminalPaste>>> = OnceLock::new();
+    RECENT_TERMINAL_PASTE.get_or_init(|| Mutex::new(None))
+}
+
+fn store_recent_terminal_paste(text: String) {
+    if text.is_empty() {
+        return;
+    }
+
+    if let Ok(mut paste) = recent_terminal_paste().lock() {
+        *paste = Some(TerminalPaste {
+            text,
+            pasted_ms: now_ms(),
+        });
+    }
+}
+
+fn take_recent_terminal_paste() -> Option<TerminalPaste> {
+    let mut paste = recent_terminal_paste().lock().ok()?;
+    let recent = paste.as_ref()?;
+
+    if now_ms().saturating_sub(recent.pasted_ms) > SMART_UNDO_PASTE_MS {
+        *paste = None;
+        return None;
+    }
+
+    let recent = recent.clone();
+    *paste = None;
+    Some(recent)
 }
 
 // -- Smart paste logic --
@@ -368,8 +538,9 @@ fn handle_smart_paste() {
                     return;
                 }
 
-                if clipboard_has_text() {
+                if let Ok(text) = get_clipboard_text() {
                     send_terminal_paste();
+                    store_recent_terminal_paste(text);
                     return;
                 }
 
@@ -400,8 +571,10 @@ fn paste_clipboard_image() -> bool {
 
 fn paste_image_path(image_path: String) {
     unsafe {
-        if set_clipboard_text(&image_path.replace('\\', "/")).is_ok() {
+        let paste_text = image_path.replace('\\', "/");
+        if set_clipboard_text(&paste_text).is_ok() {
             send_terminal_paste();
+            store_recent_terminal_paste(paste_text);
             LAST_SCREENSHOT_INTENT_MS.store(0, Ordering::SeqCst);
             std::thread::spawn(move || {
                 std::thread::sleep(std::time::Duration::from_millis(
@@ -441,6 +614,38 @@ fn clipboard_has_image() -> bool {
 fn clipboard_has_text() -> bool {
     unsafe {
         IsClipboardFormatAvailable(CF_UNICODETEXT) != 0 || IsClipboardFormatAvailable(CF_TEXT) != 0
+    }
+}
+
+fn get_clipboard_text() -> Result<String, String> {
+    if !clipboard_has_text() {
+        return Err("Clipboard does not contain text".to_string());
+    }
+
+    unsafe {
+        with_open_clipboard(|| {
+            let handle = GetClipboardData(CF_UNICODETEXT);
+            if handle.is_null() {
+                return Err("Failed to get clipboard text".to_string());
+            }
+
+            let locked = GlobalLock(handle);
+            if locked.is_null() {
+                return Err("Failed to lock clipboard text".to_string());
+            }
+
+            let size = GlobalSize(handle) / size_of::<u16>();
+            let slice = std::slice::from_raw_parts(locked as *const u16, size);
+            let len = slice.iter().position(|value| *value == 0).unwrap_or(size);
+            let text = String::from_utf16_lossy(&slice[..len]);
+            GlobalUnlock(handle);
+
+            if text.is_empty() {
+                Err("Clipboard text is empty".to_string())
+            } else {
+                Ok(text)
+            }
+        })
     }
 }
 
@@ -1103,6 +1308,43 @@ unsafe fn send_key_combo(modifier: u16, key: u16) {
     SendInput(4, inputs.as_ptr(), size_of::<INPUT>() as i32);
 }
 
+unsafe fn send_ctrl_key(key: u16) {
+    let ctrl_already_down = is_ctrl_held();
+
+    if !ctrl_already_down {
+        send_key(VK_CONTROL, false);
+    }
+
+    send_key(key, false);
+    send_key(key, true);
+
+    if !ctrl_already_down {
+        send_key(VK_CONTROL, true);
+    }
+}
+
+unsafe fn send_terminal_copy() {
+    let ctrl_already_down = is_ctrl_held();
+    let shift_already_down = is_shift_held();
+
+    if !ctrl_already_down {
+        send_key(VK_CONTROL, false);
+    }
+    if !shift_already_down {
+        send_key(VK_SHIFT, false);
+    }
+
+    send_key(VK_C, false);
+    send_key(VK_C, true);
+
+    if !shift_already_down {
+        send_key(VK_SHIFT, true);
+    }
+    if !ctrl_already_down {
+        send_key(VK_CONTROL, true);
+    }
+}
+
 unsafe fn send_terminal_paste() {
     let ctrl_already_down = is_ctrl_held();
     let shift_already_down = is_shift_held();
@@ -1122,6 +1364,14 @@ unsafe fn send_terminal_paste() {
     }
     if !ctrl_already_down {
         send_key(VK_CONTROL, true);
+    }
+}
+
+unsafe fn send_backspaces(count: usize) {
+    let capped_count = count.min(SMART_UNDO_MAX_BACKSPACES);
+    for _ in 0..capped_count {
+        send_key(VK_BACK, false);
+        send_key(VK_BACK, true);
     }
 }
 
@@ -1155,6 +1405,14 @@ fn is_smart_paste_modifier_held() -> bool {
     }
 
     now_ms().saturating_sub(LAST_CTRL_DOWN_MS.load(Ordering::SeqCst)) <= TRACKED_CTRL_GRACE_MS
+}
+
+fn is_plain_ctrl_hotkey_held() -> bool {
+    if unsafe { is_shift_held() || is_win_held() } {
+        return false;
+    }
+
+    is_smart_paste_modifier_held()
 }
 
 fn has_recent_screenshot_intent() -> bool {
@@ -1213,10 +1471,20 @@ unsafe fn get_foreground_process_name() -> Option<String> {
     path.rsplit('\\').next().map(|s| s.to_string())
 }
 
+unsafe fn is_foreground_terminal() -> bool {
+    let Some(proc_name) = get_foreground_process_name() else {
+        return false;
+    };
+
+    let lower = proc_name.to_lowercase();
+    TERMINALS.iter().any(|terminal| lower == *terminal)
+}
+
 // -- Win32 clipboard check --
 
 #[link(name = "user32")]
 extern "system" {
+    fn GetClipboardSequenceNumber() -> u32;
     fn IsClipboardFormatAvailable(format: u32) -> BOOL;
     fn RegisterClipboardFormatW(lpszFormat: *const u16) -> u32;
 }

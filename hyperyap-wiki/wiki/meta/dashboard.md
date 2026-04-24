@@ -2,7 +2,7 @@
 type: meta
 title: "Dashboard"
 created: 2026-04-21
-updated: 2026-04-22
+updated: 2026-04-24
 tags:
   - hyperyap
   - dashboard
@@ -19,17 +19,20 @@ sources:
 
 - [[Smart Screenshot Paste]]
 - [[Hotkey Daemon]]
+- [[Terminal Editing Layer]]
 - [[ADR 2026-04-21 Smart Paste Guard]]
 
 ## Release State
 
-- Latest known release: `v1.0.7`
-- Latest known installer: `hyperyap_1.0.7_x64-setup.exe`
-- Latest known release URL: `https://github.com/avalonreset/hyperyap/releases/tag/v1.0.7`
+- Local release build: `v1.0.8`
+- Windows installer: `hyperyap_1.0.8_x64-setup.exe`
+- Expected release URL: `https://github.com/avalonreset/hyperyap/releases/tag/v1.0.8`
 
 ## Open Checks
 
-- Keep stress testing fast screenshot paste in Benjamin Term.
-- Monitor `v1.0.7` smart paste hook responsiveness after public release.
+- Apply [[Public Release Sanitization]] before publishing vault updates.
+- Validate smart terminal copy, smart terminal paste, and paste undo in BenjaminTerm and at least one stock Windows terminal.
+- Publish `v1.0.8` after GitHub Actions produces all selected platform artifacts.
+- Run GitHub release workflow for Windows, Linux, macOS Apple Silicon, and macOS Intel artifacts.
 - Run future installer and app relaunch tests detached from the active Codex terminal. See [[ADR 2026-04-21 Detached Installer Runs]].
-- Record future Ubuntu validation results when release-impacting changes occur.
+- Record macOS and Linux validation results from GitHub Actions because local validation is Windows-only.

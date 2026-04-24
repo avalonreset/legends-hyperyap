@@ -56,8 +56,8 @@ jobs:
             APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
 
     publish:
-        needs: [windows]
-        if: ${{ always() && (needs.windows.result == 'success') }}
+        needs: [linux, windows, macos, macos-intel]
+        if: ${{ always() && (needs.linux.result == 'success' || needs.windows.result == 'success' || needs.macos.result == 'success' || needs['macos-intel'].result == 'success') }}
         runs-on: ubuntu-latest
         permissions:
             contents: write
@@ -65,10 +65,32 @@ jobs:
             - uses: actions/checkout@v4
 
             - name: Download Windows artifacts
+              if: ${{ needs.windows.result == 'success' }}
               uses: actions/download-artifact@v4
               with:
                   name: hyperyap-windows-x64
-                  path: release-assets
+                  path: release-assets/windows
+
+            - name: Download Linux artifacts
+              if: ${{ needs.linux.result == 'success' }}
+              uses: actions/download-artifact@v4
+              with:
+                  name: hyperyap-linux
+                  path: release-assets/linux
+
+            - name: Download macOS Apple Silicon artifacts
+              if: ${{ needs.macos.result == 'success' }}
+              uses: actions/download-artifact@v4
+              with:
+                  name: hyperyap-macos
+                  path: release-assets/macos
+
+            - name: Download macOS Intel artifacts
+              if: ${{ needs['macos-intel'].result == 'success' }}
+              uses: actions/download-artifact@v4
+              with:
+                  name: hyperyap-macos-intel
+                  path: release-assets/macos-intel
 
             - name: Get version
               id: version
@@ -76,9 +98,11 @@ jobs:
                   VERSION=$(grep '"version"' src-tauri/tauri.conf.json | head -1 | sed 's/.*"\([0-9.]*\)".*/\1/')
                   echo "version=$VERSION" >> $GITHUB_OUTPUT
 
-            - name: Rename assets for release
+            - name: Prepare release assets
               run: |
-                  cd release-assets
+                  mkdir -p release-upload
+                  find release-assets -type f -exec cp {} release-upload/ \;
+                  cd release-upload
                   for f in *.exe; do
                     mv "$f" "hyperyap_${{ steps.version.outputs.version }}_x64-setup.exe" 2>/dev/null || true
                   done
@@ -96,14 +120,25 @@ jobs:
                     --title "HyperYap $TAG" \
                     --notes "## HyperYap $TAG
 
-                  Download and run the installer. It handles everything:
-                  - HyperYap voice engine
-                  - Hotkey daemon (F13/CapsLock/Mouse Back for recording)
-                  - NVIDIA Parakeet speech model (~440MB, downloaded on install)
+                  Download the package for your platform.
+
+                  ### Windows
+                  - hyperyap_${{ steps.version.outputs.version }}_x64-setup.exe
+                  - Includes the Windows hotkey daemon for F13/CapsLock/Mouse Back recording, smart terminal paste, smart terminal copy, and basic paste undo.
+
+                  ### Linux
+                  - HyperYap_amd64.AppImage
+                  - HyperYap_amd64.deb
+
+                  ### macOS
+                  - HyperYap_aarch64_darwin.dmg for Apple Silicon
+                  - HyperYap_x86_64_darwin.dmg for Intel Macs
+
+                  The NVIDIA Parakeet speech model runs locally. Installers download or bundle the model depending on platform build settings.
 
                   ### Quick install (PowerShell)
                   \`\`\`powershell
                   irm https://raw.githubusercontent.com/avalonreset/hyperyap/main/install.ps1 | iex
                   \`\`\`" \
                     --latest \
-                    release-assets/*
+                    release-upload/*

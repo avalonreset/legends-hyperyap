@@ -1,8 +1,24 @@
+---
+type: meta
+title: "HyperYap Wiki Instructions"
+created: 2026-04-21
+updated: 2026-04-22
+tags:
+  - hyperyap
+  - codex
+  - operating-guide
+status: active
+related:
+  - "[[Public Release Sanitization]]"
+sources:
+  - "[[Project Documentation]]"
+---
+
 # HyperYap Wiki
 
 Mode: GitHub repository wiki
 Purpose: Maintain a persistent Obsidian knowledge base for HyperYap architecture, releases, workflows, and decisions.
-Owner: Ryan
+Owner: <project-owner>
 Created: 2026-04-21
 
 ## Structure
@@ -37,6 +53,7 @@ hyperyap-wiki/
 - Update `wiki/index.md`, `wiki/hot.md`, and `wiki/log.md` after meaningful changes.
 - New log entries go at the top of `wiki/log.md`.
 - Do not store private user data in this vault.
+- Before public release, apply [[Public Release Sanitization]] and inspect sensitive-pattern scan hits.
 - Preserve HyperYap project rules from `../CONTRIBUTING.md` and `../GUIDELINES.md`.
 
 ## HyperYap Constraints

@@ -1,15 +1,15 @@
 <p align="center">
-  <img src="assets/banner.webp" alt="HyperYap - local voice-to-text for Windows" width="100%">
+  <img src="assets/banner.webp" alt="HyperYap - local voice-to-text for Windows, macOS, and Linux" width="100%">
 </p>
 
-# HyperYap - Local Voice-to-Text for Windows
+# HyperYap - Local Voice-to-Text for Windows, macOS, and Linux
 
 [![CI](https://github.com/avalonreset/hyperyap/actions/workflows/ci.yaml/badge.svg)](https://github.com/avalonreset/hyperyap/actions/workflows/ci.yaml)
 [![GitHub release](https://img.shields.io/github/v/release/avalonreset/hyperyap)](https://github.com/avalonreset/hyperyap/releases)
 [![License: AGPL-3.0](https://img.shields.io/github/license/avalonreset/hyperyap)](LICENSE)
 [![Last Commit](https://img.shields.io/github/last-commit/avalonreset/hyperyap)](https://github.com/avalonreset/hyperyap/commits/main)
 
-HyperYap is a local voice-to-text application that bundles speech recognition, a terminal emulator, and hotkey automation into a single zero-config installer for Windows. No cloud, no internet required for transcription, no data collection. Install once, use everywhere.
+HyperYap is a local voice-to-text application for Windows, macOS, and Linux. It runs NVIDIA Parakeet speech recognition on your machine, collects no data, and keeps terminal-heavy workflows fast with a Windows hotkey daemon for recording, smart terminal paste, smart terminal copy, and basic paste undo.
 
 ## Table of Contents
 
@@ -17,7 +17,7 @@ HyperYap is a local voice-to-text application that bundles speech recognition, a
 - [Install](#install)
 - [Default Hotkeys](#default-hotkeys)
   - [CapsLock Remapping](#capslock-remapping)
-  - [Smart Paste](#smart-paste)
+  - [Smart Terminal Editing](#smart-terminal-editing)
 - [Requirements](#requirements)
 - [How It Works](#how-it-works)
 - [Configuration](#configuration)
@@ -28,29 +28,28 @@ HyperYap is a local voice-to-text application that bundles speech recognition, a
 
 ## What You Get
 
-One installer, one tray icon, everything just works:
+One app, local transcription, fast terminal workflows:
 
 - **Local speech-to-text** powered by NVIDIA [Parakeet TDT 0.6B v3](https://huggingface.co/nvidia/parakeet-tdt-0.6b-v3). No cloud, no internet after first install.
-- **Hotkey remapping** turns CapsLock and mouse side buttons into recording triggers. Mouse Forward becomes Enter.
-- **Smart paste** detects terminals and auto-saves clipboard images as PNGs, pasting the file path instead of garbled data.
-- **[BenjaminTerm](https://github.com/avalonreset/BenjaminTerm)** included. Hacker-styled WezTerm terminal with smart clipboard, 86 dark themes, and borderless mode.
-- **Auto-boot** on login. Preset configs. Zero setup after install.
+- **Cross-platform app builds** for Windows, macOS Apple Silicon, macOS Intel, and Linux x86_64.
+- **Windows hotkey daemon** turns CapsLock and mouse side buttons into recording triggers. Mouse Forward becomes Enter.
+- **Smart terminal editing on Windows** detects terminals and adapts Ctrl+C, Ctrl+V, and Ctrl+Z for terminal workflows.
+- **Smart screenshot paste on Windows** auto-saves clipboard images as PNGs and pastes the file path instead of garbled terminal data.
+- **[BenjaminTerm](https://github.com/avalonreset/BenjaminTerm)** is supported as the preferred terminal target for smart terminal behavior.
 
-Everything is preconfigured. You do not need to set up shortcuts, change settings, or configure anything after install.
+Windows installs are preconfigured for the full voice-to-text plus hotkey workflow. macOS and Linux builds provide the HyperYap app and platform shortcut support; the dedicated smart terminal editing daemon is Windows-only.
 
 ## Install
 
-### Option 1: Download the installer
+### Windows
 
-Download [hyperyap_1.0.7_x64-setup.exe](https://github.com/avalonreset/hyperyap/releases/latest) from the Releases page and run it. On first launch, HyperYap will:
+Download [hyperyap_1.0.8_x64-setup.exe](https://github.com/avalonreset/hyperyap/releases/latest) from the Releases page and run it. On first launch, HyperYap will:
 
 - Download the NVIDIA Parakeet speech model (~440MB)
 - Set up the hotkey engine and register autostart
 - Apply all preset settings (toggle-to-talk, F13, English)
 
-### Option 2: One-line PowerShell install
-
-This installs everything in one shot, including BenjaminTerm and the speech model:
+Or use the one-line PowerShell installer. This installs everything in one shot, including BenjaminTerm and the speech model:
 
 ```powershell
 irm https://raw.githubusercontent.com/avalonreset/hyperyap/main/install.ps1 | iex
@@ -66,6 +65,25 @@ powershell -ExecutionPolicy Bypass -File install.ps1
 
 The PowerShell installer also removes old MURmure installations if present.
 
+### macOS
+
+Download the matching DMG from the [latest release](https://github.com/avalonreset/hyperyap/releases/latest):
+
+- `HyperYap_aarch64_darwin.dmg` for Apple Silicon Macs
+- `HyperYap_x86_64_darwin.dmg` for Intel Macs
+
+macOS requires Accessibility permission for global shortcuts.
+
+### Linux
+
+Download `HyperYap_amd64.AppImage` or `HyperYap_amd64.deb` from the [latest release](https://github.com/avalonreset/hyperyap/releases/latest).
+
+On Debian/Ubuntu, you can also use:
+
+```sh
+curl -fsSL https://raw.githubusercontent.com/avalonreset/hyperyap/main/install.sh | sh
+```
+
 ### Upgrading
 
 Run the installer again over an existing install. HyperYap upgrades in-place without deleting your speech model or requiring a re-download. Settings are reset to the recommended defaults on each upgrade.
@@ -74,26 +92,32 @@ Run the installer again over an existing install. HyperYap upgrades in-place wit
 
 | Key | Action |
 |-----|--------|
-| `F13` / `CapsLock` / Mouse Back | Start/stop recording |
-| Mouse Forward | Enter |
+| `F13` / `CapsLock` / Mouse Back | Start/stop recording on Windows |
+| Mouse Forward | Enter on Windows |
 | `Ctrl+Shift+Space` | Paste last transcript |
 | `Ctrl+Alt+Space` | LLM-assisted recording |
 | `Ctrl+Shift+X` | Command mode |
 | `Escape` | Cancel recording |
 
-These hotkeys are built in. You can pause and resume them from the tray icon's right-click menu.
+These hotkeys are built in. Windows hotkey daemon behavior can be paused and resumed from the tray icon's right-click menu.
 
 ### CapsLock Remapping
 
-HyperYap disables CapsLock and repurposes it as a speech-to-text key. Press CapsLock to start recording, press it again to stop. Your transcription is pasted into whatever window is focused. CapsLock is permanently set to off so you never accidentally activate it.
+On Windows, HyperYap disables CapsLock and repurposes it as a speech-to-text key. Press CapsLock to start recording, press it again to stop. Your transcription is pasted into whatever window is focused. CapsLock is permanently set to off so you never accidentally activate it.
 
-### Smart Paste
+### Smart Terminal Editing
 
-HyperYap's hotkey engine is terminal-aware. It detects which application is focused and adapts Ctrl+V behavior accordingly:
+On Windows, HyperYap's hotkey engine is terminal-aware. It detects which application is focused and adapts terminal copy, paste, and undo behavior accordingly:
 
-**In regular applications** (browsers, editors, chat apps), Ctrl+V works exactly as it normally does. HyperYap does not interfere.
+**In regular applications** (browsers, editors, chat apps), Ctrl+C, Ctrl+V, and Ctrl+Z work normally. HyperYap does not interfere.
 
-**In supported terminals**, HyperYap intercepts Ctrl+V and adds clipboard image intelligence. When you take a Win+Shift+S or PrintScreen capture, the hotkey daemon prepares the screenshot path as soon as Windows publishes image data. It saves a timestamped PNG in `~/screenshots/`, caches the path briefly, and pastes that path through the terminal paste shortcut. If the path is not ready yet, HyperYap waits for image data instead of falling back to stale text or typing a stray `v`. Text clipboard contents paste normally.
+**In supported terminals**, HyperYap adds:
+
+- `Ctrl+C`: copy selected terminal text through the terminal copy shortcut first; fall back to interrupt behavior when no selection is copied.
+- `Ctrl+V`: paste text through the terminal paste shortcut and convert clipboard screenshots into saved PNG paths.
+- `Ctrl+Z`: erase the most recent HyperYap-managed paste with bounded backspaces when the pasted text is still pending at the prompt.
+
+When you take a Win+Shift+S or PrintScreen capture, the hotkey daemon prepares the screenshot path as soon as Windows publishes image data. It saves a timestamped PNG in `~/screenshots/`, caches the path briefly, and pastes that path through the terminal paste shortcut. If the path is not ready yet, HyperYap waits for image data instead of falling back to stale text or typing a stray `v`. Text clipboard contents paste normally.
 
 This is especially useful for vibe coding workflows where you screenshot errors, UI mockups, or terminal output and need to reference them by path in a command or prompt.
 
@@ -117,12 +141,12 @@ Supported terminals:
 
 ## Requirements
 
-- **Windows 10+** (Windows only)
+- Windows 10+, macOS, or Linux x86_64
 - A microphone
 - ~700MB disk space (voice model)
 - Internet connection for first launch (model download)
 
-BenjaminTerm is installed by the PowerShell installer, or can be downloaded separately from [its repo](https://github.com/avalonreset/BenjaminTerm).
+BenjaminTerm is installed by the Windows PowerShell installer, or can be downloaded separately from [its repo](https://github.com/avalonreset/BenjaminTerm).
 
 ## How It Works
 
@@ -160,7 +184,7 @@ All in-app hotkeys can be remapped from the Settings page. Mouse button and Caps
 ```bash
 pnpm install
 
-# Build the hotkey engine first
+# Build the Windows hotkey engine first when packaging on Windows
 cd hotkeys && cargo build --release && cd ..
 
 pnpm tauri dev      # development

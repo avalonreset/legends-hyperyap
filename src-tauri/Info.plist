@@ -3,8 +3,8 @@
 <plist version="1.0">
 <dict>
 	<key>NSMicrophoneUsageDescription</key>
-	<string>Murmure needs access to your microphone to transcribe your speech into text</string>
+	<string>HyperYap needs access to your microphone to transcribe your speech into text</string>
 	<key>NSAppleEventsUsageDescription</key>
-	<string>Murmure needs permission to simulate keyboard input to paste transcribed text into your active application</string>
+	<string>HyperYap needs permission to simulate keyboard input to paste transcribed text into your active application</string>
 </dict>
 </plist>

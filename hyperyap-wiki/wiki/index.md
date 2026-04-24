@@ -1,8 +1,10 @@
 ---
 type: meta
 title: "HyperYap Vault Index"
+aliases:
+  - "HyperYap Vault Index"
 created: 2026-04-21
-updated: 2026-04-22
+updated: 2026-04-24
 tags:
   - hyperyap
   - index
@@ -32,6 +34,7 @@ sources:
 - [[Concepts Index]]: focused catalog for concept notes.
 - [[Privacy First Local Processing]]: local-only processing and persistence boundaries.
 - [[Clipboard Preservation]]: save, replace, paste, and restore clipboard behavior.
+- [[Terminal Editing Layer]]: terminal-aware copy, paste, screenshot path paste, and basic paste undo.
 
 ## Modules
 
@@ -58,3 +61,8 @@ sources:
 ## Questions
 
 - [[Questions Index]]: saved durable answers and analysis.
+
+## Meta
+
+- [[Dashboard]]: current focus, release state, and open checks.
+- [[Public Release Sanitization]]: public-release safety policy and pre-publish scan checklist.

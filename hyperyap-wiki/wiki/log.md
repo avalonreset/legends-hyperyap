@@ -1,8 +1,10 @@
 ---
 type: meta
 title: "Vault Log"
+aliases:
+  - "Vault Log"
 created: 2026-04-21
-updated: 2026-04-22
+updated: 2026-04-24
 tags:
   - hyperyap
   - log
@@ -14,6 +16,23 @@ sources:
 ---
 
 # Vault Log
+
+## 2026-04-24 save | terminal editing release prep
+
+- Created [[Terminal Editing Layer]] to name the missing concept behind smart terminal copy, smart paste, screenshot path paste, and basic paste undo.
+- Prepared `v1.0.8` release metadata for HyperYap.
+- Updated README, changelog, Linux installer script, and GitHub release workflow for Windows, Linux, macOS Apple Silicon, and macOS Intel artifacts.
+- Built the Windows NSIS installer at `src-tauri/target/release/bundle/nsis/hyperyap_1.0.8_x64-setup.exe`.
+- Ran the `1.0.8` installer silently and launched the installed app from `%LOCALAPPDATA%/hyperyap/hyperyap.exe`.
+- Validation scope: local Windows build and installer validation completed; macOS/Linux validation must come from GitHub Actions runners.
+
+## 2026-04-22 save | public release sanitization
+
+- Created [[Public Release Sanitization]] modeled after the BenjaminTerm wiki policy.
+- Added vault `.gitignore` coverage for local Obsidian state, private raw material, private attachments, secret-like files, and environment files.
+- Replaced local owner metadata in `CODEX.md` with `<project-owner>`.
+- Linked the sanitization policy from [[HyperYap Vault Index]], [[Dashboard]], and `CODEX.md`; no `Meta Index.md` file exists in this vault.
+- Ran public-release checks for wikilinks, JSON config validity, wiki note frontmatter, and sensitive patterns.
 
 ## 2026-04-22 save | smart paste hook responsiveness
 

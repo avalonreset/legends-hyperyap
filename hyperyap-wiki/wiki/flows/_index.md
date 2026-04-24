@@ -1,8 +1,10 @@
 ---
 type: meta
 title: "Flows Index"
+aliases:
+  - "Flows Index"
 created: 2026-04-21
-updated: 2026-04-21
+updated: 2026-04-22
 tags:
   - hyperyap
   - flows

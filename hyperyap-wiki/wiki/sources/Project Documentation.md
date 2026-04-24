@@ -2,7 +2,7 @@
 type: source
 title: "Project Documentation"
 created: 2026-04-21
-updated: 2026-04-21
+updated: 2026-04-22
 tags:
   - hyperyap
   - source
@@ -10,7 +10,7 @@ status: developing
 related:
   - "[[HyperYap Overview]]"
 sources:
-  - "[[Project Source Map]]"
+  - "[[project-source-map|Project Source Map]]"
 source_type: repository
 confidence: high
 ---
