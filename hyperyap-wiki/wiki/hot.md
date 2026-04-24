@@ -20,11 +20,13 @@ sources:
 
 ## Last Updated
 
-2026-04-24. Prepared and locally installed `v1.0.8` with the first [[Terminal Editing Layer]] pass: terminal Ctrl+C copies selected text before falling back to interrupt, terminal Ctrl+V keeps smart paste behavior, and terminal Ctrl+Z erases the most recent HyperYap-managed paste with bounded backspaces.
+2026-04-24. Prepared `v1.0.9` release state for HyperYap. The Windows PowerShell installer now resolves BenjaminTerm from the latest stable `avalonreset/benjaminterm` GitHub release; the current BenjaminTerm release is `v1.4.3`. A `.release-trigger` commit was pushed to start the all-platform GitHub Actions release path, but this Codex environment could not verify the run status because outbound GitHub CLI/API checks are blocked here.
 
 ## Key Recent Facts
 
 - Smart screenshot paste targets Benjamin Term and similar terminal windows.
+- BenjaminTerm is installed dynamically by the Windows PowerShell installer rather than embedded inside the HyperYap app bundle.
+- BenjaminTerm `v1.4.3` is the current upstream release line that HyperYap should install through the release endpoint.
 - The Windows hotkey daemon now treats smart copy, smart paste, smart screenshot paste, and paste undo as one terminal editing layer.
 - Terminal Ctrl+C first attempts Ctrl+Shift+C copy, then falls back to Ctrl+C when no clipboard change is detected.
 - Terminal Ctrl+Z only undoes recent HyperYap-managed pastes; it does not reverse commands after Enter submits them.
@@ -41,9 +43,10 @@ sources:
 ## Recent Changes
 
 - Created [[Terminal Editing Layer]].
-- Bumped release metadata to `1.0.8`.
-- Updated README, Linux installer script, changelog, and release workflow for Windows, Linux, macOS Apple Silicon, and macOS Intel release artifacts.
-- Built `src-tauri/target/release/bundle/nsis/hyperyap_1.0.8_x64-setup.exe`, ran it silently, and launched the installed HyperYap app.
+- Bumped release metadata to `1.0.9`.
+- Updated the Windows installer to select the latest stable BenjaminTerm release and accept lowercase `benjaminterm` artifact naming.
+- Added `.release-trigger` and release workflow support so a deliberate trigger-file commit can start the all-platform release path.
+- Created [[Lint Report 2026-04-24]] for the public-release wiki scan.
 - Created [[Public Release Sanitization]] and linked it from [[HyperYap Vault Index]], [[Dashboard]], and `CODEX.md`.
 - Added vault `.gitignore` rules for local/private/sensitive material.
 - Replaced local owner metadata in `CODEX.md` with `Owner: <project-owner>`.
@@ -57,10 +60,12 @@ sources:
 ## Active Threads
 
 - Run [[Public Release Sanitization]] checks before publishing vault changes.
-- Validate smart terminal copy/paste/undo manually on Windows before publishing.
+- Monitor the all-platform GitHub Actions release run for `v1.0.9`.
+- Validate the `v1.0.9` Windows installer after the release artifact is published.
+- Validate smart terminal copy/paste/undo manually on Windows before declaring terminal editing complete.
 - Use GitHub Actions for macOS and Linux build validation; local machine validation is Windows-only.
 - Future work should preserve native prepared screenshot paths, exact clipboard image restoration, and terminal-specific paste behavior.
 - If raw `V` still appears after this patch, next checks are elevated-terminal integrity mismatch, unsupported foreground process name, or the daemon not running.
-- Target release: `https://github.com/avalonreset/hyperyap/releases/tag/v1.0.8`.
-- Fresh installer path: `src-tauri/target/release/bundle/nsis/hyperyap_1.0.8_x64-setup.exe`.
+- Target release: `https://github.com/avalonreset/hyperyap/releases/tag/v1.0.9`.
+- Expected Windows release asset: `hyperyap_1.0.9_x64-setup.exe`.
 - After context compaction, continue from `wiki/hot.md` first and then `wiki/index.md`.
