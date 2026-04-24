@@ -108,6 +108,19 @@ jobs:
             - name: Install frontend deps
               run: pnpm install
 
+            - name: Remove Windows-only hotkey resource
+              shell: bash
+              run: |
+                  node <<'NODE'
+                  const fs = require('fs');
+                  const path = 'src-tauri/tauri.conf.json';
+                  const config = JSON.parse(fs.readFileSync(path, 'utf8'));
+                  config.bundle.resources = config.bundle.resources.filter(
+                    (resource) => resource !== '../hotkeys/target/release/hyperyap-hotkeys.exe'
+                  );
+                  fs.writeFileSync(path, `${JSON.stringify(config, null, 4)}\n`);
+                  NODE
+
             # ── Build ────────────────────────────────────────────────────
             # APPLE_SIGNING_IDENTITY is set so Tauri signs the .app with
             # hardened runtime during the build (required for notarization)

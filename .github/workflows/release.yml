@@ -57,7 +57,17 @@ jobs:
 
     publish:
         needs: [linux, windows, macos, macos-intel]
-        if: ${{ always() && (needs.linux.result == 'success' || needs.windows.result == 'success' || needs.macos.result == 'success' || needs['macos-intel'].result == 'success') }}
+        if: >-
+            ${{
+                always() &&
+                (
+                    (github.event.inputs.target == 'all' && needs.linux.result == 'success' && needs.windows.result == 'success' && needs.macos.result == 'success' && needs['macos-intel'].result == 'success') ||
+                    (github.event.inputs.target == 'linux' && needs.linux.result == 'success') ||
+                    (github.event.inputs.target == 'windows' && needs.windows.result == 'success') ||
+                    (github.event.inputs.target == 'macos' && needs.macos.result == 'success') ||
+                    (github.event.inputs.target == 'macos-intel' && needs['macos-intel'].result == 'success')
+                )
+            }}
         runs-on: ubuntu-latest
         permissions:
             contents: write
