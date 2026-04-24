@@ -17,7 +17,7 @@
 | Component | Where to Report |
 |-----------|----------------|
 | HyperYap voice engine | [This repo](https://github.com/avalonreset/hyperyap/issues) |
-| BenjaminTerm terminal | [BenjaminTerm repo](https://github.com/avalonreset/BenjaminTerm/issues) |
+| BenjaminTerm terminal | [BenjaminTerm repo](https://github.com/avalonreset/benjaminterm/issues) |
 | AutoHotkey scripts | [This repo](https://github.com/avalonreset/hyperyap/issues) |
 | Parakeet speech model | [NVIDIA Parakeet](https://huggingface.co/nvidia/parakeet-tdt-0.6b-v3) |
 

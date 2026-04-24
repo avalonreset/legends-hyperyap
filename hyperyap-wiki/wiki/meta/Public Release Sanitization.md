@@ -59,7 +59,7 @@ rg -n "C:\\|E:\\|Users\\|API[_ -]?KEY|SECRET|TOKEN|PASSWORD|BEGIN (RSA|OPENSSH|P
 Also scan for project-local identities and placeholder mistakes:
 
 ```powershell
-rg -n "Owner:|C:/|E:/|C:\\|E:\\|Users\\|\.env|password|token|secret|api key" <vault-root>
+rg -n "Owner:|C:/|E:/|C:\\|E:\\|Users\\|\\.env|password|token|secret|api key" <vault-root>
 ```
 
 Expected acceptable hits:
