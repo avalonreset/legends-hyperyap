@@ -1,4 +1,4 @@
 release v1.0.9
 BenjaminTerm latest stable via installer
-Current main refresh: 2026-04-24T13:02:00-04:00
-Includes README cross-platform wording, cleanup commits, and wiki status updates.
+Current main refresh: 2026-04-24T13:15:00-04:00
+Includes final changelog, Cargo.lock, docs links, cleanup, README, and wiki updates.
