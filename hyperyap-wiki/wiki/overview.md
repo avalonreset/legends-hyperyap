@@ -22,6 +22,8 @@ HyperYap is a privacy-first local speech-to-text desktop app built with Tauri, R
 
 The current release line includes smart terminal editing support for Windows terminal workflows. `v1.0.6` added native prepared screenshot paths in the hotkey daemon for effectively instant terminal screenshot paste. `v1.0.7` moved smart paste waits to a worker thread. `v1.0.8` adds smart terminal copy and basic HyperYap-managed paste undo. `v1.0.9` prepares the release path that installs the latest stable BenjaminTerm release, currently `v1.4.3`, through the Windows PowerShell installer.
 
+The public README now presents HyperYap as a cross-platform local voice-to-text app first, with Windows-specific CapsLock, mouse remapping, and smart terminal helper behavior documented as compatibility details. Current housekeeping removed the stale tracked `latest.json` updater manifest and ignored local release/design scratch artifacts.
+
 ## Core Areas
 
 - [[Rust Tauri Backend]] owns app lifecycle, commands, audio, history, clipboard, settings, and tray behavior.
