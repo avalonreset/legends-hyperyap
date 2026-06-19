@@ -18,4 +18,4 @@ sources:
 # Entities
 
 - [[HyperYap]]: privacy-first local speech-to-text application.
-- [[Benjamin Term]]: terminal target for smart screenshot paste.
+- [[Benjamin Term]]: decommissioned former companion terminal target.

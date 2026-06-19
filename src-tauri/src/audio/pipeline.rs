@@ -1,17 +1,21 @@
 use crate::audio::helpers::read_wav_samples;
 use crate::audio::types::{AudioState, RecordingMode};
-use crate::dictionary::{fix_transcription_with_dictionary, get_cc_rules_path, Dictionary};
-use crate::engine::transcription_engine::TranscriptionEngine;
+use crate::dictionary::{Dictionary, fix_transcription_with_dictionary, get_cc_rules_path};
 use crate::engine::ParakeetModelParams;
+use crate::engine::transcription_engine::TranscriptionEngine;
 use crate::formatting_rules;
 use crate::history;
 use crate::model::Model;
 use crate::stats;
 use anyhow::{Context, Result};
 use log::{debug, error, info, warn};
+use serde_json::json;
+use std::io::Write;
 use std::path::Path;
 use std::sync::Arc;
 use tauri::{AppHandle, Emitter, Manager};
+
+const EVAL_CAPTURE_DIR_ENV: &str = "HYPERYAP_EVAL_CAPTURE_DIR";
 
 pub fn process_recording(app: &AppHandle, file_path: &Path) -> Result<String> {
     // 1. Transcribe
@@ -20,6 +24,7 @@ pub fn process_recording(app: &AppHandle, file_path: &Path) -> Result<String> {
 
     if raw_text.trim().is_empty() {
         debug!("Transcription is empty, skipping further processing.");
+        capture_eval_sample(app, file_path, &raw_text, &raw_text);
         return Ok(raw_text);
     }
 
@@ -37,10 +42,91 @@ pub fn process_recording(app: &AppHandle, file_path: &Path) -> Result<String> {
     let final_text = apply_formatting_rules(app, llm_text);
     debug!("Transcription with formatting rules: {}", final_text);
 
+    capture_eval_sample(app, file_path, &raw_text, &final_text);
+
     // 6. Save Stats & History
     save_stats_and_history(app, file_path, &final_text)?;
 
     Ok(final_text)
+}
+
+fn capture_eval_sample(app: &AppHandle, file_path: &Path, raw_text: &str, final_text: &str) {
+    let Ok(capture_dir) = std::env::var(EVAL_CAPTURE_DIR_ENV) else {
+        return;
+    };
+
+    let capture_dir = capture_dir.trim();
+    if capture_dir.is_empty() {
+        return;
+    }
+
+    if let Err(e) = capture_eval_sample_inner(app, file_path, raw_text, final_text, capture_dir) {
+        warn!("Failed to capture eval sample: {}", e);
+    }
+}
+
+fn capture_eval_sample_inner(
+    app: &AppHandle,
+    file_path: &Path,
+    raw_text: &str,
+    final_text: &str,
+    capture_dir: &str,
+) -> Result<()> {
+    let capture_root = Path::new(capture_dir);
+    std::fs::create_dir_all(capture_root).with_context(|| {
+        format!(
+            "failed to create eval capture dir {}",
+            capture_root.display()
+        )
+    })?;
+
+    let timestamp = chrono::Utc::now().to_rfc3339();
+    let id = format!("hyperyap-real-{}", uuid::Uuid::new_v4().simple());
+    let audio_name = format!("{id}.wav");
+    let captured_audio = capture_root.join(&audio_name);
+    std::fs::copy(file_path, &captured_audio).with_context(|| {
+        format!(
+            "failed to copy eval audio {} to {}",
+            file_path.display(),
+            captured_audio.display()
+        )
+    })?;
+
+    let model = app.state::<Arc<Model>>();
+    let model_id = model.selected_model_id();
+    let model_path = model
+        .get_model_path()
+        .map(|p| p.to_string_lossy().to_string())
+        .unwrap_or_default();
+    let mode = app.state::<AudioState>().get_recording_mode();
+
+    let payload = json!({
+        "id": id,
+        "audio": captured_audio.to_string_lossy(),
+        "reference": "",
+        "raw_transcript": raw_text,
+        "final_transcript": final_text,
+        "model_id": model_id,
+        "model_path": model_path,
+        "recording_mode": format!("{mode:?}"),
+        "captured_at": timestamp
+    });
+
+    let manifest_path = capture_root.join("capture-manifest.template.jsonl");
+    let mut manifest = std::fs::OpenOptions::new()
+        .create(true)
+        .append(true)
+        .open(&manifest_path)
+        .with_context(|| format!("failed to open {}", manifest_path.display()))?;
+    writeln!(manifest, "{}", serde_json::to_string(&payload)?)?;
+
+    info!(
+        "Captured eval sample '{}' to {}",
+        payload["id"].as_str().unwrap_or_default(),
+        capture_root.display()
+    );
+
+    Ok(())
 }
 
 pub fn transcribe_audio(app: &AppHandle, audio_path: &Path) -> Result<String> {

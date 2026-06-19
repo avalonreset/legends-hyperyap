@@ -37,7 +37,6 @@ The following are in scope:
 The following are out of scope:
 
 - NVIDIA Parakeet speech model (report to NVIDIA)
-- BenjaminTerm terminal (report to [BenjaminTerm](https://github.com/avalonreset/benjaminterm))
 - Upstream MURmure issues (report to [MURmure](https://github.com/Kieirra/murmure))
 
 ## Security Design

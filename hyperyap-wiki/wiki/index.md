@@ -27,7 +27,7 @@ sources:
 
 - [[Entities Index]]: focused catalog for entity notes.
 - [[HyperYap]]: privacy-first local speech-to-text application.
-- [[Benjamin Term]]: preferred terminal target for smart screenshot paste.
+- [[Benjamin Term]]: decommissioned former companion terminal target.
 
 ## Concepts
 

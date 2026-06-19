@@ -1,12 +1,12 @@
 use crate::audio;
-use crate::dictionary::{fix_transcription_with_dictionary, get_cc_rules_path, Dictionary};
+use crate::dictionary::{Dictionary, fix_transcription_with_dictionary, get_cc_rules_path};
 use anyhow::Result;
 use axum::{
+    Json, Router,
     extract::{DefaultBodyLimit, Multipart},
     http::StatusCode,
     response::IntoResponse,
     routing::post,
-    Json, Router,
 };
 use log::info;
 use serde::{Deserialize, Serialize};
@@ -75,7 +75,7 @@ async fn transcribe_handler(
                                     error: format!("Failed to read audio file: {}", e),
                                 }),
                             )
-                                .into_response()
+                                .into_response();
                         }
                     };
 
@@ -136,7 +136,7 @@ async fn transcribe_handler(
                         error: format!("Failed to parse multipart: {}", e),
                     }),
                 )
-                    .into_response()
+                    .into_response();
             }
         }
     }

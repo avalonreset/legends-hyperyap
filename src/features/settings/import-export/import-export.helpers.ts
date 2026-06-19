@@ -76,6 +76,7 @@ export const extractSystemSettings = (all: AppSettings): SystemSettings => {
         persist_history: all.persist_history,
         language: all.language,
         sound_enabled: all.sound_enabled,
+        asr_model: all.asr_model,
         log_level: all.log_level,
         show_in_dock: all.show_in_dock,
     };

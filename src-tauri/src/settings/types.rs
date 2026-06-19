@@ -44,6 +44,7 @@ pub struct AppSettings {
     pub persist_history: bool,     // Persist last 5 transcriptions to disk
     pub language: String,          // UI language code (e.g., "en", "fr")
     pub sound_enabled: bool,
+    pub asr_model: String,
     pub onboarding: OnboardingState,
     pub cancel_shortcut: String,   // Shortcut to cancel active recording
     pub mic_id: Option<String>,    // Optional microphone device ID
@@ -81,6 +82,7 @@ impl Default for AppSettings {
             persist_history: false,
             language: "default".to_string(),
             sound_enabled: true,
+            asr_model: crate::model::DEFAULT_MODEL_ID.to_string(),
             onboarding: OnboardingState::default(),
             cancel_shortcut: "escape".to_string(),
             mic_id: None,

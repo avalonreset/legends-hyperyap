@@ -12,17 +12,17 @@ related:
 sources:
   - "[[Project Documentation]]"
 entity_type: product
-role: "Supported terminal target for screenshot path paste"
+role: "Decommissioned former companion terminal target"
 first_mentioned: "[[Project Documentation]]"
 ---
 
 # Benjamin Term
 
-Benjamin Term is a supported companion terminal for HyperYap's Windows terminal workflow. HyperYap smart screenshot paste treats it as a terminal target where Ctrl+V should paste a screenshot file path when the clipboard contains a Windows screenshot image.
+Benjamin Term was previously a supported companion terminal for HyperYap's Windows terminal workflow. As of the `v1.0.10` release prep, HyperYap no longer installs, launches, documents, or targets BenjaminTerm as a current companion dependency.
 
 ## Release Note
 
-HyperYap does not embed BenjaminTerm in the app bundle. The Windows PowerShell installer resolves the latest stable `avalonreset/benjaminterm` GitHub release and installs its setup asset when available. As of 2026-04-24, that release line is BenjaminTerm `v1.4.3`.
+Historical note: the `v1.0.9` Windows PowerShell installer resolved the latest stable `avalonreset/benjaminterm` GitHub release and installed its setup asset when available. That behavior was removed for `v1.0.10`.
 
 ## Implementation Note
 

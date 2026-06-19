@@ -140,7 +140,8 @@ jobs:
                   ### Windows
                   - hyperyap_${{ steps.version.outputs.version }}_x64-setup.exe
                   - Includes the optional workstation hotkey helper for CapsLock/Mouse Back recording, smart terminal paste, smart terminal copy, and basic paste undo.
-                  - The PowerShell installer installs the latest BenjaminTerm release from GitHub. For v1.0.9, that is BenjaminTerm v1.4.3.
+                  - The PowerShell installer installs HyperYap, downloads the speech model, and configures the optional hotkey helper.
+                  - Uses the English-focused NVIDIA Parakeet TDT 0.6B v2 model through the smcleod INT8 ONNX conversion.
 
                   ### Linux
                   - HyperYap_amd64.AppImage

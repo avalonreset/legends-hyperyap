@@ -1,6 +1,6 @@
 # ============================================================
 # HyperYap Installer
-# One-command setup: voice-to-text + terminal + hotkeys
+# One-command setup: voice-to-text + hotkeys
 # Install everything. No options. That's the point.
 # ============================================================
 #Requires -RunAsAdministrator
@@ -12,12 +12,20 @@ param(
 $ErrorActionPreference = "Stop"
 
 $repo = "avalonreset/hyperyap"
-$modelUrl = "https://github.com/Kieirra/murmure-model/releases/download/1.0.0/parakeet-tdt-0.6b-v3-int8.zip"
+$modelId = "parakeet-tdt-0.6b-v2-smcleod-int8"
+$modelBaseUrl = "https://huggingface.co/smcleod/parakeet-tdt-0.6b-v2-int8/resolve/main"
+$modelFiles = @(
+    "encoder-model.int8.onnx",
+    "decoder_joint-model.int8.onnx",
+    "nemo128.onnx",
+    "vocab.txt",
+    "config.json",
+    "README.md"
+)
 $ahkInstallerUrl = "https://www.autohotkey.com/download/ahk-v2.exe"
 $appDataDir = "$env:APPDATA\com.avalonreset.hyperyap"
 $startupDir = "$env:APPDATA\Microsoft\Windows\Start Menu\Programs\Startup"
 $installDir = "$env:LOCALAPPDATA\Programs\HyperYap"
-$btRepo = "avalonreset/benjaminterm"
 $scriptsInstallDir = "$env:LOCALAPPDATA\HyperYap\scripts"
 
 Write-Host ""
@@ -28,14 +36,13 @@ Write-Host "/_//_/\_, / .__/\__/_/     \____/\_,_/ .__/ " -ForegroundColor Cyan
 Write-Host "     /___/_/                        /_/     " -ForegroundColor Cyan
 Write-Host ""
 Write-Host "  The complete vibe coding system." -ForegroundColor DarkGray
-Write-Host "  Voice-to-text + terminal + hotkeys. Windows only." -ForegroundColor DarkGray
+Write-Host "  Voice-to-text + hotkeys. Windows only." -ForegroundColor DarkGray
 Write-Host ""
 
 Write-Host "  This will:" -ForegroundColor White
 Write-Host "    - Uninstall MURmure (if installed)" -ForegroundColor DarkGray
-Write-Host "    - Install/update BenjaminTerm terminal" -ForegroundColor DarkGray
 Write-Host "    - Install AutoHotkey v2 (if not present)" -ForegroundColor DarkGray
-Write-Host "    - Download NVIDIA Parakeet speech model (~440MB)" -ForegroundColor DarkGray
+Write-Host "    - Download NVIDIA Parakeet v2 English speech model (~665MB)" -ForegroundColor DarkGray
 Write-Host "    - Deploy HyperYap configs (overwrites existing)" -ForegroundColor DarkGray
 Write-Host "    - Set everything to auto-start on boot" -ForegroundColor DarkGray
 Write-Host ""
@@ -122,66 +129,9 @@ try {
 }
 
 # -----------------------------------------------------------
-# 2. Install BenjaminTerm
+# 2. Download speech recognition model
 # -----------------------------------------------------------
-Write-Host "[2/5] Installing BenjaminTerm terminal..." -ForegroundColor Yellow
-
-try {
-    $btHeaders = @{ "User-Agent" = "HyperYap-Installer" }
-    $btLatestReleaseApi = "https://api.github.com/repos/$btRepo/releases/latest"
-    try {
-        $btLatestRelease = Invoke-RestMethod -Uri $btLatestReleaseApi -Headers $btHeaders
-    } catch {
-        $btReleaseApi = "https://api.github.com/repos/$btRepo/releases"
-        $btLatestRelease = @(Invoke-RestMethod -Uri $btReleaseApi -Headers $btHeaders) |
-            Where-Object { -not $_.draft -and -not $_.prerelease } |
-            Select-Object -First 1
-    }
-
-    if (-not $btLatestRelease) {
-        throw "No stable BenjaminTerm release found."
-    }
-
-    Write-Host "  Latest BenjaminTerm release: $($btLatestRelease.tag_name)" -ForegroundColor DarkGray
-
-    $btSetupAsset = @($btLatestRelease.assets) |
-        Where-Object { $_.name -match "(?i)setup\.exe$" } |
-        Select-Object -First 1
-
-    if ($btSetupAsset) {
-        $btInstallerPath = "$env:TEMP\BenjaminTerm-Setup.exe"
-        Write-Host "  Downloading $($btSetupAsset.name)..." -ForegroundColor DarkGray
-        Invoke-WebRequest -Uri $btSetupAsset.browser_download_url -OutFile $btInstallerPath -UseBasicParsing
-        Write-Host "  Running installer..." -ForegroundColor DarkGray
-        Start-Process $btInstallerPath -ArgumentList "/S" -Wait
-        Remove-Item $btInstallerPath -Force -ErrorAction SilentlyContinue
-        Write-Host "  BenjaminTerm installed." -ForegroundColor Green
-    } else {
-        # Fall back to portable zip
-        $btZipAsset = @($btLatestRelease.assets) |
-            Where-Object { $_.name -match "(?i)windows.*\.zip$" -and $_.name -notmatch "(?i)sha256" } |
-            Select-Object -First 1
-        if ($btZipAsset) {
-            $btZipPath = "$env:TEMP\BenjaminTerm.zip"
-            $btInstallDir = "$env:LOCALAPPDATA\Programs\BenjaminTerm"
-            Write-Host "  Downloading $($btZipAsset.name) (portable)..." -ForegroundColor DarkGray
-            Invoke-WebRequest -Uri $btZipAsset.browser_download_url -OutFile $btZipPath -UseBasicParsing
-            New-Item -ItemType Directory -Path $btInstallDir -Force | Out-Null
-            Expand-Archive -Path $btZipPath -DestinationPath $btInstallDir -Force
-            Remove-Item $btZipPath -Force
-            Write-Host "  BenjaminTerm installed (portable)." -ForegroundColor Green
-        } else {
-            Write-Host "  No installer found. Get it at: https://github.com/$btRepo/releases" -ForegroundColor DarkYellow
-        }
-    }
-} catch {
-    Write-Host "  Could not fetch BenjaminTerm. Get it at: https://github.com/$btRepo/releases" -ForegroundColor DarkYellow
-}
-
-# -----------------------------------------------------------
-# 3. Download speech recognition model
-# -----------------------------------------------------------
-Write-Host "[3/5] Setting up speech recognition model (~440MB)..." -ForegroundColor Yellow
+Write-Host "[2/4] Setting up speech recognition model (~665MB)..." -ForegroundColor Yellow
 
 $resourceDirs = @(
     "$installDir\resources",
@@ -190,23 +140,39 @@ $resourceDirs = @(
 )
 $targetResourceDir = $resourceDirs | Where-Object { Test-Path (Split-Path $_ -Parent) } | Select-Object -First 1
 if (-not $targetResourceDir) { $targetResourceDir = $resourceDirs[0] }
-$modelDir = "$targetResourceDir\parakeet-tdt-0.6b-v3-int8"
+$modelDir = "$targetResourceDir\$modelId"
 
 if (Test-Path "$modelDir\encoder-model.int8.onnx") {
     Write-Host "  Model already downloaded." -ForegroundColor Green
 } else {
-    $modelZip = "$env:TEMP\parakeet-model.zip"
     $maxRetries = 30
     $downloaded = $false
 
     for ($attempt = 1; $attempt -le $maxRetries; $attempt++) {
-        Write-Host "  Downloading from GitHub (attempt $attempt/$maxRetries)..." -ForegroundColor DarkGray
-        # Use curl.exe with resume support — handles flaky connections gracefully
-        & curl.exe -L -C - -o $modelZip --retry 3 --retry-delay 2 --connect-timeout 30 $modelUrl 2>&1 | Write-Host
-        if ($LASTEXITCODE -eq 0) {
+        Write-Host "  Downloading from Hugging Face (attempt $attempt/$maxRetries)..." -ForegroundColor DarkGray
+        New-Item -ItemType Directory -Path $modelDir -Force | Out-Null
+
+        $attemptOk = $true
+        foreach ($file in $modelFiles) {
+            $out = Join-Path $modelDir $file
+            $url = "$modelBaseUrl/$file"
+            Write-Host "    $file" -ForegroundColor DarkGray
+            & curl.exe -L -C - -o $out --retry 3 --retry-delay 2 --connect-timeout 30 $url 2>&1 | Write-Host
+            if ($LASTEXITCODE -ne 0) {
+                $attemptOk = $false
+                break
+            }
+        }
+
+        if ($attemptOk -and
+            (Test-Path "$modelDir\encoder-model.int8.onnx") -and
+            (Test-Path "$modelDir\decoder_joint-model.int8.onnx") -and
+            (Test-Path "$modelDir\nemo128.onnx") -and
+            (Test-Path "$modelDir\vocab.txt")) {
             $downloaded = $true
             break
         }
+
         Write-Host "  Download interrupted, retrying in 3 seconds..." -ForegroundColor Yellow
         Start-Sleep -Seconds 3
     }
@@ -215,24 +181,13 @@ if (Test-Path "$modelDir\encoder-model.int8.onnx") {
         throw "Failed to download speech model after $maxRetries attempts. Check your internet connection."
     }
 
-    Write-Host "  Extracting model..." -ForegroundColor DarkGray
-    New-Item -ItemType Directory -Path $targetResourceDir -Force | Out-Null
-    Expand-Archive -Path $modelZip -DestinationPath $targetResourceDir -Force
-
-    # Verify the model was extracted correctly
-    if (-not (Test-Path "$modelDir\encoder-model.int8.onnx")) {
-        Remove-Item $modelZip -Force -ErrorAction SilentlyContinue
-        throw "Model extraction failed — encoder-model.int8.onnx not found. The download may have been corrupted."
-    }
-
-    Remove-Item $modelZip -Force
     Write-Host "  Model installed." -ForegroundColor Green
 }
 
 # -----------------------------------------------------------
-# 4. Install AutoHotkey v2 + deploy hotkey scripts
+# 3. Install AutoHotkey v2 + deploy hotkey scripts
 # -----------------------------------------------------------
-Write-Host "[4/5] Setting up hotkeys..." -ForegroundColor Yellow
+Write-Host "[3/4] Setting up hotkeys..." -ForegroundColor Yellow
 
 $ahkExe = Get-Command "AutoHotkey64.exe" -ErrorAction SilentlyContinue
 if (-not $ahkExe) { $ahkExe = Get-Command "AutoHotkey32.exe" -ErrorAction SilentlyContinue }
@@ -278,9 +233,9 @@ Copy-Item "$presetsDir\scripts\*" "$scriptsInstallDir\" -Force
 Write-Host "  Hotkey scripts deployed." -ForegroundColor Green
 
 # -----------------------------------------------------------
-# 5. Deploy configs + auto-start
+# 4. Deploy configs + auto-start
 # -----------------------------------------------------------
-Write-Host "[5/5] Deploying configs and auto-start..." -ForegroundColor Yellow
+Write-Host "[4/4] Deploying configs and auto-start..." -ForegroundColor Yellow
 
 New-Item -ItemType Directory -Path $appDataDir -Force | Out-Null
 
@@ -335,18 +290,6 @@ $appExe = $appExePaths | Where-Object { Test-Path $_ } | Select-Object -First 1
 if ($appExe) {
     Write-Host "  Launching HyperYap..." -ForegroundColor DarkGray
     Start-Process $appExe
-}
-
-# Start BenjaminTerm
-$btExePaths = @(
-    "$env:ProgramFiles\BenjaminTerm\benjaminterm-gui.exe",
-    "$env:LOCALAPPDATA\Programs\BenjaminTerm\benjaminterm-gui.exe",
-    "${env:ProgramFiles(x86)}\BenjaminTerm\benjaminterm-gui.exe"
-)
-$btExe = $btExePaths | Where-Object { Test-Path $_ } | Select-Object -First 1
-if ($btExe) {
-    Write-Host "  Launching BenjaminTerm..." -ForegroundColor DarkGray
-    Start-Process $btExe
 }
 
 Write-Host ""

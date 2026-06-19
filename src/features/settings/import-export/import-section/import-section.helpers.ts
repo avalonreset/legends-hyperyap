@@ -19,6 +19,13 @@ const applySettings = async (categories: ExportedCategories): Promise<void> => {
     await invoke('set_persist_history', { enabled: s.persist_history });
     await invoke('set_current_language', { lang: s.language });
     await invoke('set_sound_enabled', { enabled: s.sound_enabled });
+    if (typeof s.asr_model === 'string' && s.asr_model !== '') {
+        try {
+            await invoke('set_asr_model', { modelId: s.asr_model });
+        } catch (error) {
+            console.warn('Skipped imported ASR model because it is not available locally:', error);
+        }
+    }
     await invoke('set_log_level', { level: s.log_level });
     await invoke('set_show_in_dock', { show: s.show_in_dock });
 };

@@ -9,6 +9,7 @@ export interface SystemSettings {
     persist_history: boolean;
     language: string;
     sound_enabled: boolean;
+    asr_model: string;
     log_level: string;
     show_in_dock: boolean;
 }
@@ -26,3 +27,12 @@ export interface ShortcutSettings {
 }
 
 export interface AppSettings extends SystemSettings, ShortcutSettings {}
+
+export interface AsrModelInfo {
+    id: string;
+    name: string;
+    path: string;
+    source: string;
+    selected: boolean;
+    available: boolean;
+}

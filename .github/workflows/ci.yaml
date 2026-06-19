@@ -44,18 +44,23 @@ jobs:
 
             - name: Download & extract ONNX model (Linux)
               shell: bash
-              run: |
-                  set -euo pipefail
-                  url="https://github.com/Kieirra/murmure-model/releases/download/1.0.0/parakeet-tdt-0.6b-v3-int8.zip"
-                  tmp="/tmp/model.zip"
-                  echo "Downloading $url"
-                  curl -L -o "$tmp" "$url"
-                  echo "Unzipping into ./resources"
-                  unzip -o "$tmp" -d resources
-                  ls -al resources
+              run: bash .github/scripts/download-parakeet-model.sh resources
 
             - name: Install frontend deps
               run: pnpm install
+
+            - name: Remove Windows-only hotkey resource
+              shell: bash
+              run: |
+                  node <<'NODE'
+                  const fs = require('fs');
+                  const path = 'src-tauri/tauri.conf.json';
+                  const config = JSON.parse(fs.readFileSync(path, 'utf8'));
+                  config.bundle.resources = config.bundle.resources.filter(
+                    (resource) => resource !== '../hotkeys/target/release/hyperyap-hotkeys.exe'
+                  );
+                  fs.writeFileSync(path, `${JSON.stringify(config, null, 4)}\n`);
+                  NODE
 
             - name: Clippy
               run: pnpm run clippy

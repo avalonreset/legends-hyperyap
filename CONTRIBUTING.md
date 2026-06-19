@@ -27,8 +27,10 @@ Our guiding principles:
 
 ### Prerequisites
 
-- Download the Parakeet ONNX model [here](https://github.com/Kieirra/murmure-model/releases/download/1.0.0/parakeet-tdt-0.6b-v3-int8.zip)
-- Place the extracted folder into `resources/parakeet-tdt-0.6b-v3-int8`
+- Download the default Parakeet ONNX model:
+  - Windows: `powershell -ExecutionPolicy Bypass -File .github/scripts/download-parakeet-model.ps1 -Destination resources`
+  - macOS/Linux: `bash .github/scripts/download-parakeet-model.sh resources`
+- The model folder should be `resources/parakeet-tdt-0.6b-v2-smcleod-int8`
 - Install all required dependencies for Tauri: [https://v2.tauri.app/start/prerequisites/](https://v2.tauri.app/start/prerequisites/)
 
 ### Start HyperYap

@@ -71,8 +71,7 @@ $^v:: {
 }
 
 IsSmartPasteTerminal(exe) {
-    return exe = "benjaminterm-gui.exe"
-        || exe = "wezterm-gui.exe"
+    return exe = "wezterm-gui.exe"
         || exe = "windowsterminal.exe"
         || exe = "powershell.exe"
         || exe = "pwsh.exe"

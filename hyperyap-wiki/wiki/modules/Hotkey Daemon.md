@@ -21,7 +21,7 @@ The hotkey daemon handles global input behaviors outside the main Tauri app. It 
 
 ## Current Smart Paste State
 
-- Detects terminal windows such as Benjamin Term.
+- Detects common terminal windows such as WezTerm, Windows Terminal, PowerShell, and cmd.
 - Intercepts Ctrl+V when image clipboard content is present or expected.
 - Saves clipboard image content to `~/screenshots/`.
 - Restores the image clipboard after saving.

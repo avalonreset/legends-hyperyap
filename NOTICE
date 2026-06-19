@@ -7,6 +7,14 @@ Original license: GNU Affero General Public License v3.0 (AGPL-3.0)
 
 This modified version ("HyperYap") is distributed under the same AGPL-3.0 license.
 
+Speech model attribution:
+- Base model: NVIDIA Parakeet TDT 0.6B v2 (En)
+  https://huggingface.co/nvidia/parakeet-tdt-0.6b-v2
+  License stated by NVIDIA: CC-BY-4.0
+- Default ONNX INT8 conversion: smcleod/parakeet-tdt-0.6b-v2-int8
+  https://huggingface.co/smcleod/parakeet-tdt-0.6b-v2-int8
+  License metadata stated on Hugging Face: CC-BY-2.0
+
 Modifications from the original MURmure project include:
 - Rebranding from MURmure to HyperYap
 - Pre-configured settings for immediate use (toggle-to-talk, F13 hotkey, etc.)

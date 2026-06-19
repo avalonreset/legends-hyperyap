@@ -5,7 +5,7 @@ pub mod cli;
 mod clipboard;
 mod commands;
 mod dictionary;
-mod engine;
+pub mod engine;
 mod formatting_rules;
 mod history;
 mod http_api;
@@ -32,7 +32,7 @@ use std::str::FromStr;
 use std::sync::Arc;
 use tauri::{DeviceEventFilter, Listener, Manager};
 use tauri_plugin_autostart::ManagerExt;
-use tauri_plugin_log::{Target, TargetKind};
+use tauri_plugin_log::{Target, TargetKind, TimezoneStrategy};
 use wake_word::types::WakeWordState;
 
 /// Ensure the hotkey daemon is running in headless mode (no tray icon).
@@ -54,11 +54,17 @@ fn ensure_hotkeys_daemon() {
 
     if hotkeys_path.exists() {
         match Command::new(&hotkeys_path).arg("--no-tray").spawn() {
-            Ok(_) => info!("Launched hotkey daemon (headless) from {}", hotkeys_path.display()),
+            Ok(_) => info!(
+                "Launched hotkey daemon (headless) from {}",
+                hotkeys_path.display()
+            ),
             Err(e) => warn!("Failed to launch hotkey daemon: {}", e),
         }
     } else {
-        info!("Hotkey daemon not found at {}, skipping", hotkeys_path.display());
+        info!(
+            "Hotkey daemon not found at {}, skipping",
+            hotkeys_path.display()
+        );
     }
 }
 
@@ -104,6 +110,7 @@ pub fn run() {
                     Target::new(TargetKind::Webview),
                     Target::new(TargetKind::LogDir { file_name: None }),
                 ])
+                .timezone_strategy(TimezoneStrategy::UseLocal)
                 .max_file_size(1024 * 1024) // 1 MB, rotation
                 .level(log::LevelFilter::Trace)
                 .level_for("ort", log::LevelFilter::Warn)
@@ -286,6 +293,9 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             is_model_available,
             get_model_path,
+            get_asr_model,
+            list_asr_models,
+            set_asr_model,
             read_hyperyap_file,
             write_hyperyap_file,
             get_all_settings,

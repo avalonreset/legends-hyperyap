@@ -1,7 +1,8 @@
 {
     "$schema": "https://schema.tauri.app/config/2",
     "productName": "hyperyap",
-    "version": "1.0.9",
+    "mainBinaryName": "hyperyap",
+    "version": "1.0.10",
     "identifier": "com.avalonreset.hyperyap",
     "build": {
         "beforeDevCommand": "pnpm dev",

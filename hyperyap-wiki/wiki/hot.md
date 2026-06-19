@@ -20,13 +20,12 @@ sources:
 
 ## Last Updated
 
-2026-04-24. HyperYap `main` is prepared for `v1.0.9` and the release workflow was retriggered from the current branch tip after README, release-note wording, and filesystem cleanup commits. The Windows PowerShell installer resolves BenjaminTerm from the latest stable `avalonreset/benjaminterm` GitHub release; the current target remains `v1.4.3`. This Codex environment can verify repository files through the GitHub connector, but direct release/API status checks are blocked by outbound socket policy.
+2026-06-19. HyperYap `main` is being prepared for `v1.0.10`: English-first Parakeet v2 INT8 default, targeted Murmure stability fixes, Dependabot hygiene, and BenjaminTerm decommissioning from the default Windows installer. The current installer path is HyperYap + Parakeet model + optional hotkey helper only.
 
 ## Key Recent Facts
 
-- Smart screenshot paste targets Benjamin Term and similar terminal windows.
-- BenjaminTerm is installed dynamically by the Windows PowerShell installer rather than embedded inside the HyperYap app bundle.
-- BenjaminTerm `v1.4.3` is the current upstream release line that HyperYap should install through the release endpoint.
+- Smart screenshot paste targets common terminal windows such as WezTerm, Windows Terminal, PowerShell, and cmd.
+- BenjaminTerm is no longer installed, launched, or documented as a current HyperYap companion dependency.
 - `main` now has platform-neutral README positioning, cleanup ignore rules, and no tracked stale `latest.json` updater manifest.
 - The Windows hotkey daemon now treats smart copy, smart paste, smart screenshot paste, and paste undo as one terminal editing layer.
 - Terminal Ctrl+C first attempts Ctrl+Shift+C copy, then falls back to Ctrl+C when no clipboard change is detected.
@@ -45,7 +44,7 @@ sources:
 
 - Created [[Terminal Editing Layer]].
 - Bumped release metadata to `1.0.9`.
-- Updated the Windows installer to select the latest stable BenjaminTerm release and accept lowercase `benjaminterm` artifact naming.
+- Removed the Windows installer path that selected and installed BenjaminTerm.
 - Added `.release-trigger` and release workflow support so a deliberate trigger-file commit can start the all-platform release path.
 - Retriggered `.release-trigger` from current `main` after documentation and cleanup commits.
 - Reframed the README around cross-platform functionality and moved Windows-only behavior into compatibility notes.

@@ -31,13 +31,13 @@
   CreateDirectory "$SMPROGRAMS\HyperYap"
   CreateShortcut "$SMPROGRAMS\HyperYap\HyperYap Hotkeys.lnk" "$LOCALAPPDATA\HyperYap\hyperyap-hotkeys.exe"
 
-  ; --- Download NVIDIA Parakeet speech model (~440MB) with retry ---
+  ; --- Download NVIDIA Parakeet v2 English speech model (~665MB) with retry ---
   ; Uses curl.exe (ships with Windows 10+) for resume-capable downloads
   ; The install WILL NOT complete until the model is verified on disk
-  IfFileExists "$APPDATA\com.avalonreset.hyperyap\resources\parakeet-tdt-0.6b-v3-int8\encoder-model.int8.onnx" model_exists model_download
+  IfFileExists "$APPDATA\com.avalonreset.hyperyap\resources\parakeet-tdt-0.6b-v2-smcleod-int8\encoder-model.int8.onnx" model_exists model_download
   model_download:
-    CreateDirectory "$APPDATA\com.avalonreset.hyperyap\resources"
-    DetailPrint "Downloading NVIDIA Parakeet speech model (~440MB)..."
+    CreateDirectory "$APPDATA\com.avalonreset.hyperyap\resources\parakeet-tdt-0.6b-v2-smcleod-int8"
+    DetailPrint "Downloading NVIDIA Parakeet v2 English speech model (~665MB)..."
     DetailPrint "This may take several minutes on slow connections."
     ; Retry loop: curl with resume support, up to 30 attempts
     StrCpy $0 0 ; attempt counter
@@ -46,30 +46,30 @@
       IntCmp $0 31 model_failed model_try model_failed
     model_try:
       DetailPrint "Download attempt $0 of 30..."
-      nsExec::ExecToLog 'cmd /c curl.exe -L -C - -o "$TEMP\parakeet-model.zip" --retry 3 --retry-delay 2 --connect-timeout 30 "https://github.com/Kieirra/murmure-model/releases/download/1.0.0/parakeet-tdt-0.6b-v3-int8.zip"'
+      nsExec::ExecToLog 'cmd /c curl.exe -L -C - -o "$APPDATA\com.avalonreset.hyperyap\resources\parakeet-tdt-0.6b-v2-smcleod-int8\encoder-model.int8.onnx" --retry 3 --retry-delay 2 --connect-timeout 30 "https://huggingface.co/smcleod/parakeet-tdt-0.6b-v2-int8/resolve/main/encoder-model.int8.onnx" && curl.exe -L -C - -o "$APPDATA\com.avalonreset.hyperyap\resources\parakeet-tdt-0.6b-v2-smcleod-int8\decoder_joint-model.int8.onnx" --retry 3 --retry-delay 2 --connect-timeout 30 "https://huggingface.co/smcleod/parakeet-tdt-0.6b-v2-int8/resolve/main/decoder_joint-model.int8.onnx" && curl.exe -L -C - -o "$APPDATA\com.avalonreset.hyperyap\resources\parakeet-tdt-0.6b-v2-smcleod-int8\nemo128.onnx" --retry 3 --retry-delay 2 --connect-timeout 30 "https://huggingface.co/smcleod/parakeet-tdt-0.6b-v2-int8/resolve/main/nemo128.onnx" && curl.exe -L -C - -o "$APPDATA\com.avalonreset.hyperyap\resources\parakeet-tdt-0.6b-v2-smcleod-int8\vocab.txt" --retry 3 --retry-delay 2 --connect-timeout 30 "https://huggingface.co/smcleod/parakeet-tdt-0.6b-v2-int8/resolve/main/vocab.txt" && curl.exe -L -C - -o "$APPDATA\com.avalonreset.hyperyap\resources\parakeet-tdt-0.6b-v2-smcleod-int8\config.json" --retry 3 --retry-delay 2 --connect-timeout 30 "https://huggingface.co/smcleod/parakeet-tdt-0.6b-v2-int8/resolve/main/config.json" && curl.exe -L -C - -o "$APPDATA\com.avalonreset.hyperyap\resources\parakeet-tdt-0.6b-v2-smcleod-int8\README.md" --retry 3 --retry-delay 2 --connect-timeout 30 "https://huggingface.co/smcleod/parakeet-tdt-0.6b-v2-int8/resolve/main/README.md"'
       Pop $1
       ; Check if curl succeeded (exit code 0)
-      StrCmp $1 "0" model_extract model_retry_wait
+      StrCmp $1 "0" model_verify model_retry_wait
     model_retry_wait:
       DetailPrint "Download interrupted, retrying in 3 seconds..."
       Sleep 3000
       Goto model_retry
-    model_extract:
-      DetailPrint "Extracting speech model..."
-      nsExec::ExecToLog 'cmd /c powershell.exe -NoProfile -Command "Expand-Archive -Path \"$TEMP\parakeet-model.zip\" -DestinationPath \"$APPDATA\com.avalonreset.hyperyap\resources\" -Force"'
-      ; Verify extraction succeeded
-      IfFileExists "$APPDATA\com.avalonreset.hyperyap\resources\parakeet-tdt-0.6b-v3-int8\encoder-model.int8.onnx" model_cleanup model_extract_failed
+    model_verify:
+      ; Verify required model files succeeded
+      IfFileExists "$APPDATA\com.avalonreset.hyperyap\resources\parakeet-tdt-0.6b-v2-smcleod-int8\encoder-model.int8.onnx" model_verify_decoder model_extract_failed
+    model_verify_decoder:
+      IfFileExists "$APPDATA\com.avalonreset.hyperyap\resources\parakeet-tdt-0.6b-v2-smcleod-int8\decoder_joint-model.int8.onnx" model_verify_preprocessor model_extract_failed
+    model_verify_preprocessor:
+      IfFileExists "$APPDATA\com.avalonreset.hyperyap\resources\parakeet-tdt-0.6b-v2-smcleod-int8\nemo128.onnx" model_verify_vocab model_extract_failed
+    model_verify_vocab:
+      IfFileExists "$APPDATA\com.avalonreset.hyperyap\resources\parakeet-tdt-0.6b-v2-smcleod-int8\vocab.txt" model_cleanup model_extract_failed
     model_cleanup:
-      Delete "$TEMP\parakeet-model.zip"
       DetailPrint "Speech model installed successfully."
       Goto model_exists
     model_extract_failed:
-      ; Zip may be corrupt/incomplete — delete and retry download
-      Delete "$TEMP\parakeet-model.zip"
-      DetailPrint "Extraction failed (incomplete download?), retrying..."
+      DetailPrint "Model download incomplete, retrying..."
       Goto model_retry
     model_failed:
-      Delete "$TEMP\parakeet-model.zip"
       MessageBox MB_RETRYCANCEL|MB_ICONEXCLAMATION "Failed to download the speech model after 30 attempts.$\n$\nHyperYap needs this model to work. Check your internet connection and click Retry, or Cancel to finish without it." IDRETRY model_reset_retry
       Goto model_exists
     model_reset_retry:

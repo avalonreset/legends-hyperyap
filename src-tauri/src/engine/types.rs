@@ -129,3 +129,9 @@ impl ParakeetEngine {
         }
     }
 }
+
+impl Default for ParakeetEngine {
+    fn default() -> Self {
+        Self::new()
+    }
+}

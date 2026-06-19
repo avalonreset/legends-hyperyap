@@ -33,11 +33,13 @@ fn internal_record_audio(app: &AppHandle) {
     debug!("Starting audio recording...");
     let state = app.state::<AudioState>();
 
-    // Check if already recording
-    if state.recorder.lock().is_some() {
+    let mut recorder_guard = state.recorder.lock();
+    if recorder_guard.is_some() {
         warn!("Already recording");
         return;
     }
+
+    crate::audio::sound::prewarm(app);
 
     let recordings_dir = match ensure_recordings_dir(app) {
         Ok(dir) => dir,
@@ -57,11 +59,13 @@ fn internal_record_audio(app: &AppHandle) {
         Ok(mut recorder) => {
             if let Err(e) = recorder.start() {
                 error!("Failed to start recording: {}", e);
+                drop(recorder_guard);
                 let _ = std::fs::remove_file(&file_path);
                 return;
             }
             *state.current_file_name.lock() = Some(file_name.clone());
-            *state.recorder.lock() = Some(recorder);
+            *recorder_guard = Some(recorder);
+            drop(recorder_guard);
             debug!("Recording started");
 
             // Emit the recording mode to the overlay for visual differentiation
@@ -79,6 +83,7 @@ fn internal_record_audio(app: &AppHandle) {
             }
         }
         Err(e) => {
+            drop(recorder_guard);
             error!("Failed to initialize recorder: {}", e);
             let _ = std::fs::remove_file(&file_path);
             let s = crate::settings::load_settings(app);
@@ -97,6 +102,8 @@ fn internal_record_audio(app: &AppHandle) {
 pub fn stop_recording(app: &AppHandle) -> Option<std::path::PathBuf> {
     debug!("Stopping audio recording...");
     let state = app.state::<AudioState>();
+
+    crate::audio::sound::prewarm(app);
 
     // Stop recorder
     {
@@ -160,6 +167,8 @@ pub fn stop_recording(app: &AppHandle) -> Option<std::path::PathBuf> {
 pub fn cancel_recording(app: &AppHandle) {
     info!("Cancelling audio recording...");
     let state = app.state::<AudioState>();
+
+    crate::audio::sound::prewarm(app);
 
     // Stop recorder without processing
     {

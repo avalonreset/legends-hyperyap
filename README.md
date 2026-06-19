@@ -14,6 +14,7 @@ HyperYap is a privacy-first voice-to-text app that runs speech recognition local
 ## Table of Contents
 
 - [What You Get](#what-you-get)
+- [Why This Model](#why-this-model)
 - [Install](#install)
 - [Shortcut Support](#shortcut-support)
 - [Terminal-Friendly Workflows](#terminal-friendly-workflows)
@@ -30,7 +31,7 @@ HyperYap is a privacy-first voice-to-text app that runs speech recognition local
 
 One app for private, local transcription:
 
-- **Local speech-to-text** powered by NVIDIA [Parakeet TDT 0.6B v3](https://huggingface.co/nvidia/parakeet-tdt-0.6b-v3). No cloud, no internet after first install.
+- **Local speech-to-text** powered by the English NVIDIA [Parakeet TDT 0.6B v2](https://huggingface.co/nvidia/parakeet-tdt-0.6b-v2) model through the [smcleod INT8 ONNX conversion](https://huggingface.co/smcleod/parakeet-tdt-0.6b-v2-int8). No cloud, no internet after first install.
 - **Fast record-and-paste workflow** that transcribes speech and inserts the result into the active app.
 - **Configurable shortcuts** for recording, last transcript paste, command mode, cancellation, and LLM-assisted modes.
 - **Toggle-to-talk and push-to-talk** recording modes.
@@ -39,15 +40,23 @@ One app for private, local transcription:
 - **Import/export settings** for moving configurations between installs.
 - **Desktop builds** for Windows, macOS Apple Silicon, macOS Intel, and Linux x86_64.
 
+## Why This Model
+
+HyperYap is optimized for English-first local dictation. The default model is NVIDIA's [Parakeet TDT 0.6B v2](https://huggingface.co/nvidia/parakeet-tdt-0.6b-v2), packaged through the [smcleod/parakeet-tdt-0.6b-v2-int8](https://huggingface.co/smcleod/parakeet-tdt-0.6b-v2-int8) ONNX INT8 conversion.
+
+That choice is deliberate. HyperYap is built around fast, private, everyday English speech-to-text rather than broad multilingual coverage. The v2 Parakeet line is English-focused, the ONNX INT8 conversion fits the local desktop runtime, and the model can run fully offline after the first download. For users whose main need is English dictation into editors, terminals, chat apps, and coding tools, this keeps the app focused on the workflow it is meant to serve.
+
+Multilingual Parakeet models are still valuable for multilingual transcription, but they are not the default direction for HyperYap right now. The project prioritizes English quality, local reliability, low-friction installation, and a fast record-and-paste loop.
+
 ## Install
 
 Download the package for your platform from the [latest release](https://github.com/avalonreset/hyperyap/releases/latest).
 
 ### Windows
 
-Run `hyperyap_1.0.9_x64-setup.exe` from the Releases page.
+Run `hyperyap_1.0.10_x64-setup.exe` from the Releases page.
 
-For the full workstation setup, use the PowerShell installer. It installs HyperYap, downloads the speech model, installs the latest [BenjaminTerm](https://github.com/avalonreset/benjaminterm) release, and configures the optional hotkey helper:
+For the full workstation setup, use the PowerShell installer. It installs HyperYap, downloads the speech model, and configures the optional hotkey helper:
 
 ```powershell
 irm https://raw.githubusercontent.com/avalonreset/hyperyap/main/install.ps1 | iex
@@ -111,13 +120,10 @@ The optional hotkey helper adds terminal-aware behavior where supported:
 - Clipboard screenshot conversion into a saved PNG path before paste.
 - Bounded paste undo for recent HyperYap-managed terminal inserts.
 
-[BenjaminTerm](https://github.com/avalonreset/benjaminterm) is the preferred terminal target for this workflow, but HyperYap does not require it for normal transcription.
-
 Supported terminal process names for the helper:
 
 | Terminal | Process |
 |----------|---------|
-| BenjaminTerm | `benjaminterm-gui.exe` |
 | WezTerm | `wezterm-gui.exe` |
 | Windows Terminal | `windowsterminal.exe` |
 | PowerShell | `powershell.exe` |
@@ -171,7 +177,7 @@ HyperYap works out of the box with minimal setup. All settings can be changed fr
 |---------|---------|-------------|
 | Record mode | Toggle-to-talk | Press once to start, press again to stop. Can be changed to push-to-talk. |
 | Record shortcut | Configurable | Remap to any supported key or key combination. |
-| Language | English | Supports multiple languages via the Parakeet model. |
+| Language | English | Optimized for English local dictation. |
 | Overlay | Bottom of screen | Recording indicator position. Can be set to top, bottom, or hidden. |
 | LLM Connect | Disabled | Post-process transcriptions with a local LLM through Ollama or a configured remote endpoint. |
 | HTTP API | Disabled | Local API on localhost for external tool integration. |
@@ -198,7 +204,17 @@ pnpm tauri build    # production build
 
 Requires: Node.js 18+, Rust, pnpm, [Tauri prerequisites](https://v2.tauri.app/start/prerequisites/)
 
-Download the [Parakeet model](https://github.com/Kieirra/murmure-model/releases/download/1.0.0/parakeet-tdt-0.6b-v3-int8.zip) and extract to `resources/parakeet-tdt-0.6b-v3-int8/`.
+Download the default Parakeet ONNX model into `resources/parakeet-tdt-0.6b-v2-smcleod-int8/`:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .github/scripts/download-parakeet-model.ps1 -Destination resources
+```
+
+On macOS/Linux:
+
+```sh
+bash .github/scripts/download-parakeet-model.sh resources
+```
 
 ## Contributing
 
@@ -210,10 +226,8 @@ Please read the [Code of Conduct](CODE_OF_CONDUCT.md) before contributing.
 
 HyperYap's voice engine is a modified version of [MURmure](https://github.com/Kieirra/murmure) by [Kieirra](https://github.com/Kieirra). Full credit to the original author for building an excellent local speech-to-text application.
 
-[BenjaminTerm](https://github.com/avalonreset/benjaminterm) is a custom distribution of [WezTerm](https://github.com/wezterm/wezterm) by Wez Furlong.
-
-Powered by NVIDIA's [Parakeet TDT 0.6B v3](https://huggingface.co/nvidia/parakeet-tdt-0.6b-v3) speech recognition model.
+Powered by NVIDIA's [Parakeet TDT 0.6B v2](https://huggingface.co/nvidia/parakeet-tdt-0.6b-v2) English speech recognition model, using the [smcleod/parakeet-tdt-0.6b-v2-int8](https://huggingface.co/smcleod/parakeet-tdt-0.6b-v2-int8) ONNX INT8 conversion.
 
 ## License
 
-The voice engine is licensed under [AGPL-3.0](LICENSE). BenjaminTerm is licensed under MIT. See [NOTICE](NOTICE) for full attribution details.
+The voice engine is licensed under [AGPL-3.0](LICENSE). See [NOTICE](NOTICE) for full attribution details.

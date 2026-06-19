@@ -6,7 +6,6 @@ use tauri_plugin_clipboard_manager::ClipboardExt;
 
 #[cfg(target_os = "windows")]
 const TERMINAL_PROCESSES: &[&str] = &[
-    "benjaminterm-gui.exe",
     "wezterm-gui.exe",
     "windowsterminal.exe",
     "powershell.exe",
@@ -160,7 +159,7 @@ fn foreground_process_is_terminal() -> bool {
 fn foreground_process_name() -> Option<String> {
     use windows_sys::Win32::Foundation::{CloseHandle, FALSE};
     use windows_sys::Win32::System::Threading::{
-        OpenProcess, QueryFullProcessImageNameW, PROCESS_QUERY_LIMITED_INFORMATION,
+        OpenProcess, PROCESS_QUERY_LIMITED_INFORMATION, QueryFullProcessImageNameW,
     };
     use windows_sys::Win32::UI::WindowsAndMessaging::{
         GetForegroundWindow, GetWindowThreadProcessId,

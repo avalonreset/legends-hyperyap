@@ -15,4 +15,4 @@ keywords:
   - speech-recognition
   - local-ai
   - tauri
-abstract: "The complete vibe coding system. Local voice-to-text, hacker terminal, and hotkeys bundled into a single zero-config installer for Windows."
+abstract: "Local voice-to-text and hotkey workflow tooling bundled into a zero-config installer for Windows."

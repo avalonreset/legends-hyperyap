@@ -59,7 +59,6 @@ const TRACKED_CTRL_GRACE_MS: u64 = 750;
 
 // Terminal process names (lowercase) that get smart image paste
 const TERMINALS: &[&str] = &[
-    "benjaminterm-gui.exe",
     "wezterm-gui.exe",
     "windowsterminal.exe",
     "powershell.exe",

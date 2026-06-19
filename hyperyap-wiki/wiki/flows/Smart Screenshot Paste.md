@@ -22,12 +22,12 @@ Smart screenshot paste lets the user take a native Windows screenshot, switch to
 
 1. User takes a Windows screenshot.
 2. The screenshot appears on the clipboard as image data.
-3. User focuses Benjamin Term, vanilla WezTerm, or another supported terminal.
+3. User focuses WezTerm, Windows Terminal, PowerShell, cmd, or another supported terminal.
 4. User presses Ctrl+V.
 5. The hotkey daemon detects screenshot intent from Win+Shift+S or PrintScreen.
 6. A background preparation thread waits for Windows clipboard image data.
 7. The daemon saves the image natively to `~/screenshots/screenshot_*.png` and caches the path.
-8. User focuses Benjamin Term, vanilla WezTerm, or another supported terminal.
+8. User focuses WezTerm, Windows Terminal, PowerShell, cmd, or another supported terminal.
 9. User presses Ctrl+V.
 10. The daemon pastes the prepared path through the terminal paste shortcut.
 11. The daemon restores the original image clipboard.
@@ -44,7 +44,7 @@ The `v1.0.6` pipeline prepares screenshot paths before paste. The hotkey daemon 
 
 ## WezTerm Compatibility
 
-Vanilla WezTerm does not need Benjamin Term's custom smart paste behavior. HyperYap owns the conversion, writes the saved PNG path to the clipboard, and pastes with Ctrl+Shift+V so terminal apps receive text instead of the original Ctrl+V command.
+WezTerm does not need a custom terminal distribution for smart paste behavior. HyperYap owns the conversion, writes the saved PNG path to the clipboard, and pastes with Ctrl+Shift+V so terminal apps receive text instead of the original Ctrl+V command.
 
 ## Injected Input
 

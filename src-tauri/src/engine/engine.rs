@@ -2,8 +2,8 @@ use ndarray::{Array, Array1, Array2, ArrayD, ArrayViewD, IxDyn};
 use once_cell::sync::Lazy;
 use ort::execution_providers::CPUExecutionProvider;
 use ort::inputs;
-use ort::session::builder::GraphOptimizationLevel;
 use ort::session::Session;
+use ort::session::builder::GraphOptimizationLevel;
 use ort::value::TensorRef;
 use regex::Regex;
 
@@ -18,6 +18,46 @@ const MAX_TOKENS_PER_STEP: usize = 10;
 
 static DECODE_SPACE_RE: Lazy<Result<Regex, regex::Error>> =
     Lazy::new(|| Regex::new(r"\A\s|\s\B|(\s)\b"));
+
+fn decode_wordpiece_tokens(tokens: &[String]) -> String {
+    let mut text = String::new();
+    let mut pending_space = false;
+
+    for token in tokens {
+        if token == "\u{2581}" {
+            pending_space = true;
+            continue;
+        }
+
+        let token = token.replace('\u{2581}', "");
+        if token.is_empty() || token == "<unk>" || (token.starts_with('<') && token.ends_with('>'))
+        {
+            continue;
+        }
+
+        if let Some(piece) = token.strip_prefix("##") {
+            if pending_space && !text.is_empty() {
+                text.push(' ');
+            }
+            text.push_str(piece);
+        } else {
+            if !text.is_empty() && !is_attach_left(&token) {
+                text.push(' ');
+            }
+            text.push_str(&token);
+        }
+        pending_space = false;
+    }
+
+    text
+}
+
+fn is_attach_left(token: &str) -> bool {
+    matches!(
+        token,
+        "." | "," | "!" | "?" | ":" | ";" | ")" | "]" | "}" | "'" | "\"" | "%"
+    )
+}
 
 impl Drop for ParakeetModel {
     fn drop(&mut self) {
@@ -116,35 +156,57 @@ impl ParakeetModel {
         let mut max_id = 0;
         let mut tokens_with_ids: Vec<(String, usize)> = Vec::new();
         let mut blank_idx: Option<usize> = None;
+        let mut plain_tokens: Vec<String> = Vec::new();
+        let mut saw_indexed_vocab = false;
 
         for line in content.lines() {
-            let parts: Vec<&str> = line.trim_end().split(' ').collect();
+            let trimmed = line.trim_end();
+            if trimmed.is_empty() {
+                continue;
+            }
+
+            let parts: Vec<&str> = trimmed.split(' ').collect();
             if parts.len() >= 2 {
                 let token = parts[0].to_string();
                 if let Ok(id) = parts[1].parse::<usize>() {
+                    saw_indexed_vocab = true;
                     if token == "<blk>" {
                         blank_idx = Some(id);
                     }
                     tokens_with_ids.push((token, id));
                     max_id = max_id.max(id);
+                    continue;
                 }
             }
+
+            plain_tokens.push(trimmed.to_string());
         }
 
-        // Create vocab vector with \u2581 replaced with space
-        let mut vocab = vec![String::new(); max_id + 1];
-        for (token, id) in tokens_with_ids {
-            vocab[id] = token.replace('\u{2581}', " ");
+        if saw_indexed_vocab {
+            // Create vocab vector with \u2581 replaced with space
+            let mut vocab = vec![String::new(); max_id + 1];
+            for (token, id) in tokens_with_ids {
+                vocab[id] = token.replace('\u{2581}', " ");
+            }
+
+            let blank_idx = blank_idx.ok_or_else(|| {
+                ParakeetError::Io(std::io::Error::new(
+                    std::io::ErrorKind::InvalidData,
+                    "Missing <blk> token in vocabulary",
+                ))
+            })? as i32;
+
+            Ok((vocab, blank_idx))
+        } else {
+            // Some Unified EN ONNX exports ship tokenizer.model plus a plain ordered vocab.txt
+            // that omits the SentencePiece <unk> entry. Reinsert it so token ids match the
+            // tokenizer/model space, and use the next id as the RNNT blank.
+            let mut vocab = Vec::with_capacity(plain_tokens.len() + 1);
+            vocab.push("<unk>".to_string());
+            vocab.extend(plain_tokens);
+            let blank_idx = vocab.len() as i32;
+            Ok((vocab, blank_idx))
         }
-
-        let blank_idx = blank_idx.ok_or_else(|| {
-            ParakeetError::Io(std::io::Error::new(
-                std::io::ErrorKind::InvalidData,
-                "Missing <blk> token in vocabulary",
-            ))
-        })? as i32;
-
-        Ok((vocab, blank_idx))
     }
 
     pub fn preprocess(
@@ -341,7 +403,7 @@ impl ParakeetModel {
                 ))
             })?;
 
-            let vocab_logits = if probs.len() > self.vocab_size {
+            let vocab_logits = if probs.len() > self.vocab_size + 1 {
                 // TDT model - extract only vocabulary logits
                 log::trace!(
                     "TDT model detected: splitting {} logits into vocab({}) + duration",
@@ -350,7 +412,7 @@ impl ParakeetModel {
                 );
                 &vocab_logits_slice[..self.vocab_size]
             } else {
-                // Regular RNN-T model
+                // Regular RNN-T model. Keep the trailing RNNT blank logit when present.
                 vocab_logits_slice
             };
 
@@ -392,17 +454,17 @@ impl ParakeetModel {
             })
             .collect();
 
-        let text = match &*DECODE_SPACE_RE {
-            Ok(regex) => regex
-                .replace_all(&tokens.join(""), |caps: &regex::Captures| {
-                    if caps.get(1).is_some() {
-                        " "
-                    } else {
-                        ""
-                    }
-                })
-                .to_string(),
-            Err(_) => tokens.join(""), // Fallback if regex failed to compile
+        let text = if tokens.iter().any(|token| token.starts_with("##")) {
+            decode_wordpiece_tokens(&tokens)
+        } else {
+            match &*DECODE_SPACE_RE {
+                Ok(regex) => regex
+                    .replace_all(&tokens.join(""), |caps: &regex::Captures| {
+                        if caps.get(1).is_some() { " " } else { "" }
+                    })
+                    .to_string(),
+                Err(_) => tokens.join(""), // Fallback if regex failed to compile
+            }
         };
 
         let float_timestamps: Vec<f32> = timestamps

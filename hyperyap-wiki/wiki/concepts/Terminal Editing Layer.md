@@ -37,4 +37,4 @@ The terminal editing layer is the Windows hotkey daemon behavior that makes comm
 
 ## Release Status
 
-`v1.0.8` introduces the first pass of this layer. `v1.0.9` does not change the terminal editing behavior; it prepares the release path that installs BenjaminTerm `v1.4.3` through the Windows PowerShell installer. Windows installer validation and macOS/Linux release validation must be recorded from the relevant platform or GitHub Actions builders.
+`v1.0.8` introduces the first pass of this layer. `v1.0.10` keeps the generic terminal editing behavior but removes BenjaminTerm from the installer and current terminal target list. Windows installer validation and macOS/Linux release validation must be recorded from the relevant platform or GitHub Actions builders.

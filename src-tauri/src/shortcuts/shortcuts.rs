@@ -1,8 +1,8 @@
 use crate::audio::types::RecordingMode;
 use crate::shortcuts::registry::ShortcutRegistryState;
 use crate::shortcuts::types::{
-    recording_state, ActivationMode, KeyEventType, RecordingSource, ShortcutAction,
-    ShortcutRegistry, ShortcutState,
+    ActivationMode, KeyEventType, RecordingSource, ShortcutAction, ShortcutRegistry, ShortcutState,
+    recording_state,
 };
 use log::info;
 use std::time::Duration;

@@ -12,6 +12,7 @@ import { HistorySettings } from './history-settings/history-settings';
 import { LanguageSettings } from './language-settings/language-settings';
 import { SoundSettings } from './sound-settings/sound-settings';
 import { MicSettings } from './mic-settings/mic-settings';
+import { ModelSettings } from './model-settings/model-settings';
 import { useTranslation } from '@/i18n';
 import { RecordModeSettings } from '@/features/settings/system/record-mode-settings/record-mode-settings.tsx';
 
@@ -34,6 +35,8 @@ export const System = () => {
                         <LanguageSettings />
                         <SettingsUI.Separator />
                         <MicSettings />
+                        <SettingsUI.Separator />
+                        <ModelSettings />
                         <SettingsUI.Separator />
                         <RecordModeSettings />
                         <SettingsUI.Separator />

@@ -1,6 +1,6 @@
 use crate::formatting_rules;
 use regex::Regex;
-use tauri::{command, AppHandle};
+use tauri::{AppHandle, command};
 
 #[command]
 pub fn get_formatting_settings(
