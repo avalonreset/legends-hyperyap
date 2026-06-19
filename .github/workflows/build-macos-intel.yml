@@ -58,7 +58,7 @@ jobs:
                   workspaces: './src-tauri -> target'
 
             - name: Install pnpm
-              run: arch -x86_64 npm install -g pnpm
+              run: arch -x86_64 npm install -g pnpm@11.8.0
 
             - name: Install Rosetta (Intel emulation)
               shell: bash

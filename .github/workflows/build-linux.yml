@@ -37,7 +37,7 @@ jobs:
                   key: 'ubuntu-22.04-fresh'
 
             - name: Install pnpm
-              run: npm install -g pnpm
+              run: npm install -g pnpm@11.8.0
 
             - name: Install Linux deps (official + extras)
               run: |

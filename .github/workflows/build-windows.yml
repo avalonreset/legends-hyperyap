@@ -43,7 +43,7 @@ jobs:
                       ./hotkeys -> target
 
             - name: Install pnpm
-              run: npm install -g pnpm
+              run: npm install -g pnpm@11.8.0
               shell: pwsh
 
             - name: Download & extract ONNX model (Windows)
