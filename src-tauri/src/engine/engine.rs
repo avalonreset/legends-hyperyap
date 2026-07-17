@@ -1,9 +1,12 @@
 use ndarray::{Array, Array1, Array2, ArrayD, ArrayViewD, IxDyn};
 use once_cell::sync::Lazy;
 use ort::execution_providers::CPUExecutionProvider;
+#[cfg(all(target_os = "windows", target_arch = "x86_64"))]
+use ort::execution_providers::CUDAExecutionProvider;
+use ort::execution_providers::ExecutionProviderDispatch;
 use ort::inputs;
-use ort::session::Session;
 use ort::session::builder::GraphOptimizationLevel;
+use ort::session::Session;
 use ort::value::TensorRef;
 use regex::Regex;
 
@@ -18,6 +21,144 @@ const MAX_TOKENS_PER_STEP: usize = 10;
 
 static DECODE_SPACE_RE: Lazy<Result<Regex, regex::Error>> =
     Lazy::new(|| Regex::new(r"\A\s|\s\B|(\s)\b"));
+
+#[cfg(all(target_os = "windows", target_arch = "x86_64"))]
+fn preferred_execution_provider_names() -> [&'static str; 2] {
+    ["CUDAExecutionProvider", "CPUExecutionProvider"]
+}
+
+#[cfg(all(target_os = "windows", target_arch = "x86_64"))]
+fn find_cudnn_runtime_dir(program_files: &std::path::Path) -> Option<std::path::PathBuf> {
+    let cudnn_root = program_files.join("NVIDIA").join("CUDNN");
+    let mut version_dirs = std::fs::read_dir(cudnn_root)
+        .ok()?
+        .filter_map(Result::ok)
+        .map(|entry| entry.path())
+        .filter(|path| path.is_dir())
+        .collect::<Vec<_>>();
+    version_dirs.sort_by(|left, right| right.cmp(left));
+
+    for version_dir in version_dirs {
+        let bin_dir = version_dir.join("bin");
+        let mut runtime_dirs = vec![bin_dir.clone()];
+        if let Ok(entries) = std::fs::read_dir(&bin_dir) {
+            runtime_dirs.extend(
+                entries
+                    .filter_map(Result::ok)
+                    .map(|entry| entry.path())
+                    .filter(|path| path.is_dir()),
+            );
+        }
+        runtime_dirs.sort_by(|left, right| right.cmp(left));
+
+        if let Some(runtime_dir) = runtime_dirs
+            .into_iter()
+            .find(|path| path.join("cudnn64_9.dll").is_file())
+        {
+            return Some(runtime_dir);
+        }
+    }
+
+    None
+}
+
+#[cfg(all(target_os = "windows", target_arch = "x86_64"))]
+fn find_packaged_cuda_provider_dir(executable_dir: &std::path::Path) -> Option<std::path::PathBuf> {
+    [
+        executable_dir.to_path_buf(),
+        executable_dir.join("target").join("release"),
+        executable_dir.join("_up_").join("target").join("release"),
+        executable_dir.join("runtime").join("windows-x64"),
+        executable_dir
+            .join("_up_")
+            .join("runtime")
+            .join("windows-x64"),
+    ]
+    .into_iter()
+    .find(|path| {
+        path.join("onnxruntime_providers_cuda.dll").is_file()
+            && path.join("onnxruntime_providers_shared.dll").is_file()
+    })
+}
+
+#[cfg(all(target_os = "windows", target_arch = "x86_64"))]
+fn ensure_cuda_runtime_on_path() {
+    static INIT: std::sync::Once = std::sync::Once::new();
+
+    INIT.call_once(|| {
+        let packaged_provider_dir = std::env::current_exe()
+            .ok()
+            .and_then(|executable| executable.parent().map(std::path::Path::to_path_buf))
+            .and_then(|executable_dir| find_packaged_cuda_provider_dir(&executable_dir));
+
+        let cudnn_runtime_dir = ["ProgramW6432", "ProgramFiles"]
+            .into_iter()
+            .filter_map(std::env::var_os)
+            .map(std::path::PathBuf::from)
+            .find_map(|program_files| find_cudnn_runtime_dir(&program_files));
+
+        if packaged_provider_dir.is_none() {
+            log::warn!("Packaged ONNX Runtime CUDA provider directory was not found");
+        }
+        if cudnn_runtime_dir.is_none() {
+            log::warn!("cuDNN 9 runtime directory was not found under Program Files");
+        }
+
+        let current_path = std::env::var_os("PATH").unwrap_or_default();
+        let mut path_entries = std::env::split_paths(&current_path).collect::<Vec<_>>();
+        let mut added_runtime_dirs = Vec::new();
+
+        for runtime_dir in packaged_provider_dir.into_iter().chain(cudnn_runtime_dir) {
+            let runtime_text = runtime_dir.to_string_lossy();
+            if path_entries
+                .iter()
+                .any(|path| path.to_string_lossy().eq_ignore_ascii_case(&runtime_text))
+            {
+                continue;
+            }
+
+            path_entries.insert(0, runtime_dir.clone());
+            added_runtime_dirs.push(runtime_dir);
+        }
+
+        match std::env::join_paths(path_entries) {
+            Ok(path) => {
+                std::env::set_var("PATH", path);
+                for runtime_dir in added_runtime_dirs {
+                    log::info!(
+                        "Added CUDA runtime directory to the HyperYap process path: {}",
+                        runtime_dir.display()
+                    );
+                }
+            }
+            Err(error) => log::warn!("Failed to add CUDA runtime directories to PATH: {error}"),
+        }
+    });
+}
+
+#[cfg(not(all(target_os = "windows", target_arch = "x86_64")))]
+fn preferred_execution_provider_names() -> [&'static str; 1] {
+    ["CPUExecutionProvider"]
+}
+
+#[cfg(all(target_os = "windows", target_arch = "x86_64"))]
+fn preferred_execution_providers() -> Vec<ExecutionProviderDispatch> {
+    ensure_cuda_runtime_on_path();
+    vec![
+        CUDAExecutionProvider::default()
+            .with_device_id(0)
+            .build()
+            // NVIDIA acceleration is preferred, but HyperYap must still start on
+            // Windows machines without a compatible CUDA/cuDNN installation.
+            .fail_silently(),
+        CPUExecutionProvider::default().build(),
+    ]
+}
+
+#[cfg(not(all(target_os = "windows", target_arch = "x86_64")))]
+fn preferred_execution_providers() -> Vec<ExecutionProviderDispatch> {
+    vec![CPUExecutionProvider::default().build()]
+}
 
 fn decode_wordpiece_tokens(tokens: &[String]) -> String {
     let mut text = String::new();
@@ -99,7 +240,12 @@ impl ParakeetModel {
         intra_threads: Option<usize>,
         try_quantized: bool,
     ) -> Result<Session, ParakeetError> {
-        let providers = vec![CPUExecutionProvider::default().build()];
+        let providers = preferred_execution_providers();
+        log::info!(
+            "Loading ONNX model '{}' with execution providers: {}",
+            model_name,
+            preferred_execution_provider_names().join(" -> ")
+        );
 
         // Try quantized version first if requested, fallback to regular version
         let model_filename = if try_quantized {
@@ -460,7 +606,11 @@ impl ParakeetModel {
             match &*DECODE_SPACE_RE {
                 Ok(regex) => regex
                     .replace_all(&tokens.join(""), |caps: &regex::Captures| {
-                        if caps.get(1).is_some() { " " } else { "" }
+                        if caps.get(1).is_some() {
+                            " "
+                        } else {
+                            ""
+                        }
                     })
                     .to_string(),
                 Err(_) => tokens.join(""), // Fallback if regex failed to compile
@@ -558,5 +708,70 @@ impl TranscriptionEngine for ParakeetEngine {
             text: timestamped_result.text,
             segments,
         })
+    }
+}
+
+#[cfg(test)]
+mod execution_provider_tests {
+    use super::preferred_execution_provider_names;
+    #[cfg(all(target_os = "windows", target_arch = "x86_64"))]
+    use super::{find_cudnn_runtime_dir, find_packaged_cuda_provider_dir};
+
+    #[test]
+    #[cfg(all(target_os = "windows", target_arch = "x86_64"))]
+    fn windows_prefers_cuda_before_cpu_fallback() {
+        assert_eq!(
+            preferred_execution_provider_names(),
+            ["CUDAExecutionProvider", "CPUExecutionProvider"]
+        );
+    }
+
+    #[test]
+    #[cfg(all(target_os = "windows", target_arch = "x86_64"))]
+    fn finds_versioned_cudnn_runtime_for_normal_app_launches() {
+        let test_root =
+            std::env::temp_dir().join(format!("hyperyap-cudnn-discovery-{}", uuid::Uuid::new_v4()));
+        let runtime_dir = test_root
+            .join("NVIDIA")
+            .join("CUDNN")
+            .join("v9.10")
+            .join("bin")
+            .join("12.9");
+        std::fs::create_dir_all(&runtime_dir).expect("create fake cuDNN layout");
+        std::fs::write(runtime_dir.join("cudnn64_9.dll"), []).expect("write cuDNN marker");
+
+        let discovered = find_cudnn_runtime_dir(&test_root);
+
+        assert_eq!(discovered.as_deref(), Some(runtime_dir.as_path()));
+        std::fs::remove_dir_all(test_root).expect("clean fake cuDNN layout");
+    }
+
+    #[test]
+    #[cfg(all(target_os = "windows", target_arch = "x86_64"))]
+    fn finds_cuda_provider_bundled_below_the_installed_executable() {
+        let test_root = std::env::temp_dir().join(format!(
+            "hyperyap-cuda-provider-discovery-{}",
+            uuid::Uuid::new_v4()
+        ));
+        let provider_dir = test_root.join("target").join("release");
+        std::fs::create_dir_all(&provider_dir).expect("create fake provider layout");
+        std::fs::write(provider_dir.join("onnxruntime_providers_cuda.dll"), [])
+            .expect("write CUDA provider marker");
+        std::fs::write(provider_dir.join("onnxruntime_providers_shared.dll"), [])
+            .expect("write shared provider marker");
+
+        let discovered = find_packaged_cuda_provider_dir(&test_root);
+
+        assert_eq!(discovered.as_deref(), Some(provider_dir.as_path()));
+        std::fs::remove_dir_all(test_root).expect("clean fake provider layout");
+    }
+
+    #[test]
+    #[cfg(not(all(target_os = "windows", target_arch = "x86_64")))]
+    fn non_windows_uses_cpu_provider() {
+        assert_eq!(
+            preferred_execution_provider_names(),
+            ["CPUExecutionProvider"]
+        );
     }
 }

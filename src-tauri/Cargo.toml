@@ -1,6 +1,6 @@
 [package]
 name = "hyperyap"
-version = "1.0.10"
+version = "1.0.11"
 description = "Voice-to-text that just works"
 authors = ["avalonreset"]
 edition = "2021"
@@ -39,7 +39,6 @@ futures-util = "0.3"
 flate2 = "1.1"
 tar = "0.4"
 anyhow = "1.0"
-ort = { version = "2.0.0-rc.10", features = ["download-binaries"] }
 ndarray = "0.16.1"
 regex = "1.12.2"
 thiserror = "2.0.18"
@@ -79,3 +78,9 @@ core-foundation-sys = "0.8"
 
 [target.'cfg(target_os = "windows")'.dependencies]
 windows-sys = { version = "0.61", features = ["Win32_Foundation", "Win32_UI_Input_KeyboardAndMouse", "Win32_UI_WindowsAndMessaging", "Win32_System_Console", "Win32_System_Threading"] }
+
+[target.'cfg(all(target_os = "windows", target_arch = "x86_64"))'.dependencies]
+ort = { version = "2.0.0-rc.10", features = ["download-binaries", "cuda"] }
+
+[target.'cfg(not(all(target_os = "windows", target_arch = "x86_64")))'.dependencies]
+ort = { version = "2.0.0-rc.10", features = ["download-binaries"] }

@@ -1,0 +1,12 @@
+{
+    "bundle": {
+        "resources": {
+            "../resources/audio/**/*": "_up_/resources/audio/",
+            "../resources/cc-rules/**/*": "_up_/resources/cc-rules/",
+            "../presets/settings.json": "_up_/presets/settings.json",
+            "../hotkeys/target/release/hyperyap-hotkeys.exe": "_up_/hotkeys/target/release/hyperyap-hotkeys.exe",
+            "runtime/windows-x64/onnxruntime_providers_cuda.dll": "./onnxruntime_providers_cuda.dll",
+            "runtime/windows-x64/onnxruntime_providers_shared.dll": "./onnxruntime_providers_shared.dll"
+        }
+    }
+}

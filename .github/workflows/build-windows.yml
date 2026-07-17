@@ -63,6 +63,21 @@ jobs:
               run: pnpm tauri build ${{ inputs.dry && '--no-bundle' || '' }}
               shell: pwsh
 
+            - name: Verify CUDA provider packaging
+              if: ${{ inputs.dry == false }}
+              shell: pwsh
+              run: |
+                  $installer = Get-ChildItem -Path "src-tauri/target/release/bundle/nsis" -Filter *.exe | Select-Object -First 1
+                  if (!$installer) { throw "NSIS installer not found" }
+                  $sevenZip = "C:\Program Files\7-Zip\7z.exe"
+                  if (!(Test-Path $sevenZip)) { throw "7-Zip not found on runner" }
+                  $listing = & $sevenZip l $installer.FullName | Out-String
+                  foreach ($required in @("onnxruntime_providers_cuda.dll", "onnxruntime_providers_shared.dll")) {
+                      if ($listing -notmatch [regex]::Escape($required)) {
+                          throw "Windows installer is missing $required"
+                      }
+                  }
+
             - name: Prepare unsigned artifacts
               if: ${{ inputs.dry == false }}
               shell: pwsh

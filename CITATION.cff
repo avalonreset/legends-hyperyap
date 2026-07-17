@@ -2,8 +2,8 @@ cff-version: 1.2.0
 message: "If you use this software, please cite it as below."
 type: software
 title: "HyperYap"
-version: "1.0.0"
-date-released: "2026-04-04"
+version: "1.0.11"
+date-released: "2026-07-17"
 authors:
   - name: "avalonreset"
 url: "https://github.com/avalonreset/hyperyap"

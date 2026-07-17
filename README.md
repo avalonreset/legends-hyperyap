@@ -54,7 +54,7 @@ Download the package for your platform from the [latest release](https://github.
 
 ### Windows
 
-Run `hyperyap_1.0.10_x64-setup.exe` from the Releases page.
+Run `hyperyap_1.0.11_x64-setup.exe` from the Releases page.
 
 For the full workstation setup, use the PowerShell installer. It installs HyperYap, downloads the speech model, and configures the optional hotkey helper:
 
@@ -158,6 +158,7 @@ In short: the app should work as a local voice-to-text tool on macOS and Linux, 
 - A microphone
 - ~700MB disk space for the speech model
 - Internet connection for first launch model download
+- Optional on Windows x64: an NVIDIA GPU with a compatible CUDA 12 and cuDNN 9 runtime. HyperYap tries CUDA first and falls back to CPU automatically when GPU acceleration is unavailable.
 
 ## How It Works
 

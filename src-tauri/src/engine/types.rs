@@ -13,7 +13,7 @@ pub struct TimestampedResult {
 
 #[derive(thiserror::Error, Debug)]
 pub enum ParakeetError {
-    #[error("ORT error")]
+    #[error("ORT error: {0}")]
     Ort(#[from] ort::Error),
     #[error("I/O error")]
     Io(#[from] std::io::Error),
@@ -133,5 +133,17 @@ impl ParakeetEngine {
 impl Default for ParakeetEngine {
     fn default() -> Self {
         Self::new()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::ParakeetError;
+
+    #[test]
+    fn ort_error_preserves_runtime_diagnostic() {
+        let error = ParakeetError::from(ort::Error::new("CUDA provider unavailable"));
+
+        assert_eq!(error.to_string(), "ORT error: CUDA provider unavailable");
     }
 }
