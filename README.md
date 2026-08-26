@@ -1,15 +1,19 @@
 <p align="center">
-  <img src="assets/banner.webp" alt="HyperYap - local voice-to-text for your desktop" width="100%">
+  <img src="assets/banner.webp" alt="hyperyap" width="100%">
 </p>
 
-# HyperYap - Local Voice-to-Text for Your Desktop
+# hyperyap
 
 [![CI](https://github.com/avalonreset/hyperyap/actions/workflows/ci.yaml/badge.svg)](https://github.com/avalonreset/hyperyap/actions/workflows/ci.yaml)
 [![GitHub release](https://img.shields.io/github/v/release/avalonreset/hyperyap)](https://github.com/avalonreset/hyperyap/releases)
 [![License: AGPL-3.0](https://img.shields.io/github/license/avalonreset/hyperyap)](LICENSE)
 [![Last Commit](https://img.shields.io/github/last-commit/avalonreset/hyperyap)](https://github.com/avalonreset/hyperyap/commits/main)
 
-HyperYap is a privacy-first voice-to-text app that runs speech recognition locally on your machine. It uses NVIDIA Parakeet, collects no data, and gives you fast recording, automatic paste, configurable shortcuts, optional LLM cleanup, and terminal-friendly workflow helpers.
+speak. it types. nothing leaves the machine.
+
+local voice-to-text for windows, macos, and linux. nvidia parakeet runs on your computer, pastes into the app you already have focused, and collects no data.
+
+v1.0.11 prefers cuda on windows when a compatible gpu is present, then falls back to cpu. the public installer is still a standalone app. on a legends desk, the same engine can live as a module inside legends bridge. bridge is not required.
 
 ## Table of Contents
 
