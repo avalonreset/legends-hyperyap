@@ -1,4 +1,4 @@
-<p align="center">
+<p align="center" id="banner">
   <img src="assets/banner.webp" alt="hyperyap" width="100%">
 </p>
 
