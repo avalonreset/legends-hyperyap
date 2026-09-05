@@ -1,5 +1,5 @@
-<p align="center" id="banner">
-  <img src="assets/banner.webp" alt="hyperyap" width="100%">
+<p align="left" id="banner">
+  <a href="https://cto-legends.com"><img src="assets/banner.webp" alt="hyperyap — local voice to text" width="100%"></a>
 </p>
 
 # hyperyap
@@ -46,11 +46,11 @@ One app for private, local transcription:
 
 ## Why This Model
 
-HyperYap is optimized for English-first local dictation. The default model is NVIDIA's [Parakeet TDT 0.6B v2](https://huggingface.co/nvidia/parakeet-tdt-0.6b-v2), packaged through the [smcleod/parakeet-tdt-0.6b-v2-int8](https://huggingface.co/smcleod/parakeet-tdt-0.6b-v2-int8) ONNX INT8 conversion.
+hyperyap is optimized for English-first local dictation. The default model is NVIDIA's [Parakeet TDT 0.6B v2](https://huggingface.co/nvidia/parakeet-tdt-0.6b-v2), packaged through the [smcleod/parakeet-tdt-0.6b-v2-int8](https://huggingface.co/smcleod/parakeet-tdt-0.6b-v2-int8) ONNX INT8 conversion.
 
-That choice is deliberate. HyperYap is built around fast, private, everyday English speech-to-text rather than broad multilingual coverage. The v2 Parakeet line is English-focused, the ONNX INT8 conversion fits the local desktop runtime, and the model can run fully offline after the first download. For users whose main need is English dictation into editors, terminals, chat apps, and coding tools, this keeps the app focused on the workflow it is meant to serve.
+That choice is deliberate. hyperyap is built around fast, private, everyday English speech-to-text rather than broad multilingual coverage. The v2 Parakeet line is English-focused, the ONNX INT8 conversion fits the local desktop runtime, and the model can run fully offline after the first download. For users whose main need is English dictation into editors, terminals, chat apps, and coding tools, this keeps the app focused on the workflow it is meant to serve.
 
-Multilingual Parakeet models are still valuable for multilingual transcription, but they are not the default direction for HyperYap right now. The project prioritizes English quality, local reliability, low-friction installation, and a fast record-and-paste loop.
+Multilingual Parakeet models are still valuable for multilingual transcription, but they are not the default direction for hyperyap right now. The project prioritizes English quality, local reliability, low-friction installation, and a fast record-and-paste loop.
 
 ## Install
 
@@ -60,7 +60,7 @@ Download the package for your platform from the [latest release](https://github.
 
 Run `hyperyap_1.0.11_x64-setup.exe` from the Releases page.
 
-For the full workstation setup, use the PowerShell installer. It installs HyperYap, downloads the speech model, and configures the optional hotkey helper:
+For the full workstation setup, use the PowerShell installer. It installs hyperyap, downloads the speech model, and configures the optional hotkey helper:
 
 ```powershell
 irm https://raw.githubusercontent.com/avalonreset/hyperyap/main/install.ps1 | iex
@@ -97,11 +97,11 @@ curl -fsSL https://raw.githubusercontent.com/avalonreset/hyperyap/main/install.s
 
 ### Upgrading
 
-Run the installer again over an existing install. HyperYap upgrades in place without deleting your speech model or requiring a re-download. Settings are reset to the recommended defaults on each upgrade.
+Run the installer again over an existing install. hyperyap upgrades in place without deleting your speech model or requiring a re-download. Settings are reset to the recommended defaults on each upgrade.
 
 ## Shortcut Support
 
-HyperYap records through configurable shortcuts. The exact binding can be changed from Settings.
+hyperyap records through configurable shortcuts. The exact binding can be changed from Settings.
 
 | Shortcut | Action |
 |----------|--------|
@@ -116,13 +116,13 @@ The Windows workstation preset maps `F13`, `CapsLock`, and Mouse Back to the rec
 
 ## Terminal-Friendly Workflows
 
-HyperYap can be used with any app that accepts pasted text. It is especially useful in editors, chat apps, terminals, issue trackers, and coding tools where fast dictation reduces context switching.
+hyperyap can be used with any app that accepts pasted text. It is especially useful in editors, chat apps, terminals, issue trackers, and coding tools where fast dictation reduces context switching.
 
 The optional hotkey helper adds terminal-aware behavior where supported:
 
 - Smart copy, paste, and undo handling for terminal windows.
 - Clipboard screenshot conversion into a saved PNG path before paste.
-- Bounded paste undo for recent HyperYap-managed terminal inserts.
+- Bounded paste undo for recent hyperyap-managed terminal inserts.
 
 Supported terminal process names for the helper:
 
@@ -162,21 +162,21 @@ In short: the app should work as a local voice-to-text tool on macOS and Linux, 
 - A microphone
 - ~700MB disk space for the speech model
 - Internet connection for first launch model download
-- Optional on Windows x64: an NVIDIA GPU with a compatible CUDA 12 and cuDNN 9 runtime. HyperYap tries CUDA first and falls back to CPU automatically when GPU acceleration is unavailable.
+- Optional on Windows x64: an NVIDIA GPU with a compatible CUDA 12 and cuDNN 9 runtime. hyperyap tries CUDA first and falls back to CPU automatically when GPU acceleration is unavailable.
 
 ## How It Works
 
 1. Press your configured record shortcut.
 2. Speak naturally into your microphone.
 3. Press the shortcut again to stop recording.
-4. HyperYap transcribes locally using the Parakeet TDT model.
+4. hyperyap transcribes locally using the Parakeet TDT model.
 5. The transcription is automatically pasted into the active window.
 
 All processing happens on your machine. Audio never leaves your computer. The speech model runs entirely offline after the initial download.
 
 ## Configuration
 
-HyperYap works out of the box with minimal setup. All settings can be changed from the app's Settings page.
+hyperyap works out of the box with minimal setup. All settings can be changed from the app's Settings page.
 
 | Setting | Default | Description |
 |---------|---------|-------------|
@@ -229,7 +229,7 @@ Please read the [Code of Conduct](CODE_OF_CONDUCT.md) before contributing.
 
 ## Attribution
 
-HyperYap's voice engine is a modified version of [MURmure](https://github.com/Kieirra/murmure) by [Kieirra](https://github.com/Kieirra). Full credit to the original author for building an excellent local speech-to-text application.
+hyperyap's voice engine is a modified version of [MURmure](https://github.com/Kieirra/murmure) by [Kieirra](https://github.com/Kieirra). Full credit to the original author for building an excellent local speech-to-text application.
 
 Powered by NVIDIA's [Parakeet TDT 0.6B v2](https://huggingface.co/nvidia/parakeet-tdt-0.6b-v2) English speech recognition model, using the [smcleod/parakeet-tdt-0.6b-v2-int8](https://huggingface.co/smcleod/parakeet-tdt-0.6b-v2-int8) ONNX INT8 conversion.
 
