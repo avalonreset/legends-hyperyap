@@ -7,9 +7,17 @@
 [![checks](https://img.shields.io/github/actions/workflow/status/avalonreset/hyperyap/ci.yaml?branch=main&label=checks&style=flat-square&labelColor=000000)](https://github.com/avalonreset/hyperyap/actions/workflows/ci.yaml)
 [![license](https://img.shields.io/github/license/avalonreset/hyperyap?label=license&style=flat-square&labelColor=000000&color=666666)](LICENSE)
 
-speak. it types. nothing leaves the machine.
+speak. it types. transcription stays local.
 
-local voice-to-text for windows, macos, and linux. nvidia parakeet runs on your computer, pastes into the app you already have focused, and collects no data.
+local voice-to-text for windows, macos, and linux. nvidia parakeet runs on your computer and pastes into the app you already have focused. shortcuts, a custom dictionary, and formatting rules turn dictation into an everyday typing workflow.
+
+core transcription works offline after the model download. optional remote LLM
+processing sends text to the endpoint you configure; keep it disabled for an
+entirely local dictation workflow.
+
+[download](https://github.com/avalonreset/hyperyap/releases/latest) ·
+[first dictation](docs/FIRST-RUN.md) · [troubleshooting](docs/FIRST-RUN.md#troubleshooting) ·
+[local API](docs/API_USAGE.md)
 
 v1.0.11 prefers cuda on windows when a compatible gpu is present, then falls back to cpu. the public installer is still a standalone app. on a legends desk, the same engine can live as a module inside legends bridge. bridge is not required.
 
@@ -170,7 +178,10 @@ In short: the app should work as a local voice-to-text tool on macOS and Linux, 
 4. hyperyap transcribes locally using the Parakeet TDT model.
 5. The transcription is automatically pasted into the active window.
 
-All processing happens on your machine. Audio never leaves your computer. The speech model runs entirely offline after the initial download.
+Speech recognition happens on your machine and works offline after the initial
+model download. Optional LLM post-processing is separate: local Ollama keeps
+that step local, while a configured remote endpoint receives the text submitted
+to it. Model downloads and update checks also require network access.
 
 ## Configuration
 
