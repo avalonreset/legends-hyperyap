@@ -1,5 +1,5 @@
 <p align="left" id="banner">
-  <a href="https://cto-legends.com"><img src="assets/banner.webp" alt="hyperyap — local voice to text" width="100%"></a>
+  <a href="https://cto-legends.com"><img src="assets/banner.webp" alt="hyperyap: offline voice typing directly into your apps" width="100%"></a>
 </p>
 
 # hyperyap
