@@ -22,6 +22,11 @@ path = "src/main.rs"
 [build-dependencies]
 tauri-build = { version = "2", features = [] }
 
+# build.rs stages these DLLs before tauri-build inspects bundle resources.
+# A normal dependency alone can build concurrently with our build script.
+[target.'cfg(all(target_os = "windows", target_arch = "x86_64"))'.build-dependencies]
+ort-sys = { version = "=2.0.0-rc.10", features = ["download-binaries", "cuda", "copy-dylibs"] }
+
 [dependencies]
 tauri = { version = "2", features = ["tray-icon", "image-png", "macos-private-api"] }
 tauri-plugin-opener = "2"
