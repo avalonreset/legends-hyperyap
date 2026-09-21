@@ -2423,6 +2423,7 @@ dependencies = [
  "ndarray",
  "once_cell",
  "ort",
+ "ort-sys",
  "parking_lot",
  "rdev",
  "regex",
