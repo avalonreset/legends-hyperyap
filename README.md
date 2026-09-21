@@ -1,13 +1,11 @@
-<p align="left" id="banner">
-  <a href="https://cto-legends.com"><img src="assets/banner.webp" alt="hyperyap: offline voice typing directly into your apps" width="100%"></a>
-</p>
+<a name="banner"></a>
+<a name="hyperyap"></a>
 
-# hyperyap
+# ![hyperyap](assets/banner.webp)
 
-[![CI](https://github.com/avalonreset/hyperyap/actions/workflows/ci.yaml/badge.svg)](https://github.com/avalonreset/hyperyap/actions/workflows/ci.yaml)
-[![GitHub release](https://img.shields.io/github/v/release/avalonreset/hyperyap)](https://github.com/avalonreset/hyperyap/releases)
-[![License: AGPL-3.0](https://img.shields.io/github/license/avalonreset/hyperyap)](LICENSE)
-[![Last Commit](https://img.shields.io/github/last-commit/avalonreset/hyperyap)](https://github.com/avalonreset/hyperyap/commits/main)
+[![release](https://img.shields.io/github/v/release/avalonreset/hyperyap?label=release&sort=date&style=flat-square&labelColor=000000&color=ff0000)](https://github.com/avalonreset/hyperyap/releases/latest)
+[![checks](https://img.shields.io/github/actions/workflow/status/avalonreset/hyperyap/ci.yaml?branch=main&label=checks&style=flat-square&labelColor=000000)](https://github.com/avalonreset/hyperyap/actions/workflows/ci.yaml)
+[![license](https://img.shields.io/github/license/avalonreset/hyperyap?label=license&style=flat-square&labelColor=000000&color=666666)](LICENSE)
 
 speak. it types. nothing leaves the machine.
 
