@@ -1,7 +1,7 @@
 {
     "name": "legends-hyperyap",
     "private": true,
-    "version": "0.1.0",
+    "version": "0.1.1",
     "packageManager": "pnpm@11.8.0",
     "type": "module",
     "scripts": {

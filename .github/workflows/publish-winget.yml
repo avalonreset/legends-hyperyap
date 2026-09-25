@@ -5,6 +5,9 @@ on:
 
 jobs:
     publish:
+        # Disabled: package not yet in winget-pkgs and 0.1.x has no binaries;
+        # re-enable when binary assets ship.
+        if: false
         runs-on: ubuntu-latest
         steps:
             - name: Publish to WinGet

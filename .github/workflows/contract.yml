@@ -58,10 +58,22 @@ jobs:
               "bin/setup-multi-agent.ps1", "bin/setup-multi-agent.sh",
               "bin/setup-multi-agent", "bin/install-spine.ps1",
               "bin/install-spine.sh",
-              "install.ps1", "install.sh",
               "install-codex.ps1", "install-codex.sh",
           ]
           hits = [f for f in forbidden if (root / f).exists()]
+          # Native-app installer carve-out: root install.ps1/install.sh are
+          # allowed ONLY as native-application installers with no
+          # skill-registration behavior (same marker logic as fleet-audit.py).
+          skill_markers = re.compile(
+              r"skills/|skills\\|\.agents|\.claude|SKILL\.md|skill frontmatter|"
+              r"install[^a-z]*skill|register[^a-z]*skill", re.IGNORECASE)
+          for native_installer in ("install.ps1", "install.sh"):
+              installer_path = root / native_installer
+              if installer_path.is_file():
+                  text = installer_path.read_text(encoding="utf-8",
+                                                  errors="replace")
+                  if skill_markers.search(text):
+                      hits.append(f"{native_installer} (registers a skill)")
           for mirror in (".agents/skills", ".claude/skills"):
               mp = root / mirror
               if mp.is_dir() and any(mp.iterdir()):

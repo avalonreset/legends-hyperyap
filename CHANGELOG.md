@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.1.1] - 2026-09-25 (Router-native contract patch)
+
+Post-reset patch, no behavior change:
+
+- Contract CI carve-out: root `install.ps1`/`install.sh` are verified
+  native-application installers with no skill-registration markers, so
+  they no longer fail the forbidden-file scan (flagged only if skill
+  markers appear, same logic as the fleet audit).
+- Publish to WinGet workflow disabled (`if: false`): package not yet in
+  winget-pkgs and 0.1.x has no binaries; re-enable when binary assets
+  ship.
+- Authoritative version `0.1.1` via `package.json`.
+
 ## [0.1.0] - 2026-09-25 (Router-native generation reset)
 
 Contract reset: single registered skill (`cto-legends`, vendored pinned copy
