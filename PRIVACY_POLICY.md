@@ -88,7 +88,7 @@ We use static analysis tools such as **SonarQube** to help detect potential vuln
 
 HyperYap is released under the GNU AGPL v3 License. The source code can be audited by anyone:
 
-[https://github.com/avalonreset/hyperyap](https://github.com/avalonreset/hyperyap)
+[https://github.com/avalonreset/legends-hyperyap](https://github.com/avalonreset/legends-hyperyap)
 
 ## Disclaimer of warranty (legal)
 

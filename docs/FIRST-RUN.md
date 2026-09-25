@@ -3,7 +3,7 @@
 ## install and prepare
 
 1. Download the installer for your platform from the
-   [latest release](https://github.com/avalonreset/hyperyap/releases/latest).
+   [latest release](https://github.com/avalonreset/legends-hyperyap/releases/latest).
    Windows uses the x64 setup EXE; macOS offers separate Apple Silicon and Intel
    DMGs; Linux offers an x86_64 AppImage and Debian package.
 2. Launch hyperyap and allow the initial speech-model download to complete.
@@ -40,7 +40,7 @@ short so transcription, shortcut, and paste failures are easy to distinguish.
 | an unfamiliar name is consistently wrong | add the intended spelling to the custom dictionary and retest |
 | settings changed after an upgrade | the installer resets recommended defaults; restore a previously exported configuration or settings backup |
 
-If it persists, [open an issue](https://github.com/avalonreset/hyperyap/issues)
+If it persists, [open an issue](https://github.com/avalonreset/legends-hyperyap/issues)
 with the app version, OS, install method, recording mode, and the failing step.
 Review logs before sharing them; omit private transcripts, endpoint keys, and
 personal paths.

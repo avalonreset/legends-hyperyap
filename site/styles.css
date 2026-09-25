@@ -46,7 +46,7 @@ a {
     border-bottom: 1px solid var(--line);
     background:
         linear-gradient(rgba(11, 15, 18, 0.68), rgba(11, 15, 18, 0.94)),
-        url('https://raw.githubusercontent.com/avalonreset/hyperyap/main/assets/banner.webp') center / cover;
+        url('https://raw.githubusercontent.com/avalonreset/legends-hyperyap/main/assets/banner.webp') center / cover;
 }
 
 .nav {

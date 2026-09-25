@@ -20,7 +20,7 @@ Our guiding principles:
 
 ## Before You Start
 
-- **New feature or enhancement?** Please [open an issue](https://github.com/avalonreset/hyperyap/issues) or start a conversation in the [Discussions](https://github.com/avalonreset/hyperyap/discussions) tab **before writing any code**. This avoids duplicated effort and lets us agree on scope and approach together.
+- **New feature or enhancement?** Please [open an issue](https://github.com/avalonreset/legends-hyperyap/issues) or start a conversation in the [Discussions](https://github.com/avalonreset/legends-hyperyap/discussions) tab **before writing any code**. This avoids duplicated effort and lets us agree on scope and approach together.
 - **Bug fix?** No prior discussion needed, go ahead and open a PR directly.
 
 ## Quick Start

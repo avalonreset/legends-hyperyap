@@ -49,7 +49,7 @@ export const ImportDropZone = ({ state, errorMessage, onBrowse, onFileDrop, onTr
                 <div className="flex gap-2">
                     <Page.SecondaryButton onClick={onTryAnother}>{t('Try another file')}</Page.SecondaryButton>
                     <a
-                        href="https://github.com/avalonreset/hyperyap/releases/latest"
+                        href="https://github.com/avalonreset/legends-hyperyap/releases/latest"
                         target="_blank"
                         rel="noopener noreferrer"
                     >

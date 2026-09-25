@@ -1,4 +1,4 @@
-name: Release HyperYap
+name: Release legends-hyperyap
 on:
     workflow_dispatch:
         inputs:
@@ -132,15 +132,15 @@ jobs:
                   gh release delete "$TAG" --yes 2>/dev/null || true
                   # Create new release
                   gh release create "$TAG" \
-                    --title "HyperYap $TAG" \
-                    --notes "## HyperYap $TAG
+                    --title "legends-hyperyap $TAG" \
+                    --notes "## legends-hyperyap $TAG
 
                   Download the package for your platform.
 
                   ### Windows
                   - hyperyap_${{ steps.version.outputs.version }}_x64-setup.exe
                   - Includes the optional workstation hotkey helper for CapsLock/Mouse Back recording, smart terminal paste, smart terminal copy, and basic paste undo.
-                  - The PowerShell installer installs HyperYap, downloads the speech model, and configures the optional hotkey helper.
+                  - The PowerShell installer installs legends-hyperyap, downloads the speech model, and configures the optional hotkey helper.
                   - Uses the English-focused NVIDIA Parakeet TDT 0.6B v2 model through the smcleod INT8 ONNX conversion.
 
                   ### Linux
@@ -155,7 +155,7 @@ jobs:
 
                   ### Quick install (PowerShell)
                   \`\`\`powershell
-                  irm https://raw.githubusercontent.com/avalonreset/hyperyap/main/install.ps1 | iex
+                  irm https://raw.githubusercontent.com/avalonreset/legends-hyperyap/main/install.ps1 | iex
                   \`\`\`" \
                     --latest \
                     release-upload/*

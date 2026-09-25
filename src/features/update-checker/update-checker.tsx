@@ -7,7 +7,7 @@ type UpdateCheckerProps = {
     className?: string;
 };
 
-const RELEASES_URL = 'https://github.com/avalonreset/hyperyap/releases';
+const RELEASES_URL = 'https://github.com/avalonreset/legends-hyperyap/releases';
 
 export const UpdateChecker = ({ className = '' }: UpdateCheckerProps) => {
     const [clicked, setClicked] = useState(false);

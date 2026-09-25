@@ -1,6 +1,6 @@
 {
   "template": "legends-social-v1",
-  "title": "hyperyap",
+  "title": "legends-hyperyap",
   "subtitle": "offline voice typing directly into your apps",
   "size": [
     1280,
@@ -16,7 +16,7 @@
     [
       80,
       176,
-      400,
+      720,
       238
     ],
     [
@@ -27,7 +27,7 @@
     ]
   ],
   "font_sha256": "3769f0f76477a7d9e2e6cb40422dedacb56c9ab1a6f7beee89b2b9ba6b8091ee",
-  "image_sha256": "410a4e586dbecc4759beaf35471f91b273512567169645a2c3deb69702b5456a",
-  "bytes": 14359,
+  "image_sha256": "763983711ae99c36b8cf575a39982667d06a58997b513d6cc0e8afdf8084c14c",
+  "bytes": 17500,
   "upload_status": "not_attempted"
 }

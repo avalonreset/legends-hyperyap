@@ -1,11 +1,12 @@
 <a name="banner"></a>
+<a name="legends-hyperyap"></a>
 <a name="hyperyap"></a>
 
-# ![hyperyap](assets/banner.webp)
+# ![legends-hyperyap](assets/banner.webp)
 
-[![release](https://img.shields.io/github/v/release/avalonreset/hyperyap?label=release&sort=date&style=flat-square&labelColor=000000&color=ff0000)](https://github.com/avalonreset/hyperyap/releases/latest)
-[![checks](https://img.shields.io/github/actions/workflow/status/avalonreset/hyperyap/ci.yaml?branch=main&label=checks&style=flat-square&labelColor=000000)](https://github.com/avalonreset/hyperyap/actions/workflows/ci.yaml)
-[![license](https://img.shields.io/github/license/avalonreset/hyperyap?label=license&style=flat-square&labelColor=000000&color=666666)](LICENSE)
+[![release](https://img.shields.io/github/v/release/avalonreset/legends-hyperyap?label=release&sort=date&style=flat-square&labelColor=000000&color=ff0000)](https://github.com/avalonreset/legends-hyperyap/releases/latest)
+[![checks](https://img.shields.io/github/actions/workflow/status/avalonreset/legends-hyperyap/ci.yaml?branch=main&label=checks&style=flat-square&labelColor=000000)](https://github.com/avalonreset/legends-hyperyap/actions/workflows/ci.yaml)
+[![license](https://img.shields.io/github/license/avalonreset/legends-hyperyap?label=license&style=flat-square&labelColor=000000&color=666666)](LICENSE)
 
 speak. it types. transcription stays local.
 
@@ -15,7 +16,7 @@ core transcription works offline after the model download. optional remote LLM
 processing sends text to the endpoint you configure; keep it disabled for an
 entirely local dictation workflow.
 
-[download](https://github.com/avalonreset/hyperyap/releases/latest) ·
+[download](https://github.com/avalonreset/legends-hyperyap/releases/latest) ·
 [first dictation](docs/FIRST-RUN.md) · [troubleshooting](docs/FIRST-RUN.md#troubleshooting) ·
 [local API](docs/API_USAGE.md)
 
@@ -52,31 +53,31 @@ One app for private, local transcription:
 
 ## Why This Model
 
-hyperyap is optimized for English-first local dictation. The default model is NVIDIA's [Parakeet TDT 0.6B v2](https://huggingface.co/nvidia/parakeet-tdt-0.6b-v2), packaged through the [smcleod/parakeet-tdt-0.6b-v2-int8](https://huggingface.co/smcleod/parakeet-tdt-0.6b-v2-int8) ONNX INT8 conversion.
+legends-hyperyap is optimized for English-first local dictation. The default model is NVIDIA's [Parakeet TDT 0.6B v2](https://huggingface.co/nvidia/parakeet-tdt-0.6b-v2), packaged through the [smcleod/parakeet-tdt-0.6b-v2-int8](https://huggingface.co/smcleod/parakeet-tdt-0.6b-v2-int8) ONNX INT8 conversion.
 
-That choice is deliberate. hyperyap is built around fast, private, everyday English speech-to-text rather than broad multilingual coverage. The v2 Parakeet line is English-focused, the ONNX INT8 conversion fits the local desktop runtime, and the model can run fully offline after the first download. For users whose main need is English dictation into editors, terminals, chat apps, and coding tools, this keeps the app focused on the workflow it is meant to serve.
+That choice is deliberate. legends-hyperyap is built around fast, private, everyday English speech-to-text rather than broad multilingual coverage. The v2 Parakeet line is English-focused, the ONNX INT8 conversion fits the local desktop runtime, and the model can run fully offline after the first download. For users whose main need is English dictation into editors, terminals, chat apps, and coding tools, this keeps the app focused on the workflow it is meant to serve.
 
-Multilingual Parakeet models are still valuable for multilingual transcription, but they are not the default direction for hyperyap right now. The project prioritizes English quality, local reliability, low-friction installation, and a fast record-and-paste loop.
+Multilingual Parakeet models are still valuable for multilingual transcription, but they are not the default direction for legends-hyperyap right now. The project prioritizes English quality, local reliability, low-friction installation, and a fast record-and-paste loop.
 
 ## Install
 
-Download the package for your platform from the [latest release](https://github.com/avalonreset/hyperyap/releases/latest).
+Download the package for your platform from the [latest release](https://github.com/avalonreset/legends-hyperyap/releases/latest).
 
 ### Windows
 
 Run `hyperyap_1.0.11_x64-setup.exe` from the Releases page.
 
-For the full workstation setup, use the PowerShell installer. It installs hyperyap, downloads the speech model, and configures the optional hotkey helper:
+For the full workstation setup, use the PowerShell installer. It installs legends-hyperyap, downloads the speech model, and configures the optional hotkey helper:
 
 ```powershell
-irm https://raw.githubusercontent.com/avalonreset/hyperyap/main/install.ps1 | iex
+irm https://raw.githubusercontent.com/avalonreset/legends-hyperyap/main/install.ps1 | iex
 ```
 
 Or clone and run locally:
 
 ```powershell
-git clone https://github.com/avalonreset/hyperyap.git
-cd hyperyap
+git clone https://github.com/avalonreset/legends-hyperyap.git
+cd legends-hyperyap
 powershell -ExecutionPolicy Bypass -File install.ps1
 ```
 
@@ -84,7 +85,7 @@ The PowerShell installer also removes old MURmure installations if present.
 
 ### macOS
 
-Download the matching DMG from the [latest release](https://github.com/avalonreset/hyperyap/releases/latest):
+Download the matching DMG from the [latest release](https://github.com/avalonreset/legends-hyperyap/releases/latest):
 
 - `HyperYap_aarch64_darwin.dmg` for Apple Silicon Macs
 - `HyperYap_x86_64_darwin.dmg` for Intel Macs
@@ -93,21 +94,21 @@ macOS requires Accessibility permission for global shortcuts.
 
 ### Linux
 
-Download `HyperYap_amd64.AppImage` or `HyperYap_amd64.deb` from the [latest release](https://github.com/avalonreset/hyperyap/releases/latest).
+Download `HyperYap_amd64.AppImage` or `HyperYap_amd64.deb` from the [latest release](https://github.com/avalonreset/legends-hyperyap/releases/latest).
 
 On Debian/Ubuntu, you can also use:
 
 ```sh
-curl -fsSL https://raw.githubusercontent.com/avalonreset/hyperyap/main/install.sh | sh
+curl -fsSL https://raw.githubusercontent.com/avalonreset/legends-hyperyap/main/install.sh | sh
 ```
 
 ### Upgrading
 
-Run the installer again over an existing install. hyperyap upgrades in place without deleting your speech model or requiring a re-download. Settings are reset to the recommended defaults on each upgrade.
+Run the installer again over an existing install. legends-hyperyap upgrades in place without deleting your speech model or requiring a re-download. Settings are reset to the recommended defaults on each upgrade.
 
 ## Shortcut Support
 
-hyperyap records through configurable shortcuts. The exact binding can be changed from Settings.
+legends-hyperyap records through configurable shortcuts. The exact binding can be changed from Settings.
 
 | Shortcut | Action |
 |----------|--------|
@@ -122,13 +123,13 @@ The Windows workstation preset maps `F13`, `CapsLock`, and Mouse Back to the rec
 
 ## Terminal-Friendly Workflows
 
-hyperyap can be used with any app that accepts pasted text. It is especially useful in editors, chat apps, terminals, issue trackers, and coding tools where fast dictation reduces context switching.
+legends-hyperyap can be used with any app that accepts pasted text. It is especially useful in editors, chat apps, terminals, issue trackers, and coding tools where fast dictation reduces context switching.
 
 The optional hotkey helper adds terminal-aware behavior where supported:
 
 - Smart copy, paste, and undo handling for terminal windows.
 - Clipboard screenshot conversion into a saved PNG path before paste.
-- Bounded paste undo for recent hyperyap-managed terminal inserts.
+- Bounded paste undo for recent legends-hyperyap-managed terminal inserts.
 
 Supported terminal process names for the helper:
 
@@ -168,14 +169,14 @@ In short: the app should work as a local voice-to-text tool on macOS and Linux, 
 - A microphone
 - ~700MB disk space for the speech model
 - Internet connection for first launch model download
-- Optional on Windows x64: an NVIDIA GPU with a compatible CUDA 12 and cuDNN 9 runtime. hyperyap tries CUDA first and falls back to CPU automatically when GPU acceleration is unavailable.
+- Optional on Windows x64: an NVIDIA GPU with a compatible CUDA 12 and cuDNN 9 runtime. legends-hyperyap tries CUDA first and falls back to CPU automatically when GPU acceleration is unavailable.
 
 ## How It Works
 
 1. Press your configured record shortcut.
 2. Speak naturally into your microphone.
 3. Press the shortcut again to stop recording.
-4. hyperyap transcribes locally using the Parakeet TDT model.
+4. legends-hyperyap transcribes locally using the Parakeet TDT model.
 5. The transcription is automatically pasted into the active window.
 
 Speech recognition happens on your machine and works offline after the initial
@@ -185,7 +186,7 @@ to it. Model downloads and update checks also require network access.
 
 ## Configuration
 
-hyperyap works out of the box with minimal setup. All settings can be changed from the app's Settings page.
+legends-hyperyap works out of the box with minimal setup. All settings can be changed from the app's Settings page.
 
 | Setting | Default | Description |
 |---------|---------|-------------|
@@ -238,7 +239,7 @@ Please read the [Code of Conduct](CODE_OF_CONDUCT.md) before contributing.
 
 ## Attribution
 
-hyperyap's voice engine is a modified version of [MURmure](https://github.com/Kieirra/murmure) by [Kieirra](https://github.com/Kieirra). Full credit to the original author for building an excellent local speech-to-text application.
+legends-hyperyap's voice engine is a modified version of [MURmure](https://github.com/Kieirra/murmure) by [Kieirra](https://github.com/Kieirra). Full credit to the original author for building an excellent local speech-to-text application.
 
 Powered by NVIDIA's [Parakeet TDT 0.6B v2](https://huggingface.co/nvidia/parakeet-tdt-0.6b-v2) English speech recognition model, using the [smcleod/parakeet-tdt-0.6b-v2-int8](https://huggingface.co/smcleod/parakeet-tdt-0.6b-v2-int8) ONNX INT8 conversion.
 

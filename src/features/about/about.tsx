@@ -169,7 +169,7 @@ export const About = () => {
                     <div className="flex justify-center">
                         <Button variant="outline" size="sm" asChild>
                             <a
-                                href="https://github.com/avalonreset/hyperyap"
+                                href="https://github.com/avalonreset/legends-hyperyap"
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 aria-label="View the HyperYap project on GitHub"

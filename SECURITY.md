@@ -12,7 +12,7 @@ If you discover a security vulnerability in HyperYap, please report it responsib
 
 **Do not open a public issue.** Instead:
 
-1. Email **avalonreset** via [GitHub private vulnerability reporting](https://github.com/avalonreset/hyperyap/security/advisories/new)
+1. Email **avalonreset** via [GitHub private vulnerability reporting](https://github.com/avalonreset/legends-hyperyap/security/advisories/new)
 2. Include a description of the vulnerability, steps to reproduce, and any relevant logs or screenshots
 
 ### What to expect

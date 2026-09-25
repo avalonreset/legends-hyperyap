@@ -1,5 +1,5 @@
 # ============================================================
-# HyperYap Installer
+# legends-hyperyap installer
 # One-command setup: voice-to-text + hotkeys
 # Install everything. No options. That's the point.
 # ============================================================
@@ -11,7 +11,7 @@ param(
 
 $ErrorActionPreference = "Stop"
 
-$repo = "avalonreset/hyperyap"
+$repo = "avalonreset/legends-hyperyap"
 $modelId = "parakeet-tdt-0.6b-v2-smcleod-int8"
 $modelBaseUrl = "https://huggingface.co/smcleod/parakeet-tdt-0.6b-v2-int8/resolve/main"
 $modelFiles = @(
@@ -43,7 +43,7 @@ Write-Host "  This will:" -ForegroundColor White
 Write-Host "    - Uninstall MURmure (if installed)" -ForegroundColor DarkGray
 Write-Host "    - Install AutoHotkey v2 (if not present)" -ForegroundColor DarkGray
 Write-Host "    - Download NVIDIA Parakeet v2 English speech model (~665MB)" -ForegroundColor DarkGray
-Write-Host "    - Deploy HyperYap configs (overwrites existing)" -ForegroundColor DarkGray
+Write-Host "    - Deploy legends-hyperyap configs (overwrites existing)" -ForegroundColor DarkGray
 Write-Host "    - Set everything to auto-start on boot" -ForegroundColor DarkGray
 Write-Host ""
 
@@ -93,11 +93,11 @@ if ($murmureUninstall) {
 }
 
 # -----------------------------------------------------------
-# 1. Install HyperYap voice engine
+# 1. Install legends-hyperyap voice engine
 # -----------------------------------------------------------
-Write-Host "[1/5] Installing HyperYap voice engine..." -ForegroundColor Yellow
+Write-Host "[1/5] Installing legends-hyperyap voice engine..." -ForegroundColor Yellow
 
-# Kill any running HyperYap before installing (NSIS upgrades in-place, no uninstall needed)
+# Kill any running legends-hyperyap before installing (NSIS upgrades in-place, no uninstall needed)
 Get-Process -Name "hyperyap", "HyperYap" -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue
 Start-Sleep -Seconds 1
 
@@ -120,7 +120,7 @@ try {
             Start-Process $installerPath -ArgumentList "/S" -Wait
         }
         Remove-Item $installerPath -Force -ErrorAction SilentlyContinue
-        Write-Host "  HyperYap installed." -ForegroundColor Green
+        Write-Host "  legends-hyperyap installed." -ForegroundColor Green
     } else {
         Write-Host "  No release found yet. Build from source with: pnpm tauri build" -ForegroundColor DarkYellow
     }
@@ -271,7 +271,7 @@ Write-Host "  Voice engine auto-start will activate on first launch." -Foregroun
 # Launch everything
 # -----------------------------------------------------------
 Write-Host ""
-Write-Host "  HyperYap is ready!" -ForegroundColor Green
+Write-Host "  legends-hyperyap is ready!" -ForegroundColor Green
 Write-Host ""
 Write-Host "  - Press F13, CapsLock, or Mouse Back to record" -ForegroundColor DarkGray
 Write-Host "  - Press again to stop and auto-paste transcription" -ForegroundColor DarkGray
@@ -284,11 +284,11 @@ if (Test-Path $ahkTarget) {
     Start-Process $ahkTarget
 }
 
-# Start HyperYap
+# Start legends-hyperyap
 $appExePaths = @("$installDir\hyperyap.exe", "$installDir\HyperYap.exe", "$env:ProgramFiles\HyperYap\hyperyap.exe")
 $appExe = $appExePaths | Where-Object { Test-Path $_ } | Select-Object -First 1
 if ($appExe) {
-    Write-Host "  Launching HyperYap..." -ForegroundColor DarkGray
+    Write-Host "  Launching legends-hyperyap..." -ForegroundColor DarkGray
     Start-Process $appExe
 }
 
