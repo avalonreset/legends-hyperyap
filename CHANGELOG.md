@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.0] - 2026-09-25 (Router-native generation reset)
+
+Contract reset: single registered skill (`cto-legends`, vendored pinned copy
+at `skills/cto-legends/SKILL.md`), authoritative version `0.1.0`. Source
+release (tag plus notes); no installer binaries attached. Prior releases and
+version tags wiped per the reset; git history preserved.
+
 ## HyperYap
 
 | Version       | Date       | Notes |

@@ -20,7 +20,13 @@ entirely local dictation workflow.
 [first dictation](docs/FIRST-RUN.md) · [troubleshooting](docs/FIRST-RUN.md#troubleshooting) ·
 [local API](docs/API_USAGE.md)
 
-v1.0.11 prefers cuda on windows when a compatible gpu is present, then falls back to cpu. the public installer is still a standalone app. on a legends desk, the same engine can live as a module inside legends bridge. bridge is not required.
+v0.1.0 prefers cuda on windows when a compatible gpu is present, then falls back to cpu. the public installer is still a standalone app. on a legends desk, the same engine can live as a module inside legends bridge. bridge is not required.
+
+## Agent setup (via `cto-legends`)
+
+Part of the [CTO Legends](https://github.com/avalonreset/cto-legends) ecosystem. `cto-legends` is the only registered skill; this repo vendors a pinned copy at `skills/cto-legends/SKILL.md`.
+
+Install with `cto-legends install legends-hyperyap`, then follow the module recipe the router loads. Do not register this module as its own skill.
 
 ## Table of Contents
 
@@ -65,7 +71,7 @@ Download the package for your platform from the [latest release](https://github.
 
 ### Windows
 
-Run `hyperyap_1.0.11_x64-setup.exe` from the Releases page.
+Run `hyperyap_0.1.0_x64-setup.exe` from the Releases page.
 
 For the full workstation setup, use the PowerShell installer. It installs legends-hyperyap, downloads the speech model, and configures the optional hotkey helper:
 
