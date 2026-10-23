@@ -81,28 +81,28 @@ jobs:
 
             - name: Download Windows artifacts
               if: ${{ needs.windows.result == 'success' }}
-              uses: actions/download-artifact@v4
+              uses: actions/download-artifact@v8
               with:
                   name: hyperyap-windows-x64
                   path: release-assets/windows
 
             - name: Download Linux artifacts
               if: ${{ needs.linux.result == 'success' }}
-              uses: actions/download-artifact@v4
+              uses: actions/download-artifact@v8
               with:
                   name: hyperyap-linux
                   path: release-assets/linux
 
             - name: Download macOS Apple Silicon artifacts
               if: ${{ needs.macos.result == 'success' }}
-              uses: actions/download-artifact@v4
+              uses: actions/download-artifact@v8
               with:
                   name: hyperyap-macos
                   path: release-assets/macos
 
             - name: Download macOS Intel artifacts
               if: ${{ needs['macos-intel'].result == 'success' }}
-              uses: actions/download-artifact@v4
+              uses: actions/download-artifact@v8
               with:
                   name: hyperyap-macos-intel
                   path: release-assets/macos-intel
