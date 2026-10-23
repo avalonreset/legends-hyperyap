@@ -94,7 +94,7 @@ jobs:
             - name: Upload unsigned artifact
               if: ${{ inputs.dry == false }}
               id: upload-unsigned-artifact
-              uses: actions/upload-artifact@v4
+              uses: actions/upload-artifact@v7
               with:
                   name: unsigned-binaries
                   path: unsigned_artifacts
@@ -162,7 +162,7 @@ jobs:
 
             - name: Upload artifact (1 day)
               if: ${{ inputs.dry == false }}
-              uses: actions/upload-artifact@v4
+              uses: actions/upload-artifact@v7
               with:
                   name: hyperyap-windows-x64
                   path: release-bundle
