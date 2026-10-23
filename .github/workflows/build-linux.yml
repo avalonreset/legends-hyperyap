@@ -22,7 +22,7 @@ jobs:
         env:
             HAS_TAURI_SIGNING: ${{ secrets.TAURI_PRIVATE_KEY != '' }}
         steps:
-            - uses: actions/checkout@v4
+            - uses: actions/checkout@v6
 
             - uses: actions/setup-node@v4
               with:
