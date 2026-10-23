@@ -78,6 +78,8 @@ jobs:
             contents: write
         steps:
             - uses: actions/checkout@v4
+              with:
+                persist-credentials: false
 
             - name: Download Windows artifacts
               if: ${{ needs.windows.result == 'success' }}
@@ -155,7 +157,7 @@ jobs:
 
                   ### Quick install (PowerShell)
                   \`\`\`powershell
-                  irm https://raw.githubusercontent.com/avalonreset/legends-hyperyap/main/install.ps1 | iex
+                  Invoke-WebRequest -Uri "https://raw.githubusercontent.com/avalonreset/legends-hyperyap/$TAG/install.ps1" -OutFile install.ps1; .\install.ps1
                   \`\`\`" \
                     --latest \
                     release-upload/*
