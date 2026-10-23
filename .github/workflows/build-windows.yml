@@ -29,6 +29,8 @@ jobs:
         runs-on: windows-latest
         steps:
             - uses: actions/checkout@v4
+              with:
+                persist-credentials: false
 
             - uses: actions/setup-node@v4
               with:
@@ -105,7 +107,7 @@ jobs:
               if: ${{ inputs.dry == false }}
               id: signpath
               continue-on-error: true
-              uses: signpath/github-action-submit-signing-request@v2
+              uses: signpath/github-action-submit-signing-request@c92b958760219087e01f8d67a1669ed57afe2627 # v2
               with:
                   api-token: '${{ secrets.SIGNPATH_API_TOKEN }}'
                   organization-id: '${{ secrets.SIGNPATH_ORG_ID }}'
