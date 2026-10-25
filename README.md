@@ -237,6 +237,14 @@ On macOS/Linux:
 bash .github/scripts/download-parakeet-model.sh resources
 ```
 
+## FAQ
+
+**Does `legends-hyperyap` send my voice recordings to the cloud?**
+No. Speech recognition runs 100% locally on your machine using the NVIDIA Parakeet TDT 0.6B v2 ONNX model and works offline after the initial model download.
+
+**How is `legends-hyperyap` different from `legends-ambient-intelligence`?**
+`legends-hyperyap` is for live push-to-talk or toggle-to-talk dictation pasted directly into your active cursor. [`legends-ambient-intelligence`](https://github.com/avalonreset/legends-ambient-intelligence) is for passive background audio and USB voice recorder ingestion into [`legends-empire`](https://github.com/avalonreset/legends-empire).
+
 ## Contributing
 
 Contributions are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md) for development setup, PR workflow, and coding guidelines.
