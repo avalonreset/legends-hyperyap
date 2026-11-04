@@ -260,3 +260,10 @@ Powered by NVIDIA's [Parakeet TDT 0.6B v2](https://huggingface.co/nvidia/parakee
 ## License
 
 The voice engine is licensed under [AGPL-3.0](LICENSE). See [NOTICE](NOTICE) for full attribution details.
+
+---
+
+**Specification & benchmarks on cto-legends.com:**
+- **Module specification & architecture matrix:** [cto-legends.com/modules/legends-hyperyap](https://cto-legends.com/modules/legends-hyperyap)
+- **Related engineering dispatches:** [Codex vs Claude Code: CLI and Cursor Agent Benchmarks](https://cto-legends.com/blog?post=codex-vs-claude-code-benchmarks) · [How to Build AI Agents: Production CLI & MCP Routing](https://cto-legends.com/blog?post=how-to-build-ai-agents-cli-mcp-routing)
+- **Ecosystem hub:** [cto-legends.com/home](https://cto-legends.com/home)
