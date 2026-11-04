@@ -18,7 +18,7 @@ Speech model attribution:
 Modifications from the original MURmure project include:
 - Rebranding from MURmure to HyperYap
 - Pre-configured settings for immediate use (toggle-to-talk, F13 hotkey, etc.)
-- Bundled AutoHotkey scripts for mouse-button-to-F13 mapping and smart paste
+- Native Rust hotkey helper (`hotkeys/`) for CapsLock/mouse-button-to-F13 mapping and smart terminal paste
 - One-command installer with auto-boot setup
 - Removal of multi-language UI defaults (English-only focus)
 

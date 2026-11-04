@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.1.2] - 2026-11-04 (Native clipboard pipeline and AutoHotkey removal)
+
+Security and runtime hygiene hardening:
+
+- Native Rust clipboard pipeline: `hotkeys/src/main.rs` now handles clipboard screenshot capture (`run_clipboard_image_save`) and clipboard image restoration (`restore_clipboard_image`) exclusively via direct Win32 `CF_DIB` APIs and the `image` crate (`0.25`) with a bounded native retry loop, eliminating hidden `powershell.exe -NoProfile -Sta -WindowStyle Hidden -ExecutionPolicy Bypass` child processes and `CREATE_NO_WINDOW`.
+- Zero AutoHotkey footprint: removed `presets/scripts/hyperyap-hotkeys.ahk`, `presets/scripts/clipboard-image-paste.ps1`, and all `AutoHotkey64.exe` / `ahk-v2.exe` download and startup logic from `install.ps1`. The compiled Rust helper (`hyperyap-hotkeys.exe`) is now the sole hotkey and terminal paste helper.
+- Privacy preset alignment: set `"persist_history": false` in `presets/settings.json` to match the application default and privacy policy.
+
 ## [0.1.1] - 2026-09-25 (Router-native contract patch)
 
 Post-reset patch, no behavior change:

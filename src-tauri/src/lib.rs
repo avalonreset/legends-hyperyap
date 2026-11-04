@@ -39,13 +39,14 @@ use wake_word::types::WakeWordState;
 /// Kills any existing instance first to avoid duplicates, then spawns with --no-tray.
 #[cfg(target_os = "windows")]
 fn ensure_hotkeys_daemon() {
-    use std::os::windows::process::CommandExt;
-    use std::process::Command;
+    use std::process::{Command, Stdio};
 
     // Kill any existing instance (may have its own tray icon from standalone launch)
-    let _ = Command::new("cmd")
-        .args(["/C", "taskkill /F /IM hyperyap-hotkeys.exe >nul 2>&1"])
-        .creation_flags(0x08000000) // CREATE_NO_WINDOW
+    let _ = Command::new("taskkill")
+        .args(["/F", "/IM", "hyperyap-hotkeys.exe"])
+        .stdin(Stdio::null())
+        .stdout(Stdio::null())
+        .stderr(Stdio::null())
         .status();
 
     let hotkeys_path = std::path::PathBuf::from(std::env::var("LOCALAPPDATA").unwrap_or_default())
@@ -74,11 +75,12 @@ fn ensure_hotkeys_daemon() {}
 /// Kill the hotkey daemon when the main app exits.
 #[cfg(target_os = "windows")]
 fn kill_hotkeys_daemon() {
-    use std::os::windows::process::CommandExt;
-    use std::process::Command;
-    let _ = Command::new("cmd")
-        .args(["/C", "taskkill /F /IM hyperyap-hotkeys.exe >nul 2>&1"])
-        .creation_flags(0x08000000) // CREATE_NO_WINDOW
+    use std::process::{Command, Stdio};
+    let _ = Command::new("taskkill")
+        .args(["/F", "/IM", "hyperyap-hotkeys.exe"])
+        .stdin(Stdio::null())
+        .stdout(Stdio::null())
+        .stderr(Stdio::null())
         .status();
     info!("Hotkey daemon stopped");
 }

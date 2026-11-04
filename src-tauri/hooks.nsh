@@ -12,17 +12,13 @@
   CreateDirectory "$LOCALAPPDATA\HyperYap"
   CopyFiles /SILENT "$INSTDIR\_up_\hotkeys\target\release\hyperyap-hotkeys.exe" "$LOCALAPPDATA\HyperYap\hyperyap-hotkeys.exe"
 
-  ; --- Remove old MURmure and AHK startup entries ---
-  Delete "$SMSTARTUP\murmure-hotkeys.ahk"
+  ; --- Remove old MURmure startup entries ---
   Delete "$SMSTARTUP\murmure-hotkeys.lnk"
   Delete "$SMSTARTUP\Murmure.lnk"
   Delete "$SMSTARTUP\murmure.lnk"
-  Delete "$SMSTARTUP\hyperyap-hotkeys.ahk"
 
-  ; --- Remove old AHK scripts if present ---
-  Delete "$LOCALAPPDATA\HyperYap\scripts\hyperyap-hotkeys.ahk"
-  Delete "$LOCALAPPDATA\HyperYap\scripts\clipboard-image-paste.ps1"
-  RMDir "$LOCALAPPDATA\HyperYap\scripts"
+  ; --- Remove old scripts directory if present ---
+  RMDir /r "$LOCALAPPDATA\HyperYap\scripts"
 
   ; --- Remove old standalone startup shortcut (main app now manages the daemon) ---
   Delete "$SMSTARTUP\hyperyap-hotkeys.lnk"
@@ -86,9 +82,7 @@
 
   ; Clean up deployed files and startup shortcut
   Delete "$LOCALAPPDATA\HyperYap\hyperyap-hotkeys.exe"
-  Delete "$LOCALAPPDATA\HyperYap\scripts\hyperyap-hotkeys.ahk"
-  Delete "$LOCALAPPDATA\HyperYap\scripts\clipboard-image-paste.ps1"
-  RMDir "$LOCALAPPDATA\HyperYap\scripts"
+  RMDir /r "$LOCALAPPDATA\HyperYap\scripts"
   RMDir "$LOCALAPPDATA\HyperYap"
   Delete "$SMSTARTUP\hyperyap-hotkeys.lnk"
 

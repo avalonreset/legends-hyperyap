@@ -14,7 +14,7 @@
   "api_port": 4800,
   "copy_to_clipboard": false,
   "paste_method": "ctrl_v",
-  "persist_history": true,
+  "persist_history": false,
   "language": "en",
   "sound_enabled": true,
   "onboarding": {

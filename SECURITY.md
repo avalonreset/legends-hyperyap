@@ -4,7 +4,7 @@
 
 | Version | Supported          |
 |---------|--------------------|
-| 1.0.x   | :white_check_mark: |
+| 0.1.x   | :white_check_mark: |
 
 ## Reporting a Vulnerability
 
@@ -30,7 +30,7 @@ If you discover a security vulnerability in HyperYap, please report it responsib
 The following are in scope:
 
 - HyperYap desktop application (Tauri/Rust backend, React frontend)
-- AutoHotkey hotkey scripts (`presets/scripts/`)
+- Native Rust hotkey helper (`hotkeys/`)
 - PowerShell installer (`install.ps1`)
 - HTTP API (when enabled in settings)
 
