@@ -17,7 +17,7 @@
 | Component | Where to Report |
 |-----------|----------------|
 | legends-hyperyap voice engine | [This repo](https://github.com/avalonreset/legends-hyperyap/issues) |
-| AutoHotkey scripts | [This repo](https://github.com/avalonreset/legends-hyperyap/issues) |
+| Native hotkey helper (`hotkeys/`) | [This repo](https://github.com/avalonreset/legends-hyperyap/issues) |
 | Parakeet speech model | [NVIDIA Parakeet TDT 0.6B v2](https://huggingface.co/nvidia/parakeet-tdt-0.6b-v2) via [smcleod INT8 ONNX](https://huggingface.co/smcleod/parakeet-tdt-0.6b-v2-int8) |
 
 ## Security Issues

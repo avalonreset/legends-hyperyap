@@ -20,7 +20,7 @@ entirely local dictation workflow.
 [first dictation](docs/FIRST-RUN.md) · [troubleshooting](docs/FIRST-RUN.md#troubleshooting) ·
 [local API](docs/API_USAGE.md)
 
-v0.1.0 prefers cuda on windows when a compatible gpu is present, then falls back to cpu. the public installer is still a standalone app. on a legends desk, the same engine can live as a module inside legends bridge. bridge is not required.
+v0.1.2 prefers cuda on windows when a compatible gpu is present, then falls back to cpu. the public installer is still a standalone app. on a legends desk, the same engine can live as a module inside legends bridge. bridge is not required.
 
 ## Agent setup (via `cto-legends`)
 
@@ -71,7 +71,7 @@ Download the package for your platform from the [latest release](https://github.
 
 ### Windows
 
-Run `hyperyap_0.1.0_x64-setup.exe` from the Releases page.
+Run `hyperyap_0.1.2_x64-setup.exe` from the Releases page.
 
 For the full workstation setup, use the PowerShell installer. It installs legends-hyperyap, downloads the speech model, and configures the optional hotkey helper:
 
@@ -84,7 +84,7 @@ Or clone and run locally:
 ```powershell
 git clone https://github.com/avalonreset/legends-hyperyap.git
 cd legends-hyperyap
-powershell -ExecutionPolicy Bypass -File install.ps1
+.\install.ps1
 ```
 
 The PowerShell installer also removes old MURmure installations if present.
@@ -228,7 +228,7 @@ Requires: Node.js 18+, Rust, pnpm, [Tauri prerequisites](https://v2.tauri.app/st
 Download the default Parakeet ONNX model into `resources/parakeet-tdt-0.6b-v2-smcleod-int8/`:
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File .github/scripts/download-parakeet-model.ps1 -Destination resources
+.\.github\scripts\download-parakeet-model.ps1 -Destination resources
 ```
 
 On macOS/Linux:

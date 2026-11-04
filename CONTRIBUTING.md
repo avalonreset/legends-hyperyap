@@ -28,7 +28,7 @@ Our guiding principles:
 ### Prerequisites
 
 - Download the default Parakeet ONNX model:
-  - Windows: `powershell -ExecutionPolicy Bypass -File .github/scripts/download-parakeet-model.ps1 -Destination resources`
+  - Windows: `.\.github\scripts\download-parakeet-model.ps1 -Destination resources`
   - macOS/Linux: `bash .github/scripts/download-parakeet-model.sh resources`
 - The model folder should be `resources/parakeet-tdt-0.6b-v2-smcleod-int8`
 - Install all required dependencies for Tauri: [https://v2.tauri.app/start/prerequisites/](https://v2.tauri.app/start/prerequisites/)

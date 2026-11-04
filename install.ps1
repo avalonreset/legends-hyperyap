@@ -22,11 +22,10 @@ $modelFiles = @(
     "config.json",
     "README.md"
 )
-$ahkInstallerUrl = "https://www.autohotkey.com/download/ahk-v2.exe"
 $appDataDir = "$env:APPDATA\com.avalonreset.hyperyap"
 $startupDir = "$env:APPDATA\Microsoft\Windows\Start Menu\Programs\Startup"
 $installDir = "$env:LOCALAPPDATA\Programs\HyperYap"
-$scriptsInstallDir = "$env:LOCALAPPDATA\HyperYap\scripts"
+$hotkeysExe = "$env:LOCALAPPDATA\HyperYap\hyperyap-hotkeys.exe"
 
 Write-Host ""
 Write-Host "  __ __                     __  __          " -ForegroundColor Cyan
@@ -41,7 +40,7 @@ Write-Host ""
 
 Write-Host "  This will:" -ForegroundColor White
 Write-Host "    - Uninstall MURmure (if installed)" -ForegroundColor DarkGray
-Write-Host "    - Install AutoHotkey v2 (if not present)" -ForegroundColor DarkGray
+Write-Host "    - Install legends-hyperyap and its native Rust hotkey helper" -ForegroundColor DarkGray
 Write-Host "    - Download NVIDIA Parakeet v2 English speech model (~665MB)" -ForegroundColor DarkGray
 Write-Host "    - Deploy legends-hyperyap configs (overwrites existing)" -ForegroundColor DarkGray
 Write-Host "    - Set everything to auto-start on boot" -ForegroundColor DarkGray
@@ -84,8 +83,7 @@ if ($murmureUninstall) {
 }
 
 # Remove old MURmure startup entries
-@("$startupDir\murmure.lnk", "$startupDir\Murmure.lnk",
-  "$startupDir\murmure-hotkeys.ahk", "$startupDir\murmure-hotkeys.lnk") | ForEach-Object {
+@("$startupDir\murmure.lnk", "$startupDir\Murmure.lnk", "$startupDir\murmure-hotkeys.lnk") | ForEach-Object {
     if (Test-Path $_) {
         Remove-Item $_ -Force -ErrorAction SilentlyContinue
         Write-Host "  Removed old startup entry: $(Split-Path $_ -Leaf)" -ForegroundColor DarkGray
@@ -95,7 +93,7 @@ if ($murmureUninstall) {
 # -----------------------------------------------------------
 # 1. Install legends-hyperyap voice engine
 # -----------------------------------------------------------
-Write-Host "[1/5] Installing legends-hyperyap voice engine..." -ForegroundColor Yellow
+Write-Host "[1/4] Installing legends-hyperyap voice engine..." -ForegroundColor Yellow
 
 # Kill any running legends-hyperyap before installing (NSIS upgrades in-place, no uninstall needed)
 Get-Process -Name "hyperyap", "HyperYap" -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue
@@ -185,33 +183,17 @@ if (Test-Path "$modelDir\encoder-model.int8.onnx") {
 }
 
 # -----------------------------------------------------------
-# 3. Install AutoHotkey v2 + deploy hotkey scripts
+# 3. Verify native hotkey helper + fetch presets
 # -----------------------------------------------------------
-Write-Host "[3/4] Setting up hotkeys..." -ForegroundColor Yellow
+Write-Host "[3/4] Setting up native hotkey helper..." -ForegroundColor Yellow
 
-$ahkExe = Get-Command "AutoHotkey64.exe" -ErrorAction SilentlyContinue
-if (-not $ahkExe) { $ahkExe = Get-Command "AutoHotkey32.exe" -ErrorAction SilentlyContinue }
-if (-not $ahkExe) {
-    $ahkPaths = @(
-        "$env:ProgramFiles\AutoHotkey\v2\AutoHotkey64.exe",
-        "$env:ProgramFiles\AutoHotkey\v2\AutoHotkey32.exe",
-        "${env:ProgramFiles(x86)}\AutoHotkey\v2\AutoHotkey64.exe"
-    )
-    $ahkExe = $ahkPaths | Where-Object { Test-Path $_ } | Select-Object -First 1
+# Remove any legacy startup links from pre-native releases
+@("$startupDir\hyperyap-hotkeys.lnk") | ForEach-Object {
+    if (Test-Path $_) {
+        Remove-Item $_ -Force -ErrorAction SilentlyContinue
+    }
 }
 
-if (-not $ahkExe) {
-    Write-Host "  AutoHotkey v2 not found. Installing..." -ForegroundColor DarkGray
-    $ahkInstaller = "$env:TEMP\ahk-v2-setup.exe"
-    Invoke-WebRequest -Uri $ahkInstallerUrl -OutFile $ahkInstaller -UseBasicParsing
-    Start-Process $ahkInstaller -ArgumentList "/silent" -Wait
-    Remove-Item $ahkInstaller -Force
-    Write-Host "  AutoHotkey v2 installed." -ForegroundColor Green
-} else {
-    Write-Host "  AutoHotkey v2 found." -ForegroundColor Green
-}
-
-# Deploy hotkey scripts
 $scriptRoot = $PSScriptRoot
 $presetsDir = "$scriptRoot\presets"
 
@@ -222,15 +204,13 @@ if (-not (Test-Path $presetsDir)) {
     @("settings.json", "llm_connect.json") | ForEach-Object {
         Invoke-WebRequest -Uri "https://raw.githubusercontent.com/$repo/main/presets/$_" -OutFile "$presetsDir\$_" -UseBasicParsing
     }
-    New-Item -ItemType Directory -Path "$presetsDir\scripts" -Force | Out-Null
-    @("hyperyap-hotkeys.ahk", "clipboard-image-paste.ps1") | ForEach-Object {
-        Invoke-WebRequest -Uri "https://raw.githubusercontent.com/$repo/main/presets/scripts/$_" -OutFile "$presetsDir\scripts\$_" -UseBasicParsing
-    }
 }
 
-New-Item -ItemType Directory -Path $scriptsInstallDir -Force | Out-Null
-Copy-Item "$presetsDir\scripts\*" "$scriptsInstallDir\" -Force
-Write-Host "  Hotkey scripts deployed." -ForegroundColor Green
+if (Test-Path $hotkeysExe) {
+    Write-Host "  Native hotkey helper found at $hotkeysExe." -ForegroundColor Green
+} else {
+    Write-Host "  Native hotkey helper will be deployed by the application installer." -ForegroundColor DarkGray
+}
 
 # -----------------------------------------------------------
 # 4. Deploy configs + auto-start
@@ -253,19 +233,8 @@ if (-not $KeepConfig -or -not (Test-Path "$appDataDir\llm_connect.json")) {
     Write-Host "  LLM config preserved (--KeepConfig)." -ForegroundColor DarkYellow
 }
 
-# AHK hotkeys auto-start
-$ahkTarget = "$scriptsInstallDir\hyperyap-hotkeys.ahk"
-$startupLink = "$startupDir\hyperyap-hotkeys.lnk"
-$shell = New-Object -ComObject WScript.Shell
-$shortcut = $shell.CreateShortcut($startupLink)
-$shortcut.TargetPath = $ahkTarget
-$shortcut.WorkingDirectory = $scriptsInstallDir
-$shortcut.Description = "HyperYap Hotkeys"
-$shortcut.Save()
-Write-Host "  Hotkeys auto-start configured." -ForegroundColor Green
-
-# HyperYap app auto-start (handled by app itself on first launch)
-Write-Host "  Voice engine auto-start will activate on first launch." -ForegroundColor Green
+# HyperYap app auto-start (handled by app itself on first launch; also manages hyperyap-hotkeys.exe)
+Write-Host "  Voice engine and hotkey helper auto-start will activate on first launch." -ForegroundColor Green
 
 # -----------------------------------------------------------
 # Launch everything
@@ -278,13 +247,7 @@ Write-Host "  - Press again to stop and auto-paste transcription" -ForegroundCol
 Write-Host "  - Mouse Forward = Enter" -ForegroundColor DarkGray
 Write-Host ""
 
-# Start hotkeys
-if (Test-Path $ahkTarget) {
-    Write-Host "  Starting hotkeys..." -ForegroundColor DarkGray
-    Start-Process $ahkTarget
-}
-
-# Start legends-hyperyap
+# Start legends-hyperyap (which also launches hyperyap-hotkeys.exe --no-tray)
 $appExePaths = @("$installDir\hyperyap.exe", "$installDir\HyperYap.exe", "$env:ProgramFiles\HyperYap\hyperyap.exe")
 $appExe = $appExePaths | Where-Object { Test-Path $_ } | Select-Object -First 1
 if ($appExe) {

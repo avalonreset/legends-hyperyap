@@ -2,7 +2,6 @@
 
 use image::{ColorType, ImageFormat, ImageReader};
 use std::mem::{size_of, zeroed};
-use std::os::windows::process::CommandExt;
 use std::path::PathBuf;
 use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use std::sync::{Mutex, OnceLock};
@@ -40,7 +39,6 @@ const VK_LSHIFT_KEY: u16 = 0xA0;
 const VK_RSHIFT_KEY: u16 = 0xA1;
 const VK_LWIN_KEY: u16 = 0x5B;
 const VK_RWIN_KEY: u16 = 0x5C;
-const CREATE_NO_WINDOW: u32 = 0x08000000;
 const CF_TEXT: u32 = 1;
 const CF_BITMAP: u32 = 2;
 const CF_DIB: u32 = 8;
@@ -649,123 +647,40 @@ fn get_clipboard_text() -> Result<String, String> {
 }
 
 fn run_clipboard_image_save() -> Result<String, String> {
-    if let Ok(image_path) = save_clipboard_image_native() {
-        return Ok(image_path);
+    let started_at = std::time::Instant::now();
+    let timeout = std::time::Duration::from_millis(SMART_PASTE_IMAGE_WAIT_MS);
+    let mut last_err = String::from("Clipboard did not contain a readable image");
+
+    while started_at.elapsed() <= timeout {
+        match save_clipboard_image_native() {
+            Ok(image_path) => return Ok(image_path),
+            Err(err) => {
+                last_err = err;
+                std::thread::sleep(std::time::Duration::from_millis(
+                    SMART_PASTE_RETRY_INTERVAL_MS,
+                ));
+            }
+        }
     }
 
-    let script = r#"
-Add-Type -AssemblyName System.Windows.Forms
-Add-Type -AssemblyName System.Drawing
-
-$img = $null
-$deadline = (Get-Date).AddMilliseconds(5000)
-
-while ((Get-Date) -lt $deadline -and -not $img) {
-    try {
-        $img = [System.Windows.Forms.Clipboard]::GetImage()
-    } catch {
-        $img = $null
-    }
-
-    if (-not $img) {
-        Start-Sleep -Milliseconds 50
-    }
-}
-
-if (-not $img) {
-    exit 1
-}
-
-try {
-    $dir = "$env:USERPROFILE\screenshots"
-    if (-not (Test-Path $dir)) { New-Item -ItemType Directory -Path $dir | Out-Null }
-    $timestamp = Get-Date -Format "yyyy-MM-dd_HH-mm-ss_fff"
-    $path = "$dir\screenshot_$timestamp.png"
-    $img.Save($path, [System.Drawing.Imaging.ImageFormat]::Png)
-    [System.Windows.Forms.Clipboard]::SetText($path.Replace('\', '/'))
-    Write-Output $path
-    exit 0
-} catch {
-    exit 1
-} finally {
-    $img.Dispose()
-}
-"#;
-
-    let output = std::process::Command::new("powershell.exe")
-        .args([
-            "-NoProfile",
-            "-Sta",
-            "-WindowStyle",
-            "Hidden",
-            "-ExecutionPolicy",
-            "Bypass",
-            "-Command",
-            script,
-        ])
-        .creation_flags(CREATE_NO_WINDOW)
-        .output()
-        .map_err(|e| format!("Failed to run clipboard image save script: {}", e))?;
-
-    if !output.status.success() {
-        return Err("Clipboard image save script did not find an image".to_string());
-    }
-
-    let image_path = String::from_utf8_lossy(&output.stdout).trim().to_string();
-    if image_path.is_empty() {
-        return Err("Clipboard image save script returned an empty path".to_string());
-    }
-
-    Ok(image_path)
+    Err(last_err)
 }
 
 fn restore_clipboard_image(image_path: &str) -> Result<(), String> {
-    if set_clipboard_image_native(image_path).is_ok() {
-        return Ok(());
+    let mut last_err = String::from("Failed to restore clipboard image");
+    for _ in 0..10 {
+        match set_clipboard_image_native(image_path) {
+            Ok(()) => return Ok(()),
+            Err(err) => {
+                last_err = err;
+                std::thread::sleep(std::time::Duration::from_millis(
+                    SMART_PASTE_RETRY_INTERVAL_MS,
+                ));
+            }
+        }
     }
 
-    let script = r#"
-Add-Type -AssemblyName System.Windows.Forms
-Add-Type -AssemblyName System.Drawing
-
-$path = $env:HYPERYAP_SMART_PASTE_IMAGE_PATH
-if ([string]::IsNullOrWhiteSpace($path) -or -not (Test-Path -LiteralPath $path)) {
-    exit 1
-}
-
-$img = $null
-try {
-    $img = [System.Drawing.Image]::FromFile($path)
-    [System.Windows.Forms.Clipboard]::SetImage($img)
-    exit 0
-} catch {
-    exit 1
-} finally {
-    $img.Dispose()
-}
-"#;
-
-    let status = std::process::Command::new("powershell.exe")
-        .args([
-            "-NoProfile",
-            "-Sta",
-            "-WindowStyle",
-            "Hidden",
-            "-ExecutionPolicy",
-            "Bypass",
-            "-Command",
-            script,
-        ])
-        .env("HYPERYAP_SMART_PASTE_IMAGE_PATH", image_path)
-        .creation_flags(CREATE_NO_WINDOW)
-        .status()
-        .map_err(|e| format!("Failed to run clipboard image restore script: {}", e))?;
-
-    if status.success() {
-        Ok(())
-    } else {
-        Err("Clipboard image restore script failed".to_string())
-    }
+    Err(last_err)
 }
 
 // -- Native screenshot preparation --
@@ -1510,4 +1425,39 @@ fn int_resource(resource_id: u16) -> *const u16 {
 // null_mut helper for statics
 const fn null_mut() -> *mut std::ffi::c_void {
     std::ptr::null_mut()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn dib_rgba_roundtrip_preserves_pixels() {
+        let width = 3u32;
+        let height = 2u32;
+        let rgba: Vec<u8> = vec![
+            255, 0, 0, 255, // red
+            0, 255, 0, 255, // green
+            0, 0, 255, 255, // blue
+            12, 34, 56, 200, // custom 1
+            78, 90, 123, 180, // custom 2
+            250, 240, 230, 255, // custom 3
+        ];
+
+        let dib = rgba_to_dib(width, height, &rgba).expect("rgba_to_dib should succeed");
+        let parsed = parse_dib_rgba(&dib).expect("parse_dib_rgba should succeed");
+        assert_eq!(parsed.width, width);
+        assert_eq!(parsed.height, height);
+        assert_eq!(parsed.rgba, rgba);
+    }
+
+    #[test]
+    fn dib_rgba_opaque_alpha_fallback_handles_zero_alpha_32bit() {
+        let width = 2u32;
+        let height = 1u32;
+        let zero_alpha_rgba: Vec<u8> = vec![10, 20, 30, 0, 40, 50, 60, 0];
+        let dib = rgba_to_dib(width, height, &zero_alpha_rgba).expect("rgba_to_dib should succeed");
+        let parsed = parse_dib_rgba(&dib).expect("parse_dib_rgba should succeed");
+        assert_eq!(parsed.rgba, vec![10, 20, 30, 255, 40, 50, 60, 255]);
+    }
 }
