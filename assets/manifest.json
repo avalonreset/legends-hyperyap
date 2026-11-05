@@ -1,0 +1,23 @@
+{
+  "module": "legends-hyperyap",
+  "assets": {
+    "banner_png": {
+      "path": "assets/banner.png",
+      "width": 2048,
+      "height": 512,
+      "format": "png"
+    },
+    "banner_webp": {
+      "path": "assets/banner.webp",
+      "width": 2048,
+      "height": 512,
+      "format": "webp"
+    },
+    "preview_png": {
+      "path": "assets/preview.png",
+      "width": 1024,
+      "height": 256,
+      "format": "png"
+    }
+  }
+}

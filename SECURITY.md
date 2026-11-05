@@ -31,7 +31,7 @@ The following are in scope:
 
 - HyperYap desktop application (Tauri/Rust backend, React frontend)
 - Native Rust hotkey helper (`hotkeys/`)
-- PowerShell installer (`install.ps1`)
+- Native installer packages (`.exe` / `.msi` / `.dmg` / `.deb` / `.AppImage`)
 - HTTP API (when enabled in settings)
 
 The following are out of scope:

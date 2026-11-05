@@ -50,9 +50,9 @@ sources:
 - Reframed the README around cross-platform functionality and moved Windows-only behavior into compatibility notes.
 - Removed the stale tracked `latest.json` updater manifest and ignored local release/design scratch artifacts.
 - Created [[Lint Report 2026-04-24]] for the public-release wiki scan.
-- Created [[Public Release Sanitization]] and linked it from [[HyperYap Vault Index]], [[Dashboard]], and `CODEX.md`.
+- Created [[Public Release Sanitization]] and linked it from [[HyperYap Vault Index]], [[Dashboard]], and `AGENT-NOTES.md`.
 - Added vault `.gitignore` rules for local/private/sensitive material.
-- Replaced local owner metadata in `CODEX.md` with `Owner: <project-owner>`.
+- Replaced local owner metadata in `AGENT-NOTES.md` with `Owner: <project-owner>`.
 - Created [[ADR 2026-04-21 Smart Paste Guard]].
 - Created [[ADR 2026-04-21 Mouse Back Uses F13]].
 - Created [[Smart Screenshot Paste]] and [[Hotkey Daemon]] seed notes.

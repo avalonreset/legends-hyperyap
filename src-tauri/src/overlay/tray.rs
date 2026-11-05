@@ -61,13 +61,13 @@ pub fn setup_tray(app: &AppHandle) -> Result<(), Box<dyn std::error::Error>> {
 /// Toggle the hotkey daemon: kill it to pause, relaunch to resume.
 #[cfg(target_os = "windows")]
 fn toggle_hotkeys_daemon(pause: bool) {
-    use std::os::windows::process::CommandExt;
-    use std::process::Command;
+    use std::process::{Command, Stdio};
 
     if pause {
-        let _ = Command::new("cmd")
-            .args(["/C", "taskkill /F /IM hyperyap-hotkeys.exe >nul 2>&1"])
-            .creation_flags(0x08000000)
+        let _ = Command::new("taskkill")
+            .args(["/F", "/IM", "hyperyap-hotkeys.exe"])
+            .stdout(Stdio::null())
+            .stderr(Stdio::null())
             .status();
     } else {
         let hotkeys_path =

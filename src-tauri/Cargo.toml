@@ -1,6 +1,6 @@
 [package]
 name = "hyperyap"
-version = "0.1.2"
+version = "0.1.3"
 description = "Voice-to-text that just works"
 authors = ["avalonreset"]
 edition = "2021"

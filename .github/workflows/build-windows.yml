@@ -50,8 +50,8 @@ jobs:
 
             - name: Download & extract ONNX model (Windows)
               if: ${{ inputs.dry == false }}
-              shell: pwsh
-              run: .\.github\scripts\download-parakeet-model.ps1 -Destination resources
+              shell: bash
+              run: bash .github/scripts/download-parakeet-model.sh resources
 
             - name: Build hotkey daemon
               run: cargo build --release --manifest-path hotkeys/Cargo.toml

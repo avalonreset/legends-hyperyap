@@ -23,8 +23,8 @@ body:
       label: Component
       options:
         - Voice Engine (transcription)
-        - Hotkey Scripts (AHK)
-        - Installer (install.ps1)
+        - Hotkey Daemon (hotkeys/)
+        - Native Installer
         - HTTP API
         - UI / Settings
         - Other

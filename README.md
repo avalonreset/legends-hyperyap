@@ -20,13 +20,13 @@ entirely local dictation workflow.
 [first dictation](docs/FIRST-RUN.md) · [troubleshooting](docs/FIRST-RUN.md#troubleshooting) ·
 [local API](docs/API_USAGE.md)
 
-v0.1.2 prefers cuda on windows when a compatible gpu is present, then falls back to cpu. the public installer is still a standalone app. on a legends desk, the same engine can live as a module inside legends bridge. bridge is not required.
+v0.1.3 prefers cuda on windows when a compatible gpu is present, then falls back to cpu. the public desktop application runs standalone. on a legends desk, the same engine can live as a module inside legends bridge. bridge is not required.
 
 ## Agent setup (via `cto-legends`)
 
-Part of the [CTO Legends](https://github.com/avalonreset/cto-legends) ecosystem. `cto-legends` is the only registered skill; this repo vendors a pinned copy at `skills/cto-legends/SKILL.md`.
+Part of the [CTO Legends](https://github.com/avalonreset/cto-legends) ecosystem. `cto-legends` is the only registered skill; this repo vendors a pinned copy at [`skills/cto-legends/SKILL.md`](skills/cto-legends/SKILL.md).
 
-Install with `cto-legends install legends-hyperyap`, then follow the module recipe the router loads. Do not register this module as its own skill.
+Install with `cto-legends install legends-hyperyap`, then follow the module recipe the router loads ([`docs/AGENT-RECIPE.md`](docs/AGENT-RECIPE.md)). Do not register this module as its own skill.
 
 ## Table of Contents
 
@@ -67,31 +67,27 @@ Multilingual Parakeet models are still valuable for multilingual transcription, 
 
 ## Install
 
-Download the package for your platform from the [latest release](https://github.com/avalonreset/legends-hyperyap/releases/latest).
+`v0.1.3` is published as a source release. Build and package the native desktop installer for your platform using the guided source build below, or download prebuilt packages when attached to a GitHub Release.
 
-### Windows
+### Windows (Guided Source Build)
 
-Run `hyperyap_0.1.2_x64-setup.exe` from the Releases page.
-
-For the full workstation setup, use the PowerShell installer. It installs legends-hyperyap, downloads the speech model, and configures the optional hotkey helper:
-
-```powershell
-irm https://raw.githubusercontent.com/avalonreset/legends-hyperyap/main/install.ps1 | iex
-```
-
-Or clone and run locally:
-
-```powershell
-git clone https://github.com/avalonreset/legends-hyperyap.git
-cd legends-hyperyap
-.\install.ps1
-```
-
-The PowerShell installer also removes old MURmure installations if present.
+1. Install [Node.js LTS](https://nodejs.org/), `pnpm`, and the [Rust toolchain](https://rustup.rs/).
+2. Clone the repository and fetch the Parakeet ONNX model and dependencies:
+   ```bash
+   git clone https://github.com/avalonreset/legends-hyperyap.git
+   cd legends-hyperyap
+   bash .github/scripts/download-parakeet-model.sh resources
+   pnpm install
+   ```
+3. Build the native Windows hotkey helper (`hyperyap-hotkeys.exe`) and Tauri installer:
+   ```bash
+   cargo build --release --manifest-path hotkeys/Cargo.toml
+   pnpm tauri build
+   ```
 
 ### macOS
 
-Download the matching DMG from the [latest release](https://github.com/avalonreset/legends-hyperyap/releases/latest):
+Build from source with `pnpm tauri build` or install the matching DMG when attached to a [GitHub Release](https://github.com/avalonreset/legends-hyperyap/releases/latest):
 
 - `HyperYap_aarch64_darwin.dmg` for Apple Silicon Macs
 - `HyperYap_x86_64_darwin.dmg` for Intel Macs
@@ -100,17 +96,11 @@ macOS requires Accessibility permission for global shortcuts.
 
 ### Linux
 
-Download `HyperYap_amd64.AppImage` or `HyperYap_amd64.deb` from the [latest release](https://github.com/avalonreset/legends-hyperyap/releases/latest).
-
-On Debian/Ubuntu, you can also use:
-
-```sh
-curl -fsSL https://raw.githubusercontent.com/avalonreset/legends-hyperyap/main/install.sh | sh
-```
+Build from source with `pnpm tauri build` or install `HyperYap_amd64.AppImage` / `HyperYap_amd64.deb` when attached to a [GitHub Release](https://github.com/avalonreset/legends-hyperyap/releases/latest).
 
 ### Upgrading
 
-Run the installer again over an existing install. legends-hyperyap upgrades in place without deleting your speech model or requiring a re-download. Settings are reset to the recommended defaults on each upgrade.
+Run the newly built installer over an existing install. legends-hyperyap upgrades in place without deleting your speech model or requiring a re-download.
 
 ## Shortcut Support
 
@@ -165,9 +155,8 @@ The core app is built for Windows, macOS, and Linux. Global shortcut behavior is
 | Automatic paste into active app | Supported | Supported | Supported |
 | CapsLock and mouse side-button remapping | Supported through the optional hotkey helper | Not currently bundled | Not currently bundled |
 | Smart terminal copy/paste/undo helper | Supported through the optional hotkey helper | Not currently bundled | Not currently bundled |
-| PowerShell one-line workstation installer | Supported | Not applicable | Not applicable |
 
-In short: the app should work as a local voice-to-text tool on macOS and Linux, but the CapsLock remapper and smart terminal helper are currently Windows-only. macOS users must grant Accessibility permission. Linux global shortcuts may vary by distribution, window manager, and Wayland/X11 session.
+In short: the app works as a local voice-to-text tool on macOS and Linux, while the CapsLock remapper and smart terminal helper are Windows-only. macOS users must grant Accessibility permission. Linux global shortcuts may vary by distribution, window manager, and Wayland/X11 session.
 
 ## Requirements
 
@@ -216,6 +205,9 @@ All in-app shortcuts can be remapped from the Settings page. Platform-level rema
 ```bash
 pnpm install
 
+# Download the default Parakeet ONNX model into resources/parakeet-tdt-0.6b-v2-smcleod-int8/
+bash .github/scripts/download-parakeet-model.sh resources
+
 # Build the optional hotkey helper before packaging the Windows installer
 cd hotkeys && cargo build --release && cd ..
 
@@ -223,19 +215,7 @@ pnpm tauri dev      # development
 pnpm tauri build    # production build
 ```
 
-Requires: Node.js 18+, Rust, pnpm, [Tauri prerequisites](https://v2.tauri.app/start/prerequisites/)
-
-Download the default Parakeet ONNX model into `resources/parakeet-tdt-0.6b-v2-smcleod-int8/`:
-
-```powershell
-.\.github\scripts\download-parakeet-model.ps1 -Destination resources
-```
-
-On macOS/Linux:
-
-```sh
-bash .github/scripts/download-parakeet-model.sh resources
-```
+Requires: Node.js 18+, Rust, pnpm, [Tauri prerequisites](https://v2.tauri.app/start/prerequisites/).
 
 ## FAQ
 
@@ -259,7 +239,7 @@ Powered by NVIDIA's [Parakeet TDT 0.6B v2](https://huggingface.co/nvidia/parakee
 
 ## License
 
-The voice engine is licensed under [AGPL-3.0](LICENSE). See [NOTICE](NOTICE) for full attribution details.
+The voice engine is licensed under [AGPL-3.0](LICENSE). See [NOTICE](NOTICE) and [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) for full attribution details.
 
 ---
 

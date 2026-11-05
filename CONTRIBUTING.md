@@ -28,8 +28,7 @@ Our guiding principles:
 ### Prerequisites
 
 - Download the default Parakeet ONNX model:
-  - Windows: `.\.github\scripts\download-parakeet-model.ps1 -Destination resources`
-  - macOS/Linux: `bash .github/scripts/download-parakeet-model.sh resources`
+  - Cross-platform (Git Bash on Windows / macOS / Linux): `bash .github/scripts/download-parakeet-model.sh resources`
 - The model folder should be `resources/parakeet-tdt-0.6b-v2-smcleod-int8`
 - Install all required dependencies for Tauri: [https://v2.tauri.app/start/prerequisites/](https://v2.tauri.app/start/prerequisites/)
 
@@ -142,7 +141,7 @@ Notes:
 - `commands.rs` : Tauri commands exposed to the frontend (single communication layer)
 - `audio.rs` : Recording/transcription pipeline: capture audio, write WAV, run Parakeet, update history, clipboard, and paste into the active field
 - `history.rs` : Stores and manages the last 5 transcriptions (persistent) and emits updates
-- `dictionary.rs` : Post-processing using the Beider–Morse phonetic algorithm to apply custom words
+- `dictionary.rs` : Post-processing using the Beider-Morse phonetic algorithm to apply custom words
 - `model.rs` : Resolves bundled Parakeet model path and checks availability
 - `overlay.rs` : Creates and manages the recording overlay (show/hide/position)
 - `settings.rs` : Loads and saves app settings (shortcuts, overlay, API) to JSON
