@@ -74,3 +74,10 @@ When a developer asks for help, use your knowledge of these guidelines to provid
 
 - ✅ "Generate a new React component for the history feature named `TranscriptionItem`." -> _You should create `src/features/history/transcription-item/transcription-item.tsx` and ensure the component name is `TranscriptionItem`, following guideline 1.2._
 - ✅ "Review this Rust function. Does it follow the project's error handling guidelines?" -> _You should check for the use of `Result<T, E>` and the absence of `panic!`, as required by guideline 3.1._
+
+## 7. EDR and Security Guardrails
+
+- Do not create or execute `.ps1`, `.bat`, `.cmd`, `.vbs`, or `.ahk` wrapper scripts.
+- Do not use hidden window flags or execution-policy bypass flags when invoking subprocesses.
+- Do not write to Windows Run keys or create Scheduled Tasks from automation scripts.
+- Use native binaries or cross-platform build commands (`pnpm`, `cargo`) directly with explicit argument arrays.

@@ -63,13 +63,13 @@ jobs:
               "install-codex.ps1", "install-codex.sh",
           ]
           hits = [f for f in forbidden if (root / f).exists()]
-          # Native-app installer carve-out: root install.ps1/install.sh are
+          # Native-app installer carve-out: root install-native-win/install.sh are
           # allowed ONLY as native-application installers with no
           # skill-registration behavior (same marker logic as fleet-audit.py).
           skill_markers = re.compile(
               r"skills/|skills\\|\.agents|\.claude|SKILL\.md|skill frontmatter|"
               r"install[^a-z]*skill|register[^a-z]*skill", re.IGNORECASE)
-          for native_installer in ("install.ps1", "install.sh"):
+          for native_installer in ("install-native-win", "install.sh"):
               installer_path = root / native_installer
               if installer_path.is_file():
                   text = installer_path.read_text(encoding="utf-8",

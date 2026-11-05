@@ -49,8 +49,8 @@ sources:
 
 - Created [[Public Release Sanitization]] modeled after the BenjaminTerm wiki policy.
 - Added vault `.gitignore` coverage for local Obsidian state, private raw material, private attachments, secret-like files, and environment files.
-- Replaced local owner metadata in `CODEX.md` with `<project-owner>`.
-- Linked the sanitization policy from [[HyperYap Vault Index]], [[Dashboard]], and `CODEX.md`; no `Meta Index.md` file exists in this vault.
+- Replaced local owner metadata in `AGENT-NOTES.md` with `<project-owner>`.
+- Linked the sanitization policy from [[HyperYap Vault Index]], [[Dashboard]], and `AGENT-NOTES.md`; no `Meta Index.md` file exists in this vault.
 - Ran public-release checks for wikilinks, JSON config validity, wiki note frontmatter, and sensitive patterns.
 
 ## 2026-04-22 save | smart paste hook responsiveness
