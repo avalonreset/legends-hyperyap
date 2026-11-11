@@ -3,6 +3,9 @@ on:
     release:
         types: [released]
 
+permissions:
+    contents: read
+
 jobs:
     publish:
         # Disabled: package not yet in winget-pkgs and 0.1.x has no binaries;

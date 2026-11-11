@@ -15,11 +15,11 @@ jobs:
     build-linux:
         runs-on: ubuntu-24.04
         steps:
-            - uses: actions/checkout@v4
+            - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
               with:
                 persist-credentials: false
 
-            - uses: actions/setup-node@v4
+            - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
               with:
                   node-version: lts/*
 
@@ -58,6 +58,19 @@ jobs:
             - name: Install frontend deps
               run: pnpm install
 
+            - name: Remove Windows-only hotkey resource
+              shell: bash
+              run: |
+                  node <<'NODE'
+                  const fs = require('fs');
+                  const path = 'src-tauri/tauri.conf.json';
+                  const config = JSON.parse(fs.readFileSync(path, 'utf8'));
+                  config.bundle.resources = config.bundle.resources.filter(
+                    (resource) => resource !== '../hotkeys/target/release/hyperyap-hotkeys.exe'
+                  );
+                  fs.writeFileSync(path, `${JSON.stringify(config, null, 4)}\n`);
+                  NODE
+
             - name: Build (AppImage)
               run: pnpm tauri build --bundles appimage
 
@@ -88,9 +101,14 @@ jobs:
                   find src-tauri/target/release/bundle -name "*.AppImage" -exec sh -c 'mv "$1" "$(dirname "$1")/HyperYap_amd64.AppImage"' _ {} \;
                   find src-tauri/target/release/bundle -name "*.sig" -exec sh -c 'mv "$1" "$(dirname "$1")/HyperYap_amd64.AppImage.sig"' _ {} \;
 
+            - name: Cleanup Tauri signing key
+              if: always()
+              shell: bash
+              run: rm -f tauri.key
+
             - name: Upload artifact (1 day)
               if: ${{ inputs.dry == false }}
-              uses: actions/upload-artifact@v4
+              uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
               with:
                   name: hyperyap-linux
                   path: |

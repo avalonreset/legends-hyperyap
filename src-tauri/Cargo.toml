@@ -1,8 +1,9 @@
 [package]
 name = "hyperyap"
-version = "0.1.3"
+version = "0.1.4"
 description = "Voice-to-text that just works"
 authors = ["avalonreset"]
+license = "AGPL-3.0-only"
 edition = "2021"
 default-run = "hyperyap"
 
@@ -74,7 +75,7 @@ parking_lot = "0.12"
 # macOS uses polling via CGEventSourceKeyState instead (more reliable)
 # Using fufesou fork which provides F13-F20 key support
 [target.'cfg(target_os = "linux")'.dependencies]
-rdev = { git = "https://github.com/fufesou/rdev" }
+rdev = { git = "https://github.com/fufesou/rdev", rev = "a90dbe1172f8832f54c97c62e823c5a34af5fdfe" }
 
 # Core Foundation for macOS keyboard layout handling (AZERTY/QWERTY conversion)
 [target.'cfg(target_os = "macos")'.dependencies]

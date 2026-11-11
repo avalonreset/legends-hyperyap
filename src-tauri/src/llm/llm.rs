@@ -14,6 +14,7 @@ use tauri::{AppHandle, Emitter, Manager};
 
 fn build_http_client(timeout_secs: u64) -> Result<reqwest::Client, String> {
     reqwest::Client::builder()
+        .redirect(reqwest::redirect::Policy::none())
         .timeout(Duration::from_secs(timeout_secs))
         .build()
         .map_err(|e| format!("Failed to create HTTP client: {}", e))
@@ -73,6 +74,7 @@ async fn generate_local(
     system_prompt: Option<&str>,
     user_prompt: &str,
 ) -> Result<String, String> {
+    validate_url(url)?;
     let client = build_http_client(120)?;
     let url = format!("{}/generate", normalize_url(url));
 
@@ -388,7 +390,8 @@ pub async fn warmup_ollama_model(app: &AppHandle) -> Result<(), String> {
         return Ok(());
     }
 
-    let client = reqwest::Client::new();
+    validate_url(&settings.url)?;
+    let client = build_http_client(30)?;
     let url = format!("{}/generate", normalize_url(&settings.url));
 
     let request_body = OllamaGenerateRequest {

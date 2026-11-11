@@ -1,7 +1,7 @@
 //! macOS keyboard shortcut handling using polling
 //!
 //! This implementation polls keyboard state using CGEventSourceKeyState
-//! and CGEventSourceFlagsState, similar to the Windows GetAsyncKeyState approach.
+//! and CGEventSourceFlagsState on macOS.
 //! This avoids event corruption issues with rdev when enigo simulates key events.
 
 use core_foundation::base::CFRelease;

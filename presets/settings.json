@@ -32,5 +32,7 @@
   "wake_word_validate": "validate",
   "auto_enter_after_wake_word": false,
   "silence_timeout_ms": 1500,
-  "show_in_dock": true
+  "show_in_dock": true,
+  "enable_key_polling_fallback": false,
+  "enable_hotkeys_helper": false
 }

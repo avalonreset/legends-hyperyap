@@ -35,13 +35,16 @@ use tauri_plugin_autostart::ManagerExt;
 use tauri_plugin_log::{Target, TargetKind, TimezoneStrategy};
 use wake_word::types::WakeWordState;
 
-/// Ensure the hotkey daemon is running in headless mode (no tray icon).
-/// Kills any existing instance first to avoid duplicates, then spawns with --no-tray.
+/// Launch the optional hotkey daemon with its visible system tray icon only when explicitly enabled.
 #[cfg(target_os = "windows")]
-fn ensure_hotkeys_daemon() {
+fn ensure_hotkeys_daemon(enabled: bool) {
     use std::process::{Command, Stdio};
 
-    // Kill any existing instance (may have its own tray icon from standalone launch)
+    if !enabled {
+        return;
+    }
+
+    // Stop any previous instance first to avoid duplicates
     let _ = Command::new("taskkill")
         .args(["/F", "/IM", "hyperyap-hotkeys.exe"])
         .stdin(Stdio::null())
@@ -54,9 +57,9 @@ fn ensure_hotkeys_daemon() {
         .join("hyperyap-hotkeys.exe");
 
     if hotkeys_path.exists() {
-        match Command::new(&hotkeys_path).arg("--no-tray").spawn() {
+        match Command::new(&hotkeys_path).spawn() {
             Ok(_) => info!(
-                "Launched hotkey daemon (headless) from {}",
+                "Launched opt-in hotkey helper (with tray icon) from {}",
                 hotkeys_path.display()
             ),
             Err(e) => warn!("Failed to launch hotkey daemon: {}", e),
@@ -70,7 +73,7 @@ fn ensure_hotkeys_daemon() {
 }
 
 #[cfg(not(target_os = "windows"))]
-fn ensure_hotkeys_daemon() {}
+fn ensure_hotkeys_daemon(_enabled: bool) {}
 
 /// Kill the hotkey daemon when the main app exits.
 #[cfg(target_os = "windows")]
@@ -114,7 +117,7 @@ pub fn run() {
                 ])
                 .timezone_strategy(TimezoneStrategy::UseLocal)
                 .max_file_size(1024 * 1024) // 1 MB, rotation
-                .level(log::LevelFilter::Trace)
+                .level(log::LevelFilter::Info)
                 .level_for("ort", log::LevelFilter::Warn)
                 .level_for("ort::logging", log::LevelFilter::Warn)
                 .level_for("zbus", log::LevelFilter::Warn)
@@ -169,19 +172,10 @@ pub fn run() {
                 }
             }
 
-            // Re-register autostart with --autostart flag for users who enabled it before this update
+            // Re-register autostart with --autostart flag only for users who explicitly enabled it
             if let Ok(true) = app.autolaunch().is_enabled() {
                 let _ = app.autolaunch().enable();
             }
-
-            // HyperYap: enable autostart by default on first launch
-            if let Ok(false) = app.autolaunch().is_enabled() {
-                let _ = app.autolaunch().enable();
-                info!("Autostart enabled by default (first launch)");
-            }
-
-            // Ensure the hotkey daemon is running alongside the main app
-            ensure_hotkeys_daemon();
 
             // Early CLI detection, before heavy initialization
             if let Some(cli::CliCommand::Import {
@@ -212,6 +206,9 @@ pub fn run() {
             app.manage(WakeWordState::new());
 
             let mut s = settings::load_settings(app.handle());
+
+            // Launch the optional hotkey helper only when explicitly enabled in user settings
+            ensure_hotkeys_daemon(s.enable_hotkeys_helper);
 
             #[cfg(target_os = "macos")]
             {

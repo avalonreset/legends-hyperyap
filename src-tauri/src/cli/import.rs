@@ -11,12 +11,29 @@ use crate::llm::types::LLMConnectSettings;
 
 const MAX_SUPPORTED_VERSION: u32 = 1;
 const MAX_LLM_MODES: usize = 4;
+const MAX_IMPORT_FILE_BYTES: u64 = 2 * 1024 * 1024;
 
 fn validate_extension(file_path: &str) -> Result<(), String> {
     let path = Path::new(file_path);
     match path.extension().and_then(|ext| ext.to_str()) {
         Some("hyperyap") => Ok(()),
         _ => Err("Error: File must have a .hyperyap extension.".to_string()),
+    }
+}
+
+fn is_loopback_llm_url(url_str: &str) -> bool {
+    let trimmed = url_str.trim();
+    if trimmed.is_empty() {
+        return true;
+    }
+    let Ok(parsed) = url::Url::parse(trimmed) else {
+        return false;
+    };
+    match parsed.host() {
+        Some(url::Host::Domain(h)) => h.eq_ignore_ascii_case("localhost"),
+        Some(url::Host::Ipv4(ip)) => ip.is_loopback(),
+        Some(url::Host::Ipv6(ip)) => ip.is_loopback(),
+        None => false,
     }
 }
 
@@ -37,6 +54,23 @@ pub fn execute_import(
     strategy: &ImportStrategy,
 ) -> Result<String, String> {
     validate_extension(file_path)?;
+
+    let meta = std::fs::symlink_metadata(file_path).map_err(|e| match e.kind() {
+        std::io::ErrorKind::NotFound => format!("Error: File not found: {}", file_path),
+        std::io::ErrorKind::PermissionDenied => {
+            format!("Error: Permission denied: {}", file_path)
+        }
+        _ => format!("Error: Failed to stat file: {}", e),
+    })?;
+    if meta.file_type().is_symlink() {
+        return Err(format!("Error: Refusing symlinked import file: {}", file_path));
+    }
+    if meta.len() > MAX_IMPORT_FILE_BYTES {
+        return Err(format!(
+            "Error: Import file exceeds maximum size ({} bytes): {}",
+            MAX_IMPORT_FILE_BYTES, file_path
+        ));
+    }
 
     let content = std::fs::read_to_string(file_path).map_err(|e| match e.kind() {
         std::io::ErrorKind::NotFound => format!("Error: File not found: {}", file_path),
@@ -176,11 +210,21 @@ fn apply_llm_connect(
     imported: &LLMConnectSettings,
     strategy: &ImportStrategy,
 ) -> Result<(), String> {
+    if !imported.url.trim().is_empty() {
+        crate::llm::helpers::validate_url(&imported.url)?;
+    }
+    if !imported.remote_url.trim().is_empty() {
+        crate::llm::helpers::validate_url(&imported.remote_url)?;
+    }
     match strategy {
         ImportStrategy::Replace => {
             let mut settings = imported.clone();
             settings.model = String::new();
             settings.prompt = String::new();
+            // Never silently acknowledge remote privacy consent when importing external URLs
+            if !settings.remote_url.trim().is_empty() || !is_loopback_llm_url(&settings.url) {
+                settings.remote_privacy_acknowledged = false;
+            }
             crate::llm::helpers::save_llm_connect_settings(app, &settings)?;
         }
         ImportStrategy::Merge => {
@@ -215,6 +259,15 @@ fn apply_llm_connect(
                 imported.remote_url.clone()
             };
 
+            let remote_changed = !imported.remote_url.is_empty()
+                && imported.remote_url.trim() != current.remote_url.trim();
+            let non_loopback_local = !is_loopback_llm_url(&url);
+            let remote_privacy_acknowledged = if remote_changed || non_loopback_local {
+                false
+            } else {
+                current.remote_privacy_acknowledged
+            };
+
             let settings = LLMConnectSettings {
                 url,
                 model: current.model.clone(),
@@ -223,7 +276,7 @@ fn apply_llm_connect(
                 active_mode_index: current.active_mode_index,
                 onboarding_completed: imported.onboarding_completed,
                 remote_url,
-                remote_privacy_acknowledged: imported.remote_privacy_acknowledged,
+                remote_privacy_acknowledged,
             };
             crate::llm::helpers::save_llm_connect_settings(app, &settings)?;
         }

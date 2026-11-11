@@ -20,7 +20,7 @@ entirely local dictation workflow.
 [first dictation](docs/FIRST-RUN.md) · [troubleshooting](docs/FIRST-RUN.md#troubleshooting) ·
 [local API](docs/API_USAGE.md)
 
-v0.1.3 prefers cuda on windows when a compatible gpu is present, then falls back to cpu. the public desktop application runs standalone. on a legends desk, the same engine can live as a module inside legends bridge. bridge is not required.
+v0.1.4 prefers cuda on windows when a compatible gpu is present, then falls back to cpu. the public desktop application runs standalone. on a legends desk, the same engine can live as a module inside legends bridge. bridge is not required.
 
 ## Agent setup (via `cto-legends`)
 
@@ -67,7 +67,7 @@ Multilingual Parakeet models are still valuable for multilingual transcription, 
 
 ## Install
 
-`v0.1.3` is published as a source release. Build and package the native desktop installer for your platform using the guided source build below, or download prebuilt packages when attached to a GitHub Release.
+`v0.1.4` is published as a source release. Build and package the native desktop installer for your platform using the guided source build below, or download prebuilt packages when attached to a GitHub Release.
 
 ### Windows (Guided Source Build)
 
@@ -115,16 +115,16 @@ legends-hyperyap records through configurable shortcuts. The exact binding can b
 | `Ctrl+Shift+1` through `Ctrl+Shift+4` | LLM mode slots |
 | `Escape` | Cancel recording |
 
-The Windows workstation preset maps `F13`, `CapsLock`, and Mouse Back to the record shortcut, and maps Mouse Forward to Enter. Those mappings come from the optional hotkey helper and can be paused from its tray menu.
+The Windows workstation preset can optionally map `F13`, `CapsLock`, and Mouse Back to the record shortcut, and map Mouse Forward to Enter, when the opt-in hotkey helper (`enable_hotkeys_helper`) is enabled in Settings. Standard keyboard shortcuts use OS-registered `RegisterHotKey` events without background polling, and the hotkey helper always displays a visible tray icon with Pause/Exit controls when running.
 
 ## Terminal-Friendly Workflows
 
 legends-hyperyap can be used with any app that accepts pasted text. It is especially useful in editors, chat apps, terminals, issue trackers, and coding tools where fast dictation reduces context switching.
 
-The optional hotkey helper adds terminal-aware behavior where supported:
+The opt-in hotkey helper adds terminal-aware behavior where supported:
 
 - Smart copy, paste, and undo handling for terminal windows.
-- Clipboard screenshot conversion into a saved PNG path before paste.
+- On-demand clipboard image conversion into a temporary PNG path when you press `Ctrl+V` in a supported terminal.
 - Bounded paste undo for recent legends-hyperyap-managed terminal inserts.
 
 Supported terminal process names for the helper:
@@ -190,11 +190,13 @@ legends-hyperyap works out of the box with minimal setup. All settings can be ch
 | Language | English | Optimized for English local dictation. |
 | Overlay | Bottom of screen | Recording indicator position. Can be set to top, bottom, or hidden. |
 | LLM Connect | Disabled | Post-process transcriptions with a local LLM through Ollama or a configured remote endpoint. |
-| HTTP API | Disabled | Local API on localhost for external tool integration. |
+| HTTP API | Disabled | Local API on `127.0.0.1` protected by `Authorization: Bearer <api_token>` (see [`docs/API_USAGE.md`](docs/API_USAGE.md)). |
+| Autostart | Disabled | Opt-in launch at login (`false` by default). |
+| Hotkey helper | Disabled | Opt-in Windows workstation remapper and terminal smart paste helper (`enable_hotkeys_helper: false` by default). |
 | Sound feedback | Enabled | Audio cues when recording starts and stops. |
 | Copy to clipboard | Disabled | Optionally keep transcriptions in the clipboard. |
 
-Settings are stored in `%APPDATA%/com.avalonreset.hyperyap/settings.json` on Windows. Each install or upgrade resets settings to the recommended defaults. If you need to preserve custom settings across upgrades, back up this file before updating.
+Settings are stored in `%APPDATA%/com.avalonreset.hyperyap/settings.json` on Windows. You can also import a `.hyperyap` configuration file from the command line using `hyperyap import <FILE> [-s|--strategy replace|merge]`, or override the speech model location with `HYPERYAP_ASR_MODEL_ID` / `HYPERYAP_ASR_MODEL_DIR`.
 
 ### Hotkey Customization
 

@@ -1,7 +1,8 @@
 {
     "name": "legends-hyperyap",
     "private": true,
-    "version": "0.1.3",
+    "version": "0.1.4",
+    "license": "AGPL-3.0-only",
     "packageManager": "pnpm@11.8.0",
     "type": "module",
     "scripts": {
