@@ -65,7 +65,10 @@ impl ShortcutRegistry {
         // (e.g. Ctrl+A+Space) are matched before less specific ones (e.g. Ctrl+Space)
         bindings.sort_by(|a, b| b.keys.len().cmp(&a.keys.len()));
 
-        Self { bindings }
+        Self {
+            bindings,
+            enable_key_polling_fallback: settings.enable_key_polling_fallback,
+        }
     }
 }
 

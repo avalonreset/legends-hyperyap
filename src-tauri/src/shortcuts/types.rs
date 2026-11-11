@@ -36,6 +36,7 @@ pub struct ShortcutBinding {
 #[derive(Debug, Clone)]
 pub struct ShortcutRegistry {
     pub bindings: Vec<ShortcutBinding>,
+    pub enable_key_polling_fallback: bool,
 }
 
 // === States ===

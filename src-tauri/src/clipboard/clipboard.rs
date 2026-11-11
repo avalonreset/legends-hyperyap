@@ -43,11 +43,17 @@ fn paste_with_delay(
     }
 
     let clipboard = app_handle.clipboard();
-    let clipboard_content = clipboard.read_text().unwrap_or_default();
+    let should_preserve_existing = !clipboard_is_sensitive();
+    let clipboard_content = if should_preserve_existing {
+        clipboard.read_text().unwrap_or_default()
+    } else {
+        String::new()
+    };
 
     clipboard
         .write_text(text)
         .map_err(|e| format!("Failed to write to clipboard: {}", e))?;
+    let written_seq = clipboard_sequence_number();
 
     #[cfg(target_os = "linux")]
     std::thread::sleep(std::time::Duration::from_millis(150));
@@ -66,7 +72,10 @@ fn paste_with_delay(
     #[cfg(target_os = "windows")]
     std::thread::sleep(std::time::Duration::from_millis(100));
 
-    if !app_settings.copy_to_clipboard {
+    if !app_settings.copy_to_clipboard
+        && should_preserve_existing
+        && clipboard_sequence_unchanged(written_seq)
+    {
         clipboard
             .write_text(&clipboard_content)
             .map_err(|e| format!("Failed to restore clipboard: {}", e))?;
@@ -198,7 +207,12 @@ fn foreground_process_name() -> Option<String> {
 
 pub fn get_selected_text(app_handle: &tauri::AppHandle) -> Result<String, String> {
     let clipboard = app_handle.clipboard();
-    let original_content = clipboard.read_text().unwrap_or_default();
+    let should_preserve_existing = !clipboard_is_sensitive();
+    let original_content = if should_preserve_existing {
+        clipboard.read_text().unwrap_or_default()
+    } else {
+        String::new()
+    };
     debug!(
         "Previous clipboard content length: {}",
         original_content.len()
@@ -215,19 +229,71 @@ pub fn get_selected_text(app_handle: &tauri::AppHandle) -> Result<String, String
     std::thread::sleep(std::time::Duration::from_millis(200));
 
     let selected_text = clipboard.read_text().unwrap_or_default();
+    let after_copy_seq = clipboard_sequence_number();
     debug!("Selected text length: {}", selected_text.len());
 
-    // Restore original clipboard content in all cases
-    clipboard
-        .write_text(&original_content)
-        .map_err(|e| format!("Failed to restore clipboard in get_selected_text: {}", e))?;
-    debug!("Restored original clipboard content");
+    // Restore original clipboard content if it was not marked sensitive and not concurrently modified
+    if should_preserve_existing && clipboard_sequence_unchanged(after_copy_seq) {
+        clipboard
+            .write_text(&original_content)
+            .map_err(|e| format!("Failed to restore clipboard in get_selected_text: {}", e))?;
+        debug!("Restored original clipboard content");
+    }
 
     if !selected_text.is_empty() {
         Ok(selected_text)
     } else {
         debug!("No text was selected");
         Ok(String::new())
+    }
+}
+
+#[cfg(target_os = "windows")]
+fn clipboard_is_sensitive() -> bool {
+    #[link(name = "user32")]
+    extern "system" {
+        fn IsClipboardFormatAvailable(format: u32) -> i32;
+        fn RegisterClipboardFormatW(lpszFormat: *const u16) -> u32;
+    }
+
+    fn wide_null(s: &str) -> Vec<u16> {
+        s.encode_utf16().chain(std::iter::once(0)).collect()
+    }
+
+    unsafe {
+        let exclude_fmt = RegisterClipboardFormatW(
+            wide_null("ExcludeClipboardContentFromMonitorProcessing").as_ptr(),
+        );
+        if exclude_fmt != 0 && IsClipboardFormatAvailable(exclude_fmt) != 0 {
+            return true;
+        }
+        false
+    }
+}
+
+#[cfg(not(target_os = "windows"))]
+fn clipboard_is_sensitive() -> bool {
+    false
+}
+
+#[cfg(target_os = "windows")]
+fn clipboard_sequence_number() -> Option<u32> {
+    #[link(name = "user32")]
+    extern "system" {
+        fn GetClipboardSequenceNumber() -> u32;
+    }
+    unsafe { Some(GetClipboardSequenceNumber()) }
+}
+
+#[cfg(not(target_os = "windows"))]
+fn clipboard_sequence_number() -> Option<u32> {
+    None
+}
+
+fn clipboard_sequence_unchanged(expected: Option<u32>) -> bool {
+    match (expected, clipboard_sequence_number()) {
+        (Some(exp), Some(actual)) => exp == actual,
+        _ => true,
     }
 }
 

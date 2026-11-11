@@ -21,23 +21,36 @@ LATEST_URL=$(curl -fsSo /dev/null -w '%{redirect_url}' \
     "https://github.com/$REPO/releases/latest")
 VERSION=$(echo "$LATEST_URL" | sed 's|.*/||')
 
-if [ -z "$VERSION" ]; then
-    echo "Error: Could not determine latest version." >&2
-    exit 1
-fi
+case "$VERSION" in
+    v[0-9]*.[0-9]*.[0-9]*)
+        ;;
+    *)
+        echo "Error: Invalid or unexpected version tag: $VERSION" >&2
+        exit 1
+        ;;
+esac
 
 echo "Latest version: $VERSION"
 
-DEB_URL="https://github.com/$REPO/releases/download/${VERSION}/HyperYap_amd64.deb"
-TMP_DEB="/tmp/hyperyap_${VERSION}_amd64.deb"
+TMP_DIR=$(mktemp -d)
+trap 'rm -rf "$TMP_DIR"' EXIT INT TERM
 
-echo "Downloading legends-hyperyap $VERSION..."
-curl -fSL -o "$TMP_DEB" "$DEB_URL"
+DEB_NAME="HyperYap_amd64.deb"
+DEB_URL="https://github.com/$REPO/releases/download/${VERSION}/${DEB_NAME}"
+SUMS_URL="https://github.com/$REPO/releases/download/${VERSION}/SHA256SUMS.txt"
+
+echo "Downloading legends-hyperyap $VERSION and SHA256SUMS.txt..."
+curl -fSL -o "${TMP_DIR}/${DEB_NAME}" "$DEB_URL"
+curl -fSL -o "${TMP_DIR}/SHA256SUMS.txt" "$SUMS_URL"
+
+echo "Verifying SHA-256 digest..."
+(
+    cd "$TMP_DIR"
+    grep " ${DEB_NAME}\$" SHA256SUMS.txt | sha256sum -c -
+)
 
 echo "Installing legends-hyperyap (requires sudo)..."
-sudo dpkg -i "$TMP_DEB" || sudo apt-get install -f -y
-
-rm -f "$TMP_DEB"
+sudo dpkg -i "${TMP_DIR}/${DEB_NAME}" || sudo apt-get install -f -y
 
 echo ""
 echo "legends-hyperyap $VERSION installed successfully."

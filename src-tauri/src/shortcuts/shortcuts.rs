@@ -178,6 +178,11 @@ pub fn init_shortcuts(app: AppHandle) {
     let settings = crate::settings::load_settings(&app);
     let registry = ShortcutRegistry::from_settings(&settings);
 
+    if let Some(existing) = app.try_state::<ShortcutRegistryState>() {
+        *existing.0.write() = registry;
+        return;
+    }
+
     app.manage(ShortcutState::new());
     app.manage(ShortcutRegistryState::new(registry));
 
@@ -189,6 +194,11 @@ pub fn init_shortcuts(app: AppHandle) {
     let settings = crate::settings::load_settings(&app);
     let registry = ShortcutRegistry::from_settings(&settings);
 
+    if let Some(existing) = app.try_state::<ShortcutRegistryState>() {
+        *existing.0.write() = registry;
+        return;
+    }
+
     app.manage(ShortcutState::new());
     app.manage(ShortcutRegistryState::new(registry));
 
@@ -199,6 +209,11 @@ pub fn init_shortcuts(app: AppHandle) {
 pub fn init_shortcuts(app: AppHandle) {
     let settings = crate::settings::load_settings(&app);
     let registry = ShortcutRegistry::from_settings(&settings);
+
+    if let Some(existing) = app.try_state::<ShortcutRegistryState>() {
+        *existing.0.write() = registry;
+        return;
+    }
 
     app.manage(ShortcutState::new());
     app.manage(ShortcutRegistryState::new(registry));

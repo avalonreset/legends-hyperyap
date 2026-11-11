@@ -49,7 +49,6 @@ const SMART_PASTE_IMAGE_WAIT_MS: u64 = 5_000;
 const SMART_PASTE_RETRY_INTERVAL_MS: u64 = 40;
 const SMART_PASTE_RESTORE_DELAY_MS: u64 = 750;
 const SMART_PASTE_SCREENSHOT_INTENT_MS: u64 = 10_000;
-const SMART_PASTE_CACHED_PATH_MS: u64 = 30_000;
 const SMART_COPY_WAIT_MS: u64 = 350;
 const SMART_UNDO_PASTE_MS: u64 = 30_000;
 const SMART_UNDO_MAX_BACKSPACES: usize = 4_096;
@@ -78,9 +77,10 @@ static SUPPRESS_V_UP: AtomicBool = AtomicBool::new(false);
 static SUPPRESS_C_UP: AtomicBool = AtomicBool::new(false);
 static SUPPRESS_Z_UP: AtomicBool = AtomicBool::new(false);
 static CTRL_HELD: AtomicBool = AtomicBool::new(false);
+static SHIFT_HELD: AtomicBool = AtomicBool::new(false);
+static WIN_HELD: AtomicBool = AtomicBool::new(false);
 static LAST_CTRL_DOWN_MS: AtomicU64 = AtomicU64::new(0);
 static LAST_SCREENSHOT_INTENT_MS: AtomicU64 = AtomicU64::new(0);
-static SCREENSHOT_PREPARE_IN_FLIGHT: AtomicBool = AtomicBool::new(false);
 static SMART_PASTE_IN_FLIGHT: AtomicBool = AtomicBool::new(false);
 static SMART_COPY_IN_FLIGHT: AtomicBool = AtomicBool::new(false);
 static SMART_UNDO_IN_FLIGHT: AtomicBool = AtomicBool::new(false);
@@ -90,11 +90,7 @@ static mut HWND_MAIN: HWND = null_mut();
 static mut KB_HOOK: HHOOK = null_mut();
 static mut MOUSE_HOOK: HHOOK = null_mut();
 
-#[derive(Clone)]
-struct PreparedScreenshot {
-    path: String,
-    created_ms: u64,
-}
+const MAX_DIB_DIMENSION: u32 = 16_384;
 
 #[derive(Clone)]
 struct TerminalPaste {
@@ -104,13 +100,7 @@ struct TerminalPaste {
 
 // -- Entry point --
 
-static NO_TRAY: AtomicBool = AtomicBool::new(false);
-
 fn main() {
-    // Check for --no-tray flag (headless mode, controlled by main HyperYap app)
-    let no_tray = std::env::args().any(|arg| arg == "--no-tray");
-    NO_TRAY.store(no_tray, Ordering::SeqCst);
-
     unsafe {
         // Turn off CapsLock if it's currently on
         if GetKeyState(VK_CAPITAL as i32) & 1 != 0 {
@@ -120,7 +110,7 @@ fn main() {
 
         let hinstance = GetModuleHandleW(std::ptr::null());
 
-        // Register window class for our hidden message window
+        // Register window class for our message window
         let class_name = wide("HyperYapHotkeys");
         let wc = WNDCLASSW {
             lpfnWndProc: Some(wnd_proc),
@@ -136,7 +126,7 @@ fn main() {
         };
         RegisterClassW(&wc);
 
-        // Create hidden window
+        // Create message window
         HWND_MAIN = CreateWindowExW(
             0,
             class_name.as_ptr(),
@@ -152,10 +142,8 @@ fn main() {
             null_mut(),
         );
 
-        // Add tray icon only if not in headless mode
-        if !no_tray {
-            add_tray_icon(HWND_MAIN, hinstance);
-        }
+        // Always display tray icon so the user has visible control (Pause / Quit) over input hooks
+        add_tray_icon(HWND_MAIN, hinstance);
 
         // Install low-level hooks
         KB_HOOK = SetWindowsHookExW(WH_KEYBOARD_LL, Some(keyboard_hook), hinstance, 0);
@@ -171,9 +159,7 @@ fn main() {
         // Cleanup
         UnhookWindowsHookEx(KB_HOOK);
         UnhookWindowsHookEx(MOUSE_HOOK);
-        if !no_tray {
-            remove_tray_icon(HWND_MAIN);
-        }
+        remove_tray_icon(HWND_MAIN);
     }
 }
 
@@ -200,8 +186,14 @@ unsafe extern "system" fn keyboard_hook(code: i32, wparam: WPARAM, lparam: LPARA
                 CTRL_HELD.store(true, Ordering::SeqCst);
                 LAST_CTRL_DOWN_MS.store(now_ms(), Ordering::SeqCst);
             } else if is_up {
-                CTRL_HELD.store(is_ctrl_held(), Ordering::SeqCst);
+                CTRL_HELD.store(false, Ordering::SeqCst);
             }
+        }
+        if is_shift_key(vk_code) {
+            SHIFT_HELD.store(is_down, Ordering::SeqCst);
+        }
+        if is_win_key(vk_code) {
+            WIN_HELD.store(is_down, Ordering::SeqCst);
         }
 
         match vk_code {
@@ -504,8 +496,8 @@ fn handle_smart_paste() {
         if let Some(proc_name) = get_foreground_process_name() {
             let lower = proc_name.to_lowercase();
             if TERMINALS.iter().any(|t| lower == *t) {
-                if let Some(image_path) = take_prepared_screenshot_path() {
-                    paste_image_path(image_path);
+                if clipboard_is_excluded_from_monitoring() {
+                    send_terminal_paste();
                     return;
                 }
 
@@ -517,13 +509,6 @@ fn handle_smart_paste() {
                 }
 
                 if has_recent_screenshot_intent() {
-                    if let Some(image_path) =
-                        wait_for_prepared_screenshot(SMART_PASTE_IMAGE_WAIT_MS)
-                    {
-                        paste_image_path(image_path);
-                        return;
-                    }
-
                     if wait_for_clipboard_image(std::time::Duration::from_millis(
                         SMART_PASTE_IMAGE_WAIT_MS,
                     )) && paste_clipboard_image()
@@ -570,6 +555,7 @@ fn paste_image_path(image_path: String) {
     unsafe {
         let paste_text = image_path.replace('\\', "/");
         if set_clipboard_text(&paste_text).is_ok() {
+            let written_seq = GetClipboardSequenceNumber();
             send_terminal_paste();
             store_recent_terminal_paste(paste_text);
             LAST_SCREENSHOT_INTENT_MS.store(0, Ordering::SeqCst);
@@ -577,7 +563,9 @@ fn paste_image_path(image_path: String) {
                 std::thread::sleep(std::time::Duration::from_millis(
                     SMART_PASTE_RESTORE_DELAY_MS,
                 ));
-                let _ = restore_clipboard_image(&image_path);
+                if GetClipboardSequenceNumber() == written_seq {
+                    let _ = restore_clipboard_image(&image_path);
+                }
             });
         }
     }
@@ -683,88 +671,25 @@ fn restore_clipboard_image(image_path: &str) -> Result<(), String> {
     Err(last_err)
 }
 
-// -- Native screenshot preparation --
+// -- Native screenshot intent tracking (materializes temp image only when terminal paste is invoked) --
 
 fn mark_screenshot_intent() {
     LAST_SCREENSHOT_INTENT_MS.store(now_ms(), Ordering::SeqCst);
-
-    if SCREENSHOT_PREPARE_IN_FLIGHT
-        .compare_exchange(false, true, Ordering::SeqCst, Ordering::SeqCst)
-        .is_err()
-    {
-        return;
-    }
-
-    std::thread::spawn(|| {
-        let started_at = std::time::Instant::now();
-        let timeout = std::time::Duration::from_millis(SMART_PASTE_IMAGE_WAIT_MS);
-
-        while started_at.elapsed() <= timeout {
-            if clipboard_has_image() {
-                if let Ok(path) = save_clipboard_image_native() {
-                    store_prepared_screenshot(path);
-                    break;
-                }
-            }
-
-            std::thread::sleep(std::time::Duration::from_millis(
-                SMART_PASTE_RETRY_INTERVAL_MS,
-            ));
-        }
-
-        SCREENSHOT_PREPARE_IN_FLIGHT.store(false, Ordering::SeqCst);
-    });
 }
 
-fn prepared_screenshot() -> &'static Mutex<Option<PreparedScreenshot>> {
-    static PREPARED_SCREENSHOT: OnceLock<Mutex<Option<PreparedScreenshot>>> = OnceLock::new();
-    PREPARED_SCREENSHOT.get_or_init(|| Mutex::new(None))
-}
-
-fn store_prepared_screenshot(path: String) {
-    if let Ok(mut prepared) = prepared_screenshot().lock() {
-        *prepared = Some(PreparedScreenshot {
-            path,
-            created_ms: now_ms(),
-        });
+fn clipboard_is_excluded_from_monitoring() -> bool {
+    unsafe {
+        let fmt = RegisterClipboardFormatW(
+            wide("ExcludeClipboardContentFromMonitorProcessing").as_ptr(),
+        );
+        fmt != 0 && IsClipboardFormatAvailable(fmt) != 0
     }
-}
-
-fn take_prepared_screenshot_path() -> Option<String> {
-    if !clipboard_has_image() {
-        return None;
-    }
-
-    let mut prepared = prepared_screenshot().lock().ok()?;
-    let screenshot = prepared.as_ref()?;
-    if now_ms().saturating_sub(screenshot.created_ms) > SMART_PASTE_CACHED_PATH_MS {
-        *prepared = None;
-        return None;
-    }
-
-    let path = screenshot.path.clone();
-    *prepared = None;
-    Some(path)
-}
-
-fn wait_for_prepared_screenshot(timeout_ms: u64) -> Option<String> {
-    let started_at = std::time::Instant::now();
-    let timeout = std::time::Duration::from_millis(timeout_ms);
-
-    while started_at.elapsed() <= timeout {
-        if let Some(path) = take_prepared_screenshot_path() {
-            return Some(path);
-        }
-
-        std::thread::sleep(std::time::Duration::from_millis(
-            SMART_PASTE_RETRY_INTERVAL_MS,
-        ));
-    }
-
-    None
 }
 
 fn save_clipboard_image_native() -> Result<String, String> {
+    if clipboard_is_excluded_from_monitoring() {
+        return Err("Clipboard content is marked excluded from monitoring".to_string());
+    }
     let image = read_clipboard_dib()?;
     let path = screenshot_path()?;
 
@@ -845,16 +770,37 @@ fn parse_dib_rgba(bytes: &[u8]) -> Result<ClipboardImage, String> {
 
     let width_u32 = width as u32;
     let height_u32 = height.unsigned_abs();
+    if width_u32 > MAX_DIB_DIMENSION || height_u32 > MAX_DIB_DIMENSION {
+        return Err("DIB dimensions exceed maximum allowed bounds (16384x16384)".to_string());
+    }
     let color_count = if clr_used > 0 {
+        if clr_used > 256 {
+            return Err("DIB color table exceeds maximum allowed entries".to_string());
+        }
         clr_used as usize
     } else if bit_count <= 8 {
         1usize << bit_count
     } else {
         0
     };
-    let pixel_offset = header_size + color_count * 4;
-    let stride = (width_u32 as usize * bit_count as usize).div_ceil(32) * 4;
-    let needed = pixel_offset + stride * height_u32 as usize;
+    let palette_bytes = color_count
+        .checked_mul(4)
+        .ok_or_else(|| "DIB palette size overflow".to_string())?;
+    let pixel_offset = header_size
+        .checked_add(palette_bytes)
+        .ok_or_else(|| "DIB pixel offset overflow".to_string())?;
+    let row_bits = (width_u32 as usize)
+        .checked_mul(bit_count as usize)
+        .ok_or_else(|| "DIB row bit size overflow".to_string())?;
+    let stride = row_bits.div_ceil(32)
+        .checked_mul(4)
+        .ok_or_else(|| "DIB stride overflow".to_string())?;
+    let total_pixel_bytes = stride
+        .checked_mul(height_u32 as usize)
+        .ok_or_else(|| "DIB pixel buffer overflow".to_string())?;
+    let needed = pixel_offset
+        .checked_add(total_pixel_bytes)
+        .ok_or_else(|| "DIB total size overflow".to_string())?;
 
     if bytes.len() < needed {
         return Err("DIB pixel data is truncated".to_string());
@@ -862,7 +808,11 @@ fn parse_dib_rgba(bytes: &[u8]) -> Result<ClipboardImage, String> {
 
     let bottom_up = height > 0;
     let bytes_per_pixel = (bit_count / 8) as usize;
-    let mut rgba = vec![0u8; width_u32 as usize * height_u32 as usize * 4];
+    let rgba_len = (width_u32 as usize)
+        .checked_mul(height_u32 as usize)
+        .and_then(|px| px.checked_mul(4))
+        .ok_or_else(|| "RGBA buffer size overflow".to_string())?;
+    let mut rgba = vec![0u8; rgba_len];
     let mut any_alpha = false;
 
     for y in 0..height_u32 as usize {
@@ -1042,14 +992,27 @@ unsafe fn with_open_clipboard<T>(
 }
 
 fn screenshot_path() -> Result<PathBuf, String> {
-    let mut dir = std::env::var_os("USERPROFILE")
-        .map(PathBuf::from)
-        .ok_or_else(|| "USERPROFILE is not set".to_string())?;
-    dir.push("screenshots");
+    let dir = std::env::temp_dir().join("hyperyap-paste");
     std::fs::create_dir_all(&dir)
-        .map_err(|e| format!("Failed to create screenshots directory: {}", e))?;
-    dir.push(format!("screenshot_{}.png", now_ms()));
-    Ok(dir)
+        .map_err(|e| format!("Failed to create temporary paste directory: {}", e))?;
+    // Best-effort cleanup of stale temporary paste images older than 5 minutes
+    if let Ok(entries) = std::fs::read_dir(&dir) {
+        let now = SystemTime::now();
+        for entry in entries.flatten() {
+            if let Ok(meta) = entry.metadata() {
+                if let Ok(modified) = meta.modified() {
+                    if now
+                        .duration_since(modified)
+                        .map(|d| d.as_secs() > 300)
+                        .unwrap_or(false)
+                    {
+                        let _ = std::fs::remove_file(entry.path());
+                    }
+                }
+            }
+        }
+    }
+    Ok(dir.join(format!("screenshot_{}.png", now_ms())))
 }
 
 fn read_u16(bytes: &[u8], offset: usize) -> Result<u16, String> {
@@ -1290,19 +1253,31 @@ unsafe fn send_backspaces(count: usize) {
 }
 
 unsafe fn is_ctrl_held() -> bool {
-    GetAsyncKeyState(VK_CONTROL as i32) < 0
-        || GetAsyncKeyState(VK_LCONTROL_KEY as i32) < 0
-        || GetAsyncKeyState(VK_RCONTROL_KEY as i32) < 0
+    CTRL_HELD.load(Ordering::SeqCst)
+        || GetKeyState(VK_CONTROL as i32) < 0
+        || GetKeyState(VK_LCONTROL_KEY as i32) < 0
+        || GetKeyState(VK_RCONTROL_KEY as i32) < 0
 }
 
 unsafe fn is_shift_held() -> bool {
-    GetAsyncKeyState(VK_SHIFT as i32) < 0
-        || GetAsyncKeyState(VK_LSHIFT_KEY as i32) < 0
-        || GetAsyncKeyState(VK_RSHIFT_KEY as i32) < 0
+    SHIFT_HELD.load(Ordering::SeqCst)
+        || GetKeyState(VK_SHIFT as i32) < 0
+        || GetKeyState(VK_LSHIFT_KEY as i32) < 0
+        || GetKeyState(VK_RSHIFT_KEY as i32) < 0
 }
 
 unsafe fn is_win_held() -> bool {
-    GetAsyncKeyState(VK_LWIN_KEY as i32) < 0 || GetAsyncKeyState(VK_RWIN_KEY as i32) < 0
+    WIN_HELD.load(Ordering::SeqCst)
+        || GetKeyState(VK_LWIN_KEY as i32) < 0
+        || GetKeyState(VK_RWIN_KEY as i32) < 0
+}
+
+fn is_shift_key(vk_code: u16) -> bool {
+    vk_code == VK_SHIFT || vk_code == VK_LSHIFT_KEY || vk_code == VK_RSHIFT_KEY
+}
+
+fn is_win_key(vk_code: u16) -> bool {
+    vk_code == VK_LWIN_KEY || vk_code == VK_RWIN_KEY
 }
 
 unsafe fn is_screenshot_shortcut(vk_code: u16) -> bool {
@@ -1459,5 +1434,18 @@ mod tests {
         let dib = rgba_to_dib(width, height, &zero_alpha_rgba).expect("rgba_to_dib should succeed");
         let parsed = parse_dib_rgba(&dib).expect("parse_dib_rgba should succeed");
         assert_eq!(parsed.rgba, vec![10, 20, 30, 255, 40, 50, 60, 255]);
+    }
+
+    #[test]
+    fn dib_rejects_oversized_dimensions() {
+        let mut dib = vec![0u8; 40];
+        write_u32(&mut dib, 0, 40).unwrap();
+        write_i32(&mut dib, 4, 20_000).unwrap();
+        write_i32(&mut dib, 8, 20_000).unwrap();
+        write_u16(&mut dib, 12, 1).unwrap();
+        write_u16(&mut dib, 14, 32).unwrap();
+        write_u32(&mut dib, 16, BI_RGB).unwrap();
+        let err = parse_dib_rgba(&dib).err().expect("oversized DIB must fail");
+        assert!(err.contains("exceed maximum allowed bounds"));
     }
 }

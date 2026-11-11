@@ -13,13 +13,13 @@ Speech model attribution:
   License stated by NVIDIA: CC-BY-4.0
 - Default ONNX INT8 conversion: smcleod/parakeet-tdt-0.6b-v2-int8
   https://huggingface.co/smcleod/parakeet-tdt-0.6b-v2-int8
-  License metadata stated on Hugging Face: CC-BY-2.0
+  License: CC-BY-4.0 (upstream NVIDIA Parakeet TDT 0.6B v2 license; HF card metadata tag says cc-by-2.0)
 
 Modifications from the original MURmure project include:
 - Rebranding from MURmure to HyperYap
 - Pre-configured settings for immediate use (toggle-to-talk, F13 hotkey, etc.)
-- Native Rust hotkey helper (`hotkeys/`) for CapsLock/mouse-button-to-F13 mapping and smart terminal paste
-- One-command installer with auto-boot setup
+- Native Rust hotkey helper (`hotkeys/`) for opt-in CapsLock/mouse-button-to-F13 mapping and smart terminal paste
+- Guided Windows/Linux installation with opt-in autostart setup
 - Removal of multi-language UI defaults (English-only focus)
 
 Per AGPL-3.0 Section 5, prominent notices of modification are included herein.

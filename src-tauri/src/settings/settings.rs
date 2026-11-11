@@ -81,16 +81,29 @@ pub fn load_settings(app: &AppHandle) -> AppSettings {
 
     if should_deploy_presets(app) {
         info!("New install or upgrade detected, deploying HyperYap preset settings");
-        let presets = load_bundled_preset(app);
+        let mut presets = load_bundled_preset(app);
+        if presets.api_token.trim().is_empty() {
+            presets.api_token = uuid::Uuid::new_v4().to_string();
+        }
         let _ = save_settings(app, &presets);
         mark_presets_deployed(app);
         return presets;
     }
 
     match fs::read_to_string(&path) {
-        Ok(content) => serde_json::from_str::<AppSettings>(&content).unwrap_or_default(),
+        Ok(content) => {
+            let mut settings = serde_json::from_str::<AppSettings>(&content).unwrap_or_default();
+            if settings.api_token.trim().is_empty() {
+                settings.api_token = uuid::Uuid::new_v4().to_string();
+                let _ = save_settings(app, &settings);
+            }
+            settings
+        }
         Err(_) => {
-            let defaults = load_bundled_preset(app);
+            let mut defaults = load_bundled_preset(app);
+            if defaults.api_token.trim().is_empty() {
+                defaults.api_token = uuid::Uuid::new_v4().to_string();
+            }
             let _ = save_settings(app, &defaults);
             mark_presets_deployed(app);
             defaults

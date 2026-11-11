@@ -39,6 +39,7 @@ pub struct AppSettings {
     pub overlay_position: String,  // "top" | "bottom"
     pub api_enabled: bool,         // Enable local HTTP API
     pub api_port: u16,             // Port for local HTTP API
+    pub api_token: String,         // Bearer token required by local HTTP API
     pub copy_to_clipboard: bool,   // Keep transcription in clipboard after recording finishes
     pub paste_method: PasteMethod, // Paste method: CtrlV or CtrlShiftV (for terminals)
     pub persist_history: bool,     // Persist last 5 transcriptions to disk
@@ -58,6 +59,8 @@ pub struct AppSettings {
     pub auto_enter_after_wake_word: bool,
     pub silence_timeout_ms: u64,
     pub show_in_dock: bool,
+    pub enable_key_polling_fallback: bool, // Explicit opt-in for key state polling fallback
+    pub enable_hotkeys_helper: bool,       // Explicit opt-in for Windows hotkey/paste helper
 }
 
 impl Default for AppSettings {
@@ -72,11 +75,12 @@ impl Default for AppSettings {
             llm_mode_3_shortcut: "ctrl+shift+3".to_string(),
             llm_mode_4_shortcut: "ctrl+shift+4".to_string(),
             dictionary: Vec::new(),
-            record_mode: "push_to_talk".to_string(),
+            record_mode: "toggle_to_talk".to_string(),
             overlay_mode: "recording".to_string(),
             overlay_position: "bottom".to_string(),
             api_enabled: false,
             api_port: 4800,
+            api_token: uuid::Uuid::new_v4().to_string(),
             copy_to_clipboard: false,
             paste_method: PasteMethod::default(),
             persist_history: false,
@@ -96,6 +100,8 @@ impl Default for AppSettings {
             auto_enter_after_wake_word: false,
             silence_timeout_ms: 1500,
             show_in_dock: true,
+            enable_key_polling_fallback: false,
+            enable_hotkeys_helper: false,
         }
     }
 }

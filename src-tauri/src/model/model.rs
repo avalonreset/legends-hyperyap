@@ -7,6 +7,7 @@ use std::path::{Path, PathBuf};
 use tauri::{AppHandle, Manager};
 
 pub const DEFAULT_MODEL_ID: &str = "parakeet-tdt-0.6b-v2-smcleod-int8";
+pub const DEFAULT_MODEL_HF_REVISION: &str = "d64884b484b919e9656d0b70cb95dfdc98852bef";
 pub const UNIFIED_EN_SMOOTHQUANT_PILOT_MODEL_ID: &str =
     "parakeet-unified-en-0.6b-smoothquant-pilot-int8";
 
@@ -17,6 +18,25 @@ const REQUIRED_MODEL_FILES: &[&str] = &[
     "decoder_joint-model.int8.onnx",
     "nemo128.onnx",
     "vocab.txt",
+];
+
+pub const EXPECTED_DEFAULT_MODEL_SHA256: &[(&str, &str)] = &[
+    (
+        "encoder-model.int8.onnx",
+        "464e6ba9e9ee681361b52801d90f13be3cf01a9252a584f14023dab6197aedf9",
+    ),
+    (
+        "decoder_joint-model.int8.onnx",
+        "93fbb1856f8f897004a15793e7b78953879003e03fdac56dc76b76ccc2ce6505",
+    ),
+    (
+        "nemo128.onnx",
+        "34a4d9e18f9ebf7e69bbfb502a793d2a4c19ba538cd76db8abc5d3df0b2b74a5",
+    ),
+    (
+        "vocab.txt",
+        "ec182b70dd42113aff6c5372c75cac58c952443eb22322f57bbd7f53977d497d",
+    ),
 ];
 
 #[derive(Debug, Clone, Serialize)]
@@ -86,12 +106,19 @@ impl Model {
             }
         }
 
+        let expected_digests = EXPECTED_DEFAULT_MODEL_SHA256
+            .iter()
+            .map(|(f, h)| format!("{f} (sha256:{})", &h[..12]))
+            .collect::<Vec<_>>()
+            .join(", ");
         anyhow::bail!(
-            "ASR model '{}' not found or incomplete. Attempted: {}. \
-            Expected files in each model folder: {}.",
+            "ASR model '{}' (pinned revision {}) not found or incomplete. Attempted: {}. \
+            Expected files in each model folder: {} [{}].",
             selected_model_id,
+            DEFAULT_MODEL_HF_REVISION,
             attempted.join(", "),
-            REQUIRED_MODEL_FILES.join(", ")
+            REQUIRED_MODEL_FILES.join(", "),
+            expected_digests
         )
     }
 
@@ -214,10 +241,37 @@ impl Model {
 }
 
 pub fn is_valid_model_dir(path: &Path) -> bool {
-    path.is_dir()
-        && REQUIRED_MODEL_FILES
-            .iter()
-            .all(|file_name| path.join(file_name).is_file())
+    let Ok(dir_meta) = fs::symlink_metadata(path) else {
+        return false;
+    };
+    if dir_meta.file_type().is_symlink() || !dir_meta.is_dir() {
+        return false;
+    }
+
+    REQUIRED_MODEL_FILES.iter().all(|file_name| {
+        let candidate = path.join(file_name);
+        let Ok(meta) = fs::symlink_metadata(&candidate) else {
+            return false;
+        };
+        if meta.file_type().is_symlink() || !meta.is_file() || meta.len() < 64 {
+            return false;
+        }
+        // Reject HTML error bodies saved by failed/redirected downloads
+        if let Ok(mut file) = fs::File::open(&candidate) {
+            use std::io::Read;
+            let mut prefix = [0u8; 32];
+            if let Ok(n) = file.read(&mut prefix) {
+                let head = String::from_utf8_lossy(&prefix[..n]).to_ascii_lowercase();
+                if head.trim_start().starts_with("<!doctype")
+                    || head.trim_start().starts_with("<html")
+                    || head.trim_start().starts_with("entry not found")
+                {
+                    return false;
+                }
+            }
+        }
+        true
+    })
 }
 
 fn display_name_for_model(id: &str) -> String {
@@ -257,4 +311,37 @@ fn dedupe_paths(paths: Vec<PathBuf>) -> Vec<PathBuf> {
     }
 
     deduped
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_is_valid_model_dir_rejects_html_error_body() {
+        let dir = std::env::temp_dir().join(format!(
+            "hyperyap-model-test-{}",
+            std::process::id()
+        ));
+        let _ = fs::remove_dir_all(&dir);
+        fs::create_dir_all(&dir).unwrap();
+        for (name, _) in EXPECTED_DEFAULT_MODEL_SHA256 {
+            fs::write(
+                dir.join(name),
+                "<!DOCTYPE html><html><body>Error 502 Bad Gateway from CDN</body></html>",
+            )
+            .unwrap();
+        }
+        assert!(!is_valid_model_dir(&dir));
+        let _ = fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn test_pinned_model_constants_are_sha256_aligned() {
+        assert_eq!(DEFAULT_MODEL_HF_REVISION.len(), 40);
+        assert_eq!(EXPECTED_DEFAULT_MODEL_SHA256.len(), REQUIRED_MODEL_FILES.len());
+        for (_, digest) in EXPECTED_DEFAULT_MODEL_SHA256 {
+            assert_eq!(digest.len(), 64);
+        }
+    }
 }

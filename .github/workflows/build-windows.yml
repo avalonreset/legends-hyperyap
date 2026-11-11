@@ -7,6 +7,11 @@ on:
                 description: Prevent signing and upload
                 required: false
                 type: boolean
+            allow_unsigned:
+                default: false
+                description: Explicitly allow unsigned release bundle when SignPath is skipped
+                required: false
+                type: boolean
         secrets:
             TAURI_PRIVATE_KEY:
                 required: false
@@ -28,11 +33,11 @@ jobs:
     build-windows:
         runs-on: windows-latest
         steps:
-            - uses: actions/checkout@v4
+            - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
               with:
                 persist-credentials: false
 
-            - uses: actions/setup-node@v4
+            - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
               with:
                   node-version: lts/*
 
@@ -96,7 +101,7 @@ jobs:
             - name: Upload unsigned artifact
               if: ${{ inputs.dry == false }}
               id: upload-unsigned-artifact
-              uses: actions/upload-artifact@v4
+              uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
               with:
                   name: unsigned-binaries
                   path: unsigned_artifacts
@@ -104,9 +109,8 @@ jobs:
                   if-no-files-found: error
 
             - name: SignPath Sign
-              if: ${{ inputs.dry == false }}
+              if: ${{ inputs.dry == false && inputs.allow_unsigned == false }}
               id: signpath
-              continue-on-error: true
               uses: signpath/github-action-submit-signing-request@c92b958760219087e01f8d67a1669ed57afe2627 # v2
               with:
                   api-token: '${{ secrets.SIGNPATH_API_TOKEN }}'
@@ -152,19 +156,25 @@ jobs:
                       pnpm tauri signer sign $finalExe
                   }
 
-            - name: Prepare release bundle (unsigned fallback)
-              if: ${{ inputs.dry == false && steps.signpath.outcome != 'success' }}
+            - name: Prepare release bundle (explicit allow_unsigned only)
+              if: ${{ inputs.dry == false && inputs.allow_unsigned == true }}
               shell: pwsh
               run: |
                   $releaseDir = "release-bundle"
                   if (Test-Path $releaseDir) { Remove-Item $releaseDir -Recurse -Force }
                   New-Item -ItemType Directory -Force -Path $releaseDir | Out-Null
                   Copy-Item "unsigned_artifacts/*" -Destination $releaseDir -Force
-                  Write-Host "Using unsigned artifacts (SignPath not configured or failed)"
+                  Write-Host "Using unsigned artifacts via explicit allow_unsigned=true input"
+
+            - name: Cleanup Tauri signing key
+              if: always()
+              shell: pwsh
+              run: |
+                  Remove-Item -Path "tauri.key" -Force -ErrorAction SilentlyContinue
 
             - name: Upload artifact (1 day)
               if: ${{ inputs.dry == false }}
-              uses: actions/upload-artifact@v4
+              uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
               with:
                   name: hyperyap-windows-x64
                   path: release-bundle

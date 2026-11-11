@@ -1,23 +1,115 @@
 {
   "module": "legends-hyperyap",
+  "version": "0.1.4",
   "assets": {
     "banner_png": {
       "path": "assets/banner.png",
-      "width": 2048,
-      "height": 512,
-      "format": "png"
+      "width": 4096,
+      "height": 1024,
+      "format": "png",
+      "bytes": 60588,
+      "sha256": "d5658bb4d2de9fd6c928e60f8c0b6f3e8ea660c3585973285c9b007070f129bc"
     },
     "banner_webp": {
       "path": "assets/banner.webp",
-      "width": 2048,
-      "height": 512,
-      "format": "webp"
+      "width": 4096,
+      "height": 1024,
+      "format": "webp",
+      "bytes": 50752,
+      "sha256": "b39fba963771c6f74dfe3c62ffabccc5a2114e9dc48462a852475e2f8f3092ba"
     },
     "preview_png": {
       "path": "assets/preview.png",
       "width": 1024,
       "height": 256,
-      "format": "png"
+      "format": "png",
+      "bytes": 22196,
+      "sha256": "da8fc7d026e0be3b63aee4f74a1031d43c0991780d941d8b9c7088f7a76b4aa4"
+    },
+    "social_preview_png": {
+      "path": "assets/social-preview.png",
+      "width": 1280,
+      "height": 640,
+      "format": "png",
+      "bytes": 17332,
+      "sha256": "c381ab4ecb8f8e5cff225dfb35be00095560803452aafdbadce416bc99ac2cc8"
     }
-  }
+  },
+  "files": [
+    {
+      "path": "assets/banner.png",
+      "bytes": 60588,
+      "sha256": "d5658bb4d2de9fd6c928e60f8c0b6f3e8ea660c3585973285c9b007070f129bc"
+    },
+    {
+      "path": "assets/banner.webp",
+      "bytes": 50752,
+      "sha256": "b39fba963771c6f74dfe3c62ffabccc5a2114e9dc48462a852475e2f8f3092ba"
+    },
+    {
+      "path": "assets/benterm-logo.webp",
+      "bytes": 3310,
+      "sha256": "7a956001750a8146cc1430807921caf60ae23cdd69fde21f09b478af00be1aae"
+    },
+    {
+      "path": "assets/icon-hyper-inverted.png",
+      "bytes": 1221117,
+      "sha256": "91350631153c411741f1df8f83edb85180804b01ae5c986b862f71440cfe6315"
+    },
+    {
+      "path": "assets/icon-hyper-source.jpg",
+      "bytes": 580626,
+      "sha256": "44546f7607da83514b2b188eb54b4d93d73c3a52afb70d85df21b6af124ee1f5"
+    },
+    {
+      "path": "assets/icon-source.png",
+      "bytes": 5162696,
+      "sha256": "56d8c3bc5d5505823067ccdb28f3358a9278936a89a8930257fb7274585fb065"
+    },
+    {
+      "path": "assets/icon-yap-inverted.png",
+      "bytes": 1212773,
+      "sha256": "09007ca28cd041331b8ece005a70e95d014bf517b404ebc995ebe0ea5407f7a4"
+    },
+    {
+      "path": "assets/icon-yap-source.jpg",
+      "bytes": 581989,
+      "sha256": "3e046e3ab994bdd91591cb4222072f32e7455bfc3fd949de61039abe5fcf20cc"
+    },
+    {
+      "path": "assets/logo-h-source.png",
+      "bytes": 1389899,
+      "sha256": "1018fd349b6f4ec2e12372ed3672b993a4c4488638933d2126d3bd07ec8d6028"
+    },
+    {
+      "path": "assets/logo-hyper.webp",
+      "bytes": 132694,
+      "sha256": "708b4adc656f7fb609eba5ec1de57eb01cf848970ca23767c6c1cf846c21cb1f"
+    },
+    {
+      "path": "assets/logo-yap-source.jpg",
+      "bytes": 565804,
+      "sha256": "a9645537ec09f73309b5be41ff24132359177c84c1476983ece6874c083fffd0"
+    },
+    {
+      "path": "assets/logo-yap.webp",
+      "bytes": 132694,
+      "sha256": "708b4adc656f7fb609eba5ec1de57eb01cf848970ca23767c6c1cf846c21cb1f"
+    },
+    {
+      "path": "assets/preview.png",
+      "bytes": 22196,
+      "sha256": "da8fc7d026e0be3b63aee4f74a1031d43c0991780d941d8b9c7088f7a76b4aa4"
+    },
+    {
+      "path": "assets/social-preview.png",
+      "bytes": 17332,
+      "sha256": "c381ab4ecb8f8e5cff225dfb35be00095560803452aafdbadce416bc99ac2cc8"
+    },
+    {
+      "path": "assets/social-preview.webp",
+      "bytes": 18320,
+      "sha256": "3ca63eb9f1aea0bee6efb3444a9b9483ec76f15e79e61e8cecfe36e7dff3e63e"
+    }
+  ]
 }

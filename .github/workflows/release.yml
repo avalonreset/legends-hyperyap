@@ -18,6 +18,10 @@ on:
             - main
         paths:
             - .release-trigger
+
+permissions:
+    contents: read
+
 jobs:
     linux:
         if: ${{ (github.event.inputs.target || 'all') == 'all' || github.event.inputs.target == 'linux' }}
@@ -77,34 +81,34 @@ jobs:
         permissions:
             contents: write
         steps:
-            - uses: actions/checkout@v4
+            - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
               with:
                 persist-credentials: false
 
             - name: Download Windows artifacts
               if: ${{ needs.windows.result == 'success' }}
-              uses: actions/download-artifact@v4
+              uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
               with:
                   name: hyperyap-windows-x64
                   path: release-assets/windows
 
             - name: Download Linux artifacts
               if: ${{ needs.linux.result == 'success' }}
-              uses: actions/download-artifact@v4
+              uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
               with:
                   name: hyperyap-linux
                   path: release-assets/linux
 
             - name: Download macOS Apple Silicon artifacts
               if: ${{ needs.macos.result == 'success' }}
-              uses: actions/download-artifact@v4
+              uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
               with:
                   name: hyperyap-macos
                   path: release-assets/macos
 
             - name: Download macOS Intel artifacts
               if: ${{ needs['macos-intel'].result == 'success' }}
-              uses: actions/download-artifact@v4
+              uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
               with:
                   name: hyperyap-macos-intel
                   path: release-assets/macos-intel
@@ -123,6 +127,7 @@ jobs:
                   for f in *.exe; do
                     mv "$f" "hyperyap_${{ steps.version.outputs.version }}_x64-setup.exe" 2>/dev/null || true
                   done
+                  sha256sum * > SHA256SUMS.txt
                   ls -la
 
             - name: Create or update GitHub Release
@@ -132,16 +137,14 @@ jobs:
                   TAG="v${{ steps.version.outputs.version }}"
                   # Delete existing release if it exists (for re-releases)
                   gh release delete "$TAG" --yes 2>/dev/null || true
-                  # Create new release
-                  gh release create "$TAG" \
-                    --title "legends-hyperyap $TAG" \
-                    --notes "## legends-hyperyap $TAG
+                  cat <<EOF > release-notes.md
+                  ## legends-hyperyap $TAG
 
-                  Download the package for your platform.
+                  Download the package for your platform and verify against SHA256SUMS.txt.
 
                   ### Windows
                   - hyperyap_${{ steps.version.outputs.version }}_x64-setup.exe
-                  - Includes the optional workstation hotkey helper for CapsLock/Mouse Back recording, smart terminal paste, smart terminal copy, and basic paste undo.
+                  - Includes the opt-in workstation hotkey helper for CapsLock/Mouse Back recording, smart terminal paste, smart terminal copy, and basic paste undo.
                   - Uses the English-focused NVIDIA Parakeet TDT 0.6B v2 model through the smcleod INT8 ONNX conversion.
 
                   ### Linux
@@ -153,10 +156,9 @@ jobs:
                   - HyperYap_x86_64_darwin.dmg for Intel Macs
 
                   The NVIDIA Parakeet speech model runs locally. Installers download or bundle the model depending on platform build settings.
-
-                  ### Quick install (PowerShell)
-                  \`\`\`powershell
-                  Invoke-WebRequest -Uri "https://raw.githubusercontent.com/avalonreset/legends-hyperyap/$TAG/install.ps1" -OutFile install.ps1; .\install.ps1
-                  \`\`\`" \
+                  EOF
+                  gh release create "$TAG" \
+                    --title "legends-hyperyap $TAG" \
+                    --notes-file release-notes.md \
                     --latest \
                     release-upload/*

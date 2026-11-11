@@ -22,11 +22,11 @@ jobs:
         env:
             HAS_TAURI_SIGNING: ${{ secrets.TAURI_PRIVATE_KEY != '' }}
         steps:
-            - uses: actions/checkout@v4
+            - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
               with:
                 persist-credentials: false
 
-            - uses: actions/setup-node@v4
+            - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
               with:
                   node-version: lts/*
 
@@ -94,7 +94,8 @@ jobs:
                     rm -f .DirIcon
                     ln -s hyperyap.png .DirIcon
                     cd ..
-                    wget -q https://github.com/AppImage/appimagetool/releases/download/continuous/appimagetool-x86_64.AppImage
+                    curl -fSL -o appimagetool-x86_64.AppImage https://github.com/AppImage/appimagetool/releases/download/1.9.0/appimagetool-x86_64.AppImage
+                    echo "46fdd785094c7f6e545b61afcfb0f3d98d8eab243f644b4b17698c01d06083d1  appimagetool-x86_64.AppImage" | sha256sum --check -
                     chmod +x appimagetool-x86_64.AppImage
                     ARCH=x86_64 ./appimagetool-x86_64.AppImage squashfs-root "$APPIMAGE"
                     rm -rf squashfs-root appimagetool-x86_64.AppImage
@@ -148,9 +149,14 @@ jobs:
                   find src-tauri/target/release/bundle -name "*.deb" ! -name "*.sig" -exec sh -c 'mv "$1" "$(dirname "$1")/HyperYap_amd64.deb"' _ {} \;
                   find src-tauri/target/release/bundle -name "*.deb.sig" -exec sh -c 'mv "$1" "$(dirname "$1")/HyperYap_amd64.deb.sig"' _ {} \;
 
+            - name: Cleanup Tauri signing key
+              if: always()
+              shell: bash
+              run: rm -f tauri.key
+
             - name: Upload artifact (1 day)
               if: ${{ inputs.dry == false }}
-              uses: actions/upload-artifact@v4
+              uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
               with:
                   name: hyperyap-linux
                   path: |

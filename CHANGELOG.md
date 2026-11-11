@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.1.4] - 2026-11-10 (Event-driven Windows shortcuts, supply-chain pinning, and local API authentication)
+
+- Replaced unconditional 32ms `GetAsyncKeyState` polling on Windows with OS-registered `RegisterHotKey` + `WM_HOTKEY` event-driven shortcut delivery (`src-tauri/src/shortcuts/platform_windows.rs`), with opt-in fallback (`enable_key_polling_fallback: false`).
+- Made login autostart (`autostart: false`) and the Windows hotkey helper (`enable_hotkeys_helper: false`) strictly opt-in on first launch, and removed the headless `--no-tray` flag so `hyperyap-hotkeys.exe` always runs with a visible system tray icon when enabled.
+- Hardened `hotkeys/src/main.rs` and `src-tauri/src/clipboard/clipboard.rs` to respect `ExcludeClipboardContentFromMonitorProcessing`, check `GetClipboardSequenceNumber()` before restoring clipboard contents, write temporary terminal paste images on demand under `%TEMP%\hyperyap-paste` instead of background-monitoring screenshots into `%USERPROFILE%\screenshots\`, and enforce `MAX_DIB_DIMENSION = 16_384` with checked arithmetic on `CF_DIB` headers.
+- Pinned Hugging Face model revision `d64884b484b919e9656d0b70cb95dfdc98852bef` and verified SHA-256 digests across `.github/scripts/download-parakeet-model.sh`, `src-tauri/hooks.nsh`, and `src-tauri/src/model/model.rs`; hardened `install.sh` with `mktemp -d` and `SHA256SUMS.txt` verification.
+- Added Bearer token authentication (`api_token`), `Host` loopback verification, and `Origin` / `Sec-Fetch-Site` CSRF rejection to `/api/transcribe` (`src-tauri/src/http_api/server.rs`).
+- Configured an explicit Content Security Policy in `src-tauri/tauri.conf.json`, confined `write_hyperyap_file` / `read_hyperyap_file` IPC commands to `.hyperyap` JSON files (`<= 2 MiB`, symlink-refused), disabled HTTP redirects in `llm.rs`, and changed initial log level from `Trace` to `Info`.
+- Pinned GitHub Actions to 40-character commit SHAs, pinned and SHA-256 verified `appimagetool` `1.9.0`, added `if: always()` cleanup for `tauri.key`, and removed the unconditional unsigned fallback in `build-windows.yml`.
+- Aligned `package.json`, `src-tauri/Cargo.toml`, `hotkeys/Cargo.toml`, `CITATION.cff`, `NOTICE`, and `THIRD_PARTY_NOTICES.md` licensing metadata, stripped residual C2PA/JUMBF segments from `assets/*-source.jpg`, and upgraded `assets/manifest.json` and `scripts/check_release.py` to `0.1.4`.
+
 ## [0.1.3] - 2026-11-05 (Gold-standard release hygiene and EDR alignment)
 
 - Removed `.ps1` wrapper and model download scripts (`install.ps1`, `.github/scripts/download-parakeet-model.ps1`); Windows and Unix builds now share `.github/scripts/download-parakeet-model.sh`.
