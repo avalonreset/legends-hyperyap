@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.1.5] - 2026-11-21 (Outlined Legends Font SVG card suite and evergreen documentation)
+
+- Added `scripts/render_cards.py` and the 7 outlined Legends Font `r1` SVG architecture and comparison cards under `assets/cards/r1/` (`slot-1-agent-handoff.svg`, `slot-2-three-pillars.svg`, `slot-3-plain-english-chains.svg`, `slot-4-hyperyap-architecture.svg`, `slot-5-adhoc-vs-hyperyap.svg`, `slot-7-message-avalon-reset.svg`, and `slot-collection-star-shrine.svg`), replacing the duplicate `assets/collection-star-shrine.svg`.
+- Rewrote `README.md`, `docs/AGENT-RECIPE.md`, and `docs/FIRST-RUN.md` to the evergreen CTO Legends documentation standard with collapsible `## Reference` drawers preserving `### Agent setup (via \`cto-legends\`)`.
+- Updated `assets/manifest.json` and synchronized release metadata across `package.json`, `src-tauri/tauri.conf.json`, `src-tauri/Cargo.toml`, `hotkeys/Cargo.toml`, and `CITATION.cff` to `0.1.5`.
+
 ## [0.1.4] - 2026-11-10 (Event-driven Windows shortcuts, supply-chain pinning, and local API authentication)
 
 - Replaced unconditional 32ms `GetAsyncKeyState` polling on Windows with OS-registered `RegisterHotKey` + `WM_HOTKEY` event-driven shortcut delivery (`src-tauri/src/shortcuts/platform_windows.rs`), with opt-in fallback (`enable_key_polling_fallback: false`).

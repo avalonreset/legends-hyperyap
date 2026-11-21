@@ -2,9 +2,9 @@
 
 ## install and prepare
 
-1. `v0.1.4` is published as a source release. Build and package the desktop app
+1. Build and package the desktop app
    for your platform using the guided source build in
-   [`README.md#install`](../README.md#install), or download prebuilt installers
+   [`README.md#reference`](../README.md#reference), or download prebuilt installers
    when attached to the
    [latest release](https://github.com/avalonreset/legends-hyperyap/releases/latest)
    (Windows x64 setup EXE, macOS Apple Silicon and Intel DMGs, Linux x86_64

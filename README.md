@@ -6,246 +6,165 @@
 
 [![release](https://img.shields.io/github/v/release/avalonreset/legends-hyperyap?label=release&sort=date&style=flat-square&labelColor=000000&color=ff0000)](https://github.com/avalonreset/legends-hyperyap/releases/latest)
 [![checks](https://img.shields.io/github/actions/workflow/status/avalonreset/legends-hyperyap/ci.yaml?branch=main&label=checks&style=flat-square&labelColor=000000)](https://github.com/avalonreset/legends-hyperyap/actions/workflows/ci.yaml)
+[![contract](https://img.shields.io/github/actions/workflow/status/avalonreset/legends-hyperyap/contract.yml?branch=main&label=contract&style=flat-square&labelColor=000000)](https://github.com/avalonreset/legends-hyperyap/actions/workflows/contract.yml)
+[![engine](https://img.shields.io/badge/engine-parakeet%20tdt%200.6b%20v2%20int8%20onnx-000000?style=flat-square&labelColor=000000&color=ff0000)](src-tauri/Cargo.toml)
+[![platform](https://img.shields.io/badge/platform-windows%20%7C%20macos%20%7C%20linux-000000?style=flat-square&labelColor=000000&color=ff0000)](src-tauri/tauri.conf.json)
 [![license](https://img.shields.io/github/license/avalonreset/legends-hyperyap?label=license&style=flat-square&labelColor=000000&color=666666)](LICENSE)
 
-speak. it types. transcription stays local.
+**Local push-to-talk GPU and CPU voice dictation for Windows, macOS, and Linux: transcribe speech 100% offline with NVIDIA Parakeet TDT 0.6B v2 INT8 ONNX, apply developer dictionary and camelCase/CLI formatting rules, and paste straight into your active editor or 12 supported terminals with atomic clipboard restoration.**
 
-local voice-to-text for windows, macos, and linux. nvidia parakeet runs on your computer and pastes into the app you already have focused. shortcuts, a custom dictionary, and formatting rules turn dictation into an everyday typing workflow.
+![Agent Handoff](assets/cards/r1/slot-1-agent-handoff.svg)
 
-core transcription works offline after the model download. optional remote LLM
-processing sends text to the endpoint you configure; keep it disabled for an
-entirely local dictation workflow.
+```text
+Install or update legends-hyperyap via cto-legends (https://github.com/avalonreset/cto-legends): run `cto-legends install legends-hyperyap --apply`, then `cto-legends handoff legends-hyperyap` and follow the returned JSON recipe to verify `hyperyap` and `hyperyap-hotkeys`.
+```
 
-[download](https://github.com/avalonreset/legends-hyperyap/releases/latest) ·
-[first dictation](docs/FIRST-RUN.md) · [troubleshooting](docs/FIRST-RUN.md#troubleshooting) ·
-[local API](docs/API_USAGE.md)
+![Three Pillars: Local GPU/CPU push-to-talk, Developer vocab & CLI rules, 100% offline privacy & history](assets/cards/r1/slot-2-three-pillars.svg)
 
-v0.1.4 prefers cuda on windows when a compatible gpu is present, then falls back to cpu. the public desktop application runs standalone. on a legends desk, the same engine can live as a module inside legends bridge. bridge is not required.
+## Why `legends-hyperyap` exists
 
-## Agent setup (via `cto-legends`)
+Most voice dictation setups break down when you use them inside a software engineering or coding-agent workflow:
+
+1. **Cloud subscription dictation streams live microphone audio off your machine:** Commercial voice-typing subscriptions and browser microphone widgets stream your spoken prompts and private architecture notes to remote servers, retain transcripts in third-party logs, and fail whenever you work offline.
+2. **Browser voice widgets break window focus and clobber your clipboard:** Clicking a microphone button inside a web tab forces you to leave your IDE or terminal, wait for output, and copy-paste by hand, or uses a naive paste wrapper that permanently overwrites whatever code snippet you already had on your clipboard.
+3. **Generic OS dictation mangles developer vocabulary and terminal shortcuts:** Built-in operating system voice typing turns spoken CLI flags, `camelCase` identifiers, and product names into lowercase prose, and has zero awareness of terminal paste chords (`Ctrl+Shift+V`), single-step dictation undo, or pasting clipboard screenshots as file paths into CLI coding agents.
+
+`legends-hyperyap` is a native desktop voice dictation engine (built with Tauri, Rust, and ONNX Runtime) powered by the pinned [smcleod/parakeet-tdt-0.6b-v2-int8](https://huggingface.co/smcleod/parakeet-tdt-0.6b-v2-int8) conversion of NVIDIA's [Parakeet TDT 0.6B v2](https://huggingface.co/nvidia/parakeet-tdt-0.6b-v2) model. Once the speech model is downloaded, every syllable is transcribed locally on your GPU (CUDA 12 on Windows x64) or CPU with zero cloud telemetry, formatted through your custom technical dictionary, and pasted at your active cursor while preserving your prior clipboard.
+
+## Ask in plain english
+
+Once [`cto-legends`](https://github.com/avalonreset/cto-legends) is installed, you ask your coding agent in plain english. It downloads and verifies the pinned Parakeet ONNX model, compiles or configures the hotkey and terminal helper, imports `.hyperyap` dictionary profiles, or calls the Bearer-authenticated localhost transcription API:
+
+![Say the job in plain words](assets/cards/r1/slot-3-plain-english-chains.svg)
+
+## Architecture: local Parakeet ASR and atomic terminal paste
+
+![How local push-to-talk dictation and terminal paste work](assets/cards/r1/slot-4-hyperyap-architecture.svg)
+
+### 1. 100% offline NVIDIA Parakeet TDT 0.6B v2 INT8 ONNX engine
+
+`legends-hyperyap` is engineered for high-speed English dictation into editors, terminals, issue trackers, and coding agents:
+
+- **CUDA-first GPU acceleration with automatic CPU fallback:** On Windows x64, the ONNX Runtime engine prefers the bundled CUDA 12 / cuDNN 9 execution provider for sub-second GPU turnaround and falls back cleanly to CPU when no dedicated NVIDIA GPU is present.
+- **Supply-chain pinned model verification:** Model acquisition pins Hugging Face revision `d64884b484b919e9656d0b70cb95dfdc98852bef` and verifies SHA-256 digests across `.github/scripts/download-parakeet-model.sh`, `src-tauri/hooks.nsh`, and `src-tauri/src/model/model.rs`.
+- **Event-driven shortcuts and atomic clipboard restoration:** Global recording shortcuts use OS-registered `RegisterHotKey` + `WM_HOTKEY` delivery on Windows without background key-state polling. When inserting text, the engine checks `GetClipboardSequenceNumber()`, respects `ExcludeClipboardContentFromMonitorProcessing`, performs an atomic clipboard paste into the focused window, and restores your original clipboard item.
+
+### 2. Developer dictionary, formatting rules, and 12-terminal workstation helper
+
+| Surface | Binary / Interface | What It Does |
+| :--- | :--- | :--- |
+| **Push-to-Talk & Toggle Shortcuts** | `hyperyap` (Settings -> Shortcuts) | Configurable system-wide hotkeys for toggle-to-talk or push-to-talk recording, paste last transcript (`Ctrl+Shift+Space`), command mode (`Ctrl+Shift+X`), mode slots (`Ctrl+Shift+1..4`), and cancel (`Escape`). |
+| **Custom Dictionary & Regex Rules** | `hyperyap import <FILE> [-s replace\|merge]` | Deterministic replacements and regex formatting rules for code identifiers, `camelCase` symbols, product names, and CLI flags, portable via `.hyperyap` JSON profiles (`<= 2 MiB`, symlinks refused). |
+| **12-Terminal Windows Helper** | `hyperyap-hotkeys.exe` (opt-in) | Detects 12 developer terminals (`wezterm-gui.exe`, `windowsterminal.exe`, `pwsh.exe`, `powershell.exe`, `cmd.exe`, `alacritty.exe`, `conemu.exe`, `hyper.exe`, `mintty.exe`, `tabby.exe`, `warp.exe`, `mobaxterm.exe`) for terminal-safe paste, bounded `Ctrl+Z` paste undo, and on-demand `Ctrl+V` clipboard screenshot conversion to temporary PNG paths (`%TEMP%\hyperyap-paste`). |
+| **Bearer-Gated Localhost HTTP API** | `POST http://127.0.0.1:4800/api/transcribe` | Opt-in loopback API protected by `Authorization: Bearer <api_token>`, `Host` loopback verification, and `Origin` / `Sec-Fetch-Site` CSRF rejection so local scripts can transcribe `.wav` files with dictionary rules applied. |
+| **Keyring-Backed Optional LLM Modes** | Settings -> LLM Connect | Optional post-processing through local Ollama or an HTTPS endpoint; API keys live strictly in the native OS keyring and are stripped from exported `.hyperyap` profiles. |
+
+## Cloud dictation subscriptions vs `legends-hyperyap`
+
+![Comparison: Cloud dictation subscriptions & OS voice vs Local push-to-talk engine // legends-hyperyap](assets/cards/r1/slot-5-adhoc-vs-hyperyap.svg)
+
+## Quick start
+
+<a id="install"></a>
+
+```bash
+# 1. Verify release and repository hygiene checks
+python scripts/check_release.py
+
+# 2. Fetch and SHA-256 verify the pinned NVIDIA Parakeet TDT 0.6B v2 INT8 ONNX model
+bash .github/scripts/download-parakeet-model.sh resources
+
+# 3. Build the opt-in Windows Rust hotkey and 12-terminal smart paste helper
+cargo build --release --manifest-path hotkeys/Cargo.toml
+
+# 4. Install frontend dependencies and build or run the native Tauri desktop app
+pnpm install
+pnpm tauri dev      # development mode
+pnpm tauri build    # production installer bundle
+
+# 5. Import a portable developer dictionary and formatting profile
+hyperyap import ./my-profile.hyperyap --strategy merge
+
+# 6. Call the optional Bearer-authenticated localhost transcription API
+curl -fsSL -X POST http://127.0.0.1:4800/api/transcribe \
+  -H "Authorization: Bearer ${HYPERYAP_API_TOKEN}" \
+  -F "audio=@recording.wav;type=audio/wav"
+```
+
+Read [first dictation](docs/FIRST-RUN.md), [troubleshooting](docs/FIRST-RUN.md#troubleshooting), and [local HTTP API usage](docs/API_USAGE.md) for walkthroughs and integration examples.
+
+## Reference
+
+<details>
+<summary><strong>Shortcuts, configuration defaults, and 12-terminal support</strong></summary>
+
+<a id="configuration"></a>
+
+All settings can be configured in the application UI (`%APPDATA%/com.avalonreset.hyperyap/settings.json` on Windows, `~/.config/com.avalonreset.hyperyap/settings.json` on Linux, or `~/Library/Application Support/com.avalonreset.hyperyap/settings.json` on macOS) or imported via `hyperyap import <FILE> [-s|--strategy replace|merge]`:
+
+| Setting | Default | Description |
+| :--- | :--- | :--- |
+| **Record mode** | Toggle-to-talk | Press once to start, press again to stop, or switch to push-to-talk in Settings. |
+| **Record shortcut** | Configurable | Remap to any supported key combination; standard Windows shortcuts use event-driven `RegisterHotKey`. |
+| **Language** | English | Optimized for English local dictation on NVIDIA Parakeet TDT 0.6B v2 INT8. |
+| **Overlay** | Bottom of screen | Recording indicator position (`top`, `bottom`, or `hidden`). |
+| **Persist history** | Disabled (`false`) | Transcripts stay in volatile RAM by default and clear on shutdown. |
+| **LLM Connect** | Disabled (`false`) | Optional post-processing via local Ollama or an HTTPS OpenAI-compatible endpoint (keys stored in OS keyring). |
+| **HTTP API** | Disabled (`false`) | Opt-in local API on `127.0.0.1:4800` protected by `Authorization: Bearer <api_token>` (see [`docs/API_USAGE.md`](docs/API_USAGE.md)). |
+| **Autostart** | Disabled (`false`) | Strictly opt-in launch at login. |
+| **Hotkey helper** | Disabled (`false`) | Opt-in Windows workstation remapper (`F13`, `CapsLock`, Mouse Back/Forward) and 12-terminal smart paste helper (`enable_hotkeys_helper: false`), always running with a visible system tray icon. |
+
+Override the speech model location at runtime with `HYPERYAP_ASR_MODEL_ID` or `HYPERYAP_ASR_MODEL_DIR`.
+
+</details>
+
+<details>
+<summary><strong>Agent setup (via <code>cto-legends</code>) and platform compatibility</strong></summary>
+
+### Agent setup (via `cto-legends`)
 
 Part of the [CTO Legends](https://github.com/avalonreset/cto-legends) ecosystem. `cto-legends` is the only registered skill; this repo vendors a pinned copy at [`skills/cto-legends/SKILL.md`](skills/cto-legends/SKILL.md).
 
-Install with `cto-legends install legends-hyperyap`, then follow the module recipe the router loads ([`docs/AGENT-RECIPE.md`](docs/AGENT-RECIPE.md)). Do not register this module as its own skill.
+Run `cto-legends handoff legends-hyperyap` and read the returned installed recipe and task-readiness checks. If the module is missing, preview setup with `cto-legends install legends-hyperyap`, perform the authorized setup, then repeat the handoff. Use `cto-legends check-updates` to compare your installed version with the catalog and published release. See [`docs/AGENT-RECIPE.md`](docs/AGENT-RECIPE.md) for the standalone recipe. Do not register this module as its own skill.
 
-## Table of Contents
+<a id="platform-compatibility"></a>
 
-- [What You Get](#what-you-get)
-- [Why This Model](#why-this-model)
-- [Install](#install)
-- [Shortcut Support](#shortcut-support)
-- [Terminal-Friendly Workflows](#terminal-friendly-workflows)
-- [Platform Compatibility](#platform-compatibility)
-- [Requirements](#requirements)
-- [How It Works](#how-it-works)
-- [Configuration](#configuration)
-- [Build from Source](#build-from-source)
-- [Contributing](#contributing)
-- [Attribution](#attribution)
-- [License](#license)
+| Capability | Windows (x64) | macOS (Apple Silicon & Intel) | Linux (x86_64) |
+| :--- | :--- | :--- | :--- |
+| **Local Parakeet ONNX transcription** | CUDA 12 GPU + automatic CPU fallback | CPU ONNX Runtime (`HyperYap_aarch64_darwin.dmg` / `x86_64`) | CPU ONNX Runtime (`AppImage` / `.deb`) |
+| **Global recording shortcuts** | OS-registered `RegisterHotKey` events | Supported with Accessibility permission | Supported where the desktop session allows global input hooks |
+| **Atomic paste into active window** | Supported | Supported | Supported |
+| **Opt-in CapsLock/mouse remapper & 12-terminal helper** | Bundled (`hyperyap-hotkeys.exe`) | Not bundled | Not bundled |
 
-## What You Get
+</details>
 
-One app for private, local transcription:
-
-- **Local speech-to-text** powered by the English NVIDIA [Parakeet TDT 0.6B v2](https://huggingface.co/nvidia/parakeet-tdt-0.6b-v2) model through the [smcleod INT8 ONNX conversion](https://huggingface.co/smcleod/parakeet-tdt-0.6b-v2-int8). No cloud, no internet after first install.
-- **Fast record-and-paste workflow** that transcribes speech and inserts the result into the active app.
-- **Configurable shortcuts** for recording, last transcript paste, command mode, cancellation, and LLM-assisted modes.
-- **Toggle-to-talk and push-to-talk** recording modes.
-- **Optional LLM post-processing** through local Ollama or a configured remote endpoint.
-- **Custom dictionary and formatting rules** for names, commands, casing, and recurring phrases.
-- **Import/export settings** for moving configurations between installs.
-- **Desktop builds** for Windows, macOS Apple Silicon, macOS Intel, and Linux x86_64.
-
-## Why This Model
-
-legends-hyperyap is optimized for English-first local dictation. The default model is NVIDIA's [Parakeet TDT 0.6B v2](https://huggingface.co/nvidia/parakeet-tdt-0.6b-v2), packaged through the [smcleod/parakeet-tdt-0.6b-v2-int8](https://huggingface.co/smcleod/parakeet-tdt-0.6b-v2-int8) ONNX INT8 conversion.
-
-That choice is deliberate. legends-hyperyap is built around fast, private, everyday English speech-to-text rather than broad multilingual coverage. The v2 Parakeet line is English-focused, the ONNX INT8 conversion fits the local desktop runtime, and the model can run fully offline after the first download. For users whose main need is English dictation into editors, terminals, chat apps, and coding tools, this keeps the app focused on the workflow it is meant to serve.
-
-Multilingual Parakeet models are still valuable for multilingual transcription, but they are not the default direction for legends-hyperyap right now. The project prioritizes English quality, local reliability, low-friction installation, and a fast record-and-paste loop.
-
-## Install
-
-`v0.1.4` is published as a source release. Build and package the native desktop installer for your platform using the guided source build below, or download prebuilt packages when attached to a GitHub Release.
-
-### Windows (Guided Source Build)
-
-1. Install [Node.js LTS](https://nodejs.org/), `pnpm`, and the [Rust toolchain](https://rustup.rs/).
-2. Clone the repository and fetch the Parakeet ONNX model and dependencies:
-   ```bash
-   git clone https://github.com/avalonreset/legends-hyperyap.git
-   cd legends-hyperyap
-   bash .github/scripts/download-parakeet-model.sh resources
-   pnpm install
-   ```
-3. Build the native Windows hotkey helper (`hyperyap-hotkeys.exe`) and Tauri installer:
-   ```bash
-   cargo build --release --manifest-path hotkeys/Cargo.toml
-   pnpm tauri build
-   ```
-
-### macOS
-
-Build from source with `pnpm tauri build` or install the matching DMG when attached to a [GitHub Release](https://github.com/avalonreset/legends-hyperyap/releases/latest):
-
-- `HyperYap_aarch64_darwin.dmg` for Apple Silicon Macs
-- `HyperYap_x86_64_darwin.dmg` for Intel Macs
-
-macOS requires Accessibility permission for global shortcuts.
-
-### Linux
-
-Build from source with `pnpm tauri build` or install `HyperYap_amd64.AppImage` / `HyperYap_amd64.deb` when attached to a [GitHub Release](https://github.com/avalonreset/legends-hyperyap/releases/latest).
-
-### Upgrading
-
-Run the newly built installer over an existing install. legends-hyperyap upgrades in place without deleting your speech model or requiring a re-download.
-
-## Shortcut Support
-
-legends-hyperyap records through configurable shortcuts. The exact binding can be changed from Settings.
-
-| Shortcut | Action |
-|----------|--------|
-| Record shortcut | Start or stop recording |
-| `Ctrl+Shift+Space` | Paste last transcript |
-| `Ctrl+Alt+Space` | LLM-assisted recording |
-| `Ctrl+Shift+X` | Command mode |
-| `Ctrl+Shift+1` through `Ctrl+Shift+4` | LLM mode slots |
-| `Escape` | Cancel recording |
-
-The Windows workstation preset can optionally map `F13`, `CapsLock`, and Mouse Back to the record shortcut, and map Mouse Forward to Enter, when the opt-in hotkey helper (`enable_hotkeys_helper`) is enabled in Settings. Standard keyboard shortcuts use OS-registered `RegisterHotKey` events without background polling, and the hotkey helper always displays a visible tray icon with Pause/Exit controls when running.
-
-## Terminal-Friendly Workflows
-
-legends-hyperyap can be used with any app that accepts pasted text. It is especially useful in editors, chat apps, terminals, issue trackers, and coding tools where fast dictation reduces context switching.
-
-The opt-in hotkey helper adds terminal-aware behavior where supported:
-
-- Smart copy, paste, and undo handling for terminal windows.
-- On-demand clipboard image conversion into a temporary PNG path when you press `Ctrl+V` in a supported terminal.
-- Bounded paste undo for recent legends-hyperyap-managed terminal inserts.
-
-Supported terminal process names for the helper:
-
-| Terminal | Process |
-|----------|---------|
-| WezTerm | `wezterm-gui.exe` |
-| Windows Terminal | `windowsterminal.exe` |
-| PowerShell | `powershell.exe` |
-| PowerShell 7+ | `pwsh.exe` |
-| Command Prompt | `cmd.exe` |
-| Alacritty | `alacritty.exe` |
-| ConEmu | `conemu.exe` / `conemu64.exe` |
-| Hyper | `hyper.exe` |
-| Git Bash (mintty) | `mintty.exe` |
-| Tabby | `tabby.exe` |
-| Warp | `warp.exe` |
-| MobaXterm | `mobaxterm.exe` |
-
-## Platform Compatibility
-
-The core app is built for Windows, macOS, and Linux. Global shortcut behavior is implemented separately per platform, so support depends on the operating system permissions and desktop environment.
-
-| Capability | Windows | macOS | Linux |
-|------------|---------|-------|-------|
-| Local Parakeet transcription | Supported | Supported | Supported |
-| Configurable recording shortcuts | Supported | Supported with Accessibility permission | Supported where the desktop/session allows global input hooks |
-| Automatic paste into active app | Supported | Supported | Supported |
-| CapsLock and mouse side-button remapping | Supported through the optional hotkey helper | Not currently bundled | Not currently bundled |
-| Smart terminal copy/paste/undo helper | Supported through the optional hotkey helper | Not currently bundled | Not currently bundled |
-
-In short: the app works as a local voice-to-text tool on macOS and Linux, while the CapsLock remapper and smart terminal helper are Windows-only. macOS users must grant Accessibility permission. Linux global shortcuts may vary by distribution, window manager, and Wayland/X11 session.
-
-## Requirements
-
-- Windows 10+, macOS, or Linux x86_64
-- A microphone
-- ~700MB disk space for the speech model
-- Internet connection for first launch model download
-- Optional on Windows x64: an NVIDIA GPU with a compatible CUDA 12 and cuDNN 9 runtime. legends-hyperyap tries CUDA first and falls back to CPU automatically when GPU acceleration is unavailable.
-
-## How It Works
-
-1. Press your configured record shortcut.
-2. Speak naturally into your microphone.
-3. Press the shortcut again to stop recording.
-4. legends-hyperyap transcribes locally using the Parakeet TDT model.
-5. The transcription is automatically pasted into the active window.
-
-Speech recognition happens on your machine and works offline after the initial
-model download. Optional LLM post-processing is separate: local Ollama keeps
-that step local, while a configured remote endpoint receives the text submitted
-to it. Model downloads and update checks also require network access.
-
-## Configuration
-
-legends-hyperyap works out of the box with minimal setup. All settings can be changed from the app's Settings page.
-
-| Setting | Default | Description |
-|---------|---------|-------------|
-| Record mode | Toggle-to-talk | Press once to start, press again to stop. Can be changed to push-to-talk. |
-| Record shortcut | Configurable | Remap to any supported key or key combination. |
-| Language | English | Optimized for English local dictation. |
-| Overlay | Bottom of screen | Recording indicator position. Can be set to top, bottom, or hidden. |
-| LLM Connect | Disabled | Post-process transcriptions with a local LLM through Ollama or a configured remote endpoint. |
-| HTTP API | Disabled | Local API on `127.0.0.1` protected by `Authorization: Bearer <api_token>` (see [`docs/API_USAGE.md`](docs/API_USAGE.md)). |
-| Autostart | Disabled | Opt-in launch at login (`false` by default). |
-| Hotkey helper | Disabled | Opt-in Windows workstation remapper and terminal smart paste helper (`enable_hotkeys_helper: false` by default). |
-| Sound feedback | Enabled | Audio cues when recording starts and stops. |
-| Copy to clipboard | Disabled | Optionally keep transcriptions in the clipboard. |
-
-Settings are stored in `%APPDATA%/com.avalonreset.hyperyap/settings.json` on Windows. You can also import a `.hyperyap` configuration file from the command line using `hyperyap import <FILE> [-s|--strategy replace|merge]`, or override the speech model location with `HYPERYAP_ASR_MODEL_ID` / `HYPERYAP_ASR_MODEL_DIR`.
-
-### Hotkey Customization
-
-All in-app shortcuts can be remapped from the Settings page. Platform-level remapping such as CapsLock or mouse side buttons is handled by the optional hotkey helper where available.
-
-## Build from Source
-
-```bash
-pnpm install
-
-# Download the default Parakeet ONNX model into resources/parakeet-tdt-0.6b-v2-smcleod-int8/
-bash .github/scripts/download-parakeet-model.sh resources
-
-# Build the optional hotkey helper before packaging the Windows installer
-cd hotkeys && cargo build --release && cd ..
-
-pnpm tauri dev      # development
-pnpm tauri build    # production build
-```
-
-Requires: Node.js 18+, Rust, pnpm, [Tauri prerequisites](https://v2.tauri.app/start/prerequisites/).
-
-## FAQ
+<details>
+<summary><strong>FAQ, attribution, and verification gates</strong></summary>
 
 **Does `legends-hyperyap` send my voice recordings to the cloud?**
-No. Speech recognition runs 100% locally on your machine using the NVIDIA Parakeet TDT 0.6B v2 ONNX model and works offline after the initial model download.
+No. Speech recognition runs 100% locally on your machine using the NVIDIA Parakeet TDT 0.6B v2 INT8 ONNX model and works offline after the initial model download.
 
 **How is `legends-hyperyap` different from `legends-ambient-intelligence`?**
 `legends-hyperyap` is for live push-to-talk or toggle-to-talk dictation pasted directly into your active cursor. [`legends-ambient-intelligence`](https://github.com/avalonreset/legends-ambient-intelligence) is for passive background audio and USB voice recorder ingestion into [`legends-empire`](https://github.com/avalonreset/legends-empire).
 
-## Contributing
+**Attribution:** `legends-hyperyap`'s voice engine is a modified fork of [MURmure](https://github.com/Kieirra/murmure) by [Kieirra](https://github.com/Kieirra), powered by NVIDIA's [Parakeet TDT 0.6B v2](https://huggingface.co/nvidia/parakeet-tdt-0.6b-v2) model via the [smcleod/parakeet-tdt-0.6b-v2-int8](https://huggingface.co/smcleod/parakeet-tdt-0.6b-v2-int8) ONNX conversion.
 
-Contributions are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md) for development setup, PR workflow, and coding guidelines.
+```bash
+python scripts/render_cards.py
+python scripts/check_release.py
+```
 
-Please read the [Code of Conduct](CODE_OF_CONDUCT.md) before contributing.
+</details>
 
-## Attribution
+## Contributing, security, and license
 
-legends-hyperyap's voice engine is a modified version of [MURmure](https://github.com/Kieirra/murmure) by [Kieirra](https://github.com/Kieirra). Full credit to the original author for building an excellent local speech-to-text application.
-
-Powered by NVIDIA's [Parakeet TDT 0.6B v2](https://huggingface.co/nvidia/parakeet-tdt-0.6b-v2) English speech recognition model, using the [smcleod/parakeet-tdt-0.6b-v2-int8](https://huggingface.co/smcleod/parakeet-tdt-0.6b-v2-int8) ONNX INT8 conversion.
-
-## License
+See [CONTRIBUTING.md](CONTRIBUTING.md), [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md), [SUPPORT.md](SUPPORT.md), [SECURITY.md](SECURITY.md), and [PRIVACY_POLICY.md](PRIVACY_POLICY.md).
 
 The voice engine is licensed under [AGPL-3.0](LICENSE). See [NOTICE](NOTICE) and [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) for full attribution details.
 
----
+[![Message Avalon Reset](assets/cards/r1/slot-7-message-avalon-reset.svg)](https://github.com/avalonreset/cto-legends/issues/new?title=Message%20for%20Avalon%20Reset&labels=message)
 
-<p align="center"><a href="https://github.com/stars/avalonreset/lists/cto-legends"><img src="assets/collection-star-shrine.svg" width="100%" alt="GitHub Star List: The complete cto-legends collection on one page. Bookmark or star the router and every module from a single GitHub list."></a></p>
+<p align="center"><a href="https://github.com/stars/avalonreset/lists/cto-legends"><img src="assets/cards/r1/slot-collection-star-shrine.svg" width="100%" alt="GitHub Star List: The complete cto-legends collection on one page. Bookmark or star the router and every module from a single GitHub list."></a></p>
 
 **Specification & benchmarks on cto-legends.com:**
 - **Module specification & architecture matrix:** [cto-legends.com/modules/legends-hyperyap](https://cto-legends.com/modules/legends-hyperyap)

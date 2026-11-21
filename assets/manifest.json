@@ -1,6 +1,6 @@
 {
   "module": "legends-hyperyap",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "assets": {
     "banner_png": {
       "path": "assets/banner.png",
@@ -50,6 +50,41 @@
       "path": "assets/benterm-logo.webp",
       "bytes": 3310,
       "sha256": "7a956001750a8146cc1430807921caf60ae23cdd69fde21f09b478af00be1aae"
+    },
+    {
+      "path": "assets/cards/r1/slot-1-agent-handoff.svg",
+      "bytes": 12250,
+      "sha256": "c787a91121951c6f93f5f746295da26a926bad7132c6cdf6947252b58e425dd3"
+    },
+    {
+      "path": "assets/cards/r1/slot-2-three-pillars.svg",
+      "bytes": 51252,
+      "sha256": "a22b0ce696459a05732820773e402a921c04d1a6e597c042e080e35281bd8459"
+    },
+    {
+      "path": "assets/cards/r1/slot-3-plain-english-chains.svg",
+      "bytes": 40619,
+      "sha256": "242d842beaedbe4eb464bee7ae00a20b15de8227dfbf63700391b9e3935bde9d"
+    },
+    {
+      "path": "assets/cards/r1/slot-4-hyperyap-architecture.svg",
+      "bytes": 52315,
+      "sha256": "30025b6b18c266ab7aa90771ed308d03454816a8d9a5ef48215dc406d9238638"
+    },
+    {
+      "path": "assets/cards/r1/slot-5-adhoc-vs-hyperyap.svg",
+      "bytes": 48182,
+      "sha256": "73be341b1439a55c4f5624987e665831cb38ef67059c8bda9986ca8d1a74a4dc"
+    },
+    {
+      "path": "assets/cards/r1/slot-7-message-avalon-reset.svg",
+      "bytes": 18916,
+      "sha256": "3ff481e4ab3d423869858a34a4f160cca38a34a9a5cbda6877c05a319c433a9c"
+    },
+    {
+      "path": "assets/cards/r1/slot-collection-star-shrine.svg",
+      "bytes": 24769,
+      "sha256": "9c84ab99923b7339ac7f34058c1aaf00857d17410dc9132c5a3f87fb4ae5aecc"
     },
     {
       "path": "assets/icon-hyper-inverted.png",

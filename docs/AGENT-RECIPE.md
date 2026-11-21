@@ -1,4 +1,4 @@
-# Agent Recipe: `legends-hyperyap` (`v0.1.4`)
+# Agent Recipe: `legends-hyperyap`
 
 This recipe is loaded via the `cto-legends` router (`cto-legends handoff legends-hyperyap`). Do not register `legends-hyperyap` as a standalone skill.
 
