@@ -67,7 +67,7 @@ jobs:
               shell: pwsh
 
             - name: Ensure Cargo target subdirs exist for ort-sys copy-dylibs
-              run: New-Item -ItemType Directory -Force -Path "src-tauri/target/release/examples", "src-tauri/target/release/deps" | Out-Null
+              run: New-Item -ItemType Directory -Force -Path "src-tauri/target/release/examples", "src-tauri/target/release/deps", "src-tauri/target/release/build/examples", "src-tauri/target/release/build/deps" | Out-Null
               shell: pwsh
 
             - name: Build

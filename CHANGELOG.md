@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.1.7] - 2026-11-22 (Rust 1.100 Windows build layout compatibility for ort-sys)
+
+- Pre-create `src-tauri/target/release/build/{examples,deps}` in `.github/workflows/build-windows.yml` and resolve `ort-sys` CUDA provider DLLs across both `target/<profile>/build` and `target/<profile>` in `src-tauri/build.rs` so Windows CI builds cleanly under Rust 1.100+.
+
 ## [0.1.6] - 2026-11-22 (Outlined Legends Font SVG card suite and evergreen documentation)
 
 - Sync vendored `cto-legends` router skill pin (`69ddc4f68faa`), enforce LF line endings via `.gitattributes`, and standardize release artifact checksums.
