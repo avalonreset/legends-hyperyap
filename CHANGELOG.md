@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.1.6] - 2026-11-22 (Outlined Legends Font SVG card suite and evergreen documentation)
+
+- Sync vendored `cto-legends` router skill pin (`69ddc4f68faa`), enforce LF line endings via `.gitattributes`, and standardize release artifact checksums.
+
 ## [0.1.5] - 2026-11-21 (Outlined Legends Font SVG card suite and evergreen documentation)
 
 - Added `scripts/render_cards.py` and the 7 outlined Legends Font `r1` SVG architecture and comparison cards under `assets/cards/r1/` (`slot-1-agent-handoff.svg`, `slot-2-three-pillars.svg`, `slot-3-plain-english-chains.svg`, `slot-4-hyperyap-architecture.svg`, `slot-5-adhoc-vs-hyperyap.svg`, `slot-7-message-avalon-reset.svg`, and `slot-collection-star-shrine.svg`), replacing the duplicate `assets/collection-star-shrine.svg`.

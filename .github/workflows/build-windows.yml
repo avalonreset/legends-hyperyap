@@ -66,6 +66,10 @@ jobs:
               run: pnpm install
               shell: pwsh
 
+            - name: Ensure Cargo target subdirs exist for ort-sys copy-dylibs
+              run: New-Item -ItemType Directory -Force -Path "src-tauri/target/release/examples", "src-tauri/target/release/deps" | Out-Null
+              shell: pwsh
+
             - name: Build
               run: pnpm tauri build ${{ inputs.dry && '--no-bundle' || '' }}
               shell: pwsh
