@@ -2,6 +2,7 @@
     "name": "legends-hyperyap",
     "private": true,
     "version": "0.1.7",
+    "homepage": "https://cto-legends.com/modules/legends-hyperyap",
     "license": "AGPL-3.0-only",
     "packageManager": "pnpm@11.8.0",
     "type": "module",
